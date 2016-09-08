@@ -1,0 +1,27 @@
+{% from 'macros/helpers.html' import sprite %}
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>{% block title %}{{ title }}{% endblock %}</title>
+    <link rel="stylesheet" href="stylesheets/app.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% include "shared/app-icons.html" %}
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    {% block content %}{% endblock %}
+    {% block javascript %}
+      <script src="lib/es6-promise.min.js"></script>
+      <script src="lib/cannon.js"></script>
+      <script src="lib/three.js"></script>
+      <script src="lib/VRControls.js"></script>
+      <script src="lib/VREffect.js"></script>
+      <script src="lib/OBJLoader.js"></script>
+      <script src="lib/vive-controller.js"></script>
+      <script src="lib/webvr-polyfill.js"></script>
+      <script src="lib/webvr-manager.js"></script>
+      <script src="javascripts/app.js"></script>
+    {% endblock %}
+  </body>
+</html>
