@@ -85,6 +85,7 @@
     "cannon": "^0.6.2",
     "dat-gui": "^0.5.0",
     "es6-promise": "^3.2.1",
+    "gsap": "^1.19.0",
     "normalize.css": "^4.0.0",
     "three": "^0.80.1",
     "webvr-polyfill": "^0.9.18"
