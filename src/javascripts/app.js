@@ -34,8 +34,8 @@ class PingPong {
     this.ballPaddleContact = null;
     this.balls = [];
     this.cameraHeight = 1.2;
+    this.gamemode = MODE.ONE_ON_ONE;
     this.CCD_EPSILON = 0.2;
-    this.mode = MODE.ONE_ON_ONE;
 
     this.cannon = {
       world: null,
@@ -54,6 +54,7 @@ class PingPong {
 
     // config
     this.config = {
+      mode: MODE.ONE_ON_ONE,
       gravity: 8.7,
       tableDepth: 4,
       tableWidth: 2.2,
@@ -162,11 +163,10 @@ class PingPong {
     window.addEventListener('resize', this.onResize.bind(this), true);
     window.addEventListener('vrdisplaypresentchange', this.onResize.bind(this), true);
     setInterval(() => {
-      this.addBall();
+      if (true || this.config.mode === MODE.ONE_ON_ONE) {
+        this.addBall();
+      }
     }, 2000);
-    setTimeout(() => {
-      this.setWallMode();
-    }, 2900);
 
     this.boxZBounds = -(this.boxDepth - 1);
 
@@ -190,6 +190,11 @@ class PingPong {
   setupGUI() {
     let gui = new dat.GUI();
     gui.remember(this);
+    gui.add(this, 'gamemode', [MODE.ONE_ON_ONE, MODE.AGAINST_THE_WALL]).onChange(val => {
+      if (val !== this.config.mode) {
+        this.setMode(val);
+      }
+    });
     gui.add(this.config, 'ballRadius', 0.001, 0.4);
     gui.add(this.config, 'ballInitVelocity', 0, 2);
     gui.add(this.config, 'gravity', 0.5, 15).onChange(val => this.cannon.world.gravity.set(0, -val, 0));
@@ -295,8 +300,8 @@ class PingPong {
     this.cannon.world.add(this.cannon.paddlePlayer);
   }
 
-  setWallMode() {
-    let targetColor = new THREE.Color(this.config.colors.PINK);
+  setMode(mode) {
+    let targetColor = new THREE.Color(mode === MODE.AGAINST_THE_WALL ? this.config.colors.PINK : this.config.colors.BLUE);
     let no = {
       rotation: 0,
       bouncyness: this.config.tableBouncyNess,
@@ -313,7 +318,7 @@ class PingPong {
 
 
     TweenMax.to(no, 1.2, {
-      rotation: Math.PI / 2,
+      rotation: mode === MODE.AGAINST_THE_WALL ? Math.PI / 2 : -Math.PI / 2,
       bouncyness: 0,
       r: targetColor.r,
       g: targetColor.g,
@@ -336,7 +341,7 @@ class PingPong {
         this.cannon.tableHalfEnemy.quaternion.copy(this.tableHalfEnemy.getWorldQuaternion());
       },
       onComplete: () => {
-        this.mode = MODE.AGAINST_THE_WALL;
+        this.config.mode = mode;
       }
     });
   }
@@ -344,7 +349,7 @@ class PingPong {
   groundCollision(e) {
     console.log(e);
     if (e.body.name === 'BALL') {
-      this.addBall();
+      //this.addBall();
     }
   }
 
@@ -361,7 +366,7 @@ class PingPong {
       // these values are heavily tweakable
       e.body.velocity.x += hitpointX * 4;
       e.body.velocity.y = hitpointY * 0.7;
-      if (this.mode === MODE.AGAINST_THE_WALL) {
+      if (this.config.mode === MODE.AGAINST_THE_WALL) {
         e.body.velocity.y = 5;
         e.body.velocity.z = 5;
       } else {
@@ -540,7 +545,7 @@ class PingPong {
   }
 
   initBallPosition(ball) {
-    switch (this.mode) {
+    switch (this.config.mode) {
       case MODE.ONE_ON_ONE:
         ball.position.set(0, 1, this.config.boxDepth * -0.8);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.2;
