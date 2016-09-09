@@ -2,6 +2,8 @@ import dat from 'dat-gui';
 import TweenMax from 'gsap';
 import {MODE} from 'constants/modes';
 
+const resetTimeout = 2000;
+
 class PingPong {
   constructor() {
     this.renderer = null;
@@ -36,6 +38,7 @@ class PingPong {
     this.cameraHeight = 1.2;
     this.gamemode = MODE.ONE_ON_ONE;
     this.CCD_EPSILON = 0.2;
+    this.ballResetTimeout = null;
 
     this.cannon = {
       world: null,
@@ -162,11 +165,9 @@ class PingPong {
 
     window.addEventListener('resize', this.onResize.bind(this), true);
     window.addEventListener('vrdisplaypresentchange', this.onResize.bind(this), true);
-    setInterval(() => {
-      if (true || this.config.mode === MODE.ONE_ON_ONE) {
-        this.addBall();
-      }
-    }, 2000);
+    setTimeout(() => {
+      this.addBall();
+    }, 1000);
 
     this.boxZBounds = -(this.boxDepth - 1);
 
@@ -221,6 +222,7 @@ class PingPong {
       material: new CANNON.Material(),
     });
     this.cannon.ground.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+    this.cannon.ground.addEventListener("collide", this.groundCollision.bind(this));
     this.cannon.world.add(this.cannon.ground);
 
     // table
@@ -347,14 +349,15 @@ class PingPong {
   }
 
   groundCollision(e) {
-    console.log(e);
     if (e.body.name === 'BALL') {
-      //this.addBall();
+      // this.initBallPosition(e.body);
     }
   }
 
   paddleCollision(e) {
-    if (e.body.name === 'BALL' && !this.controller1 && !this.controller2) {
+    if (e.body.name === 'BALL') {
+      clearTimeout(this.ballResetTimeout);
+      this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
       let hitpointX = e.body.position.x - e.target.position.x;
       let hitpointY = e.body.position.y - e.target.position.y;
       // normalize to -1 to 1
@@ -458,7 +461,6 @@ class PingPong {
       if (displays) {
         this.display = displays[0];
         if (displays[0].capabilities && displays[0].capabilities.hasPosition) {
-          console.log("vive loaded");
           this.controlMode = 'move';
           // also check gamepads
           this.controller1 = new THREE.ViveController(0);
@@ -545,6 +547,8 @@ class PingPong {
   }
 
   initBallPosition(ball) {
+    clearTimeout(this.ballResetTimeout);
+    this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
     switch (this.config.mode) {
       case MODE.ONE_ON_ONE:
         ball.position.set(0, 1, this.config.boxDepth * -0.8);
@@ -558,7 +562,7 @@ class PingPong {
       case MODE.AGAINST_THE_WALL:
         ball.position.set(0, 1.4, this.config.tablePositionZ + 0.01);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
-        ball.velocity.y = this.config.ballInitVelocity * -2;
+        ball.velocity.y = this.config.ballInitVelocity * -4;
         ball.velocity.z = this.config.ballInitVelocity * 2.0;
         ball.angularVelocity.x = 0;
         ball.angularVelocity.y = 0;
@@ -588,7 +592,6 @@ class PingPong {
       {friction: 0.6, restitution: 0.7}
     );
     this.cannon.world.addContactMaterial(this.ballGroundContact);
-    this.cannon.world.addEventListener("collide", this.groundCollision.bind(this));
 
     // ball - table
     // player
