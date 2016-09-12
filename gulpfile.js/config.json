@@ -15,10 +15,6 @@
       "src": "static",
       "dest": "./"
     },
-    "libs": {
-      "src": "lib",
-      "dest": "lib"
-    },
 
     "js": {
       "src": "javascripts",

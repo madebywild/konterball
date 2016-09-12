@@ -1,4 +1,3 @@
-console.log('NI');
 export const MODE = {
   ONE_ON_ONE: 'ONE_ON_ONE',
   AGAINST_THE_WALL: 'AGAINST_THE_WALL',

@@ -3,6 +3,7 @@ import TweenMax from 'gsap';
 import {MODE} from 'constants/modes';
 
 const resetTimeout = 2000;
+const DEBUG_MODE = false;
 
 class PingPong {
   constructor() {
@@ -39,6 +40,8 @@ class PingPong {
     this.gamemode = MODE.ONE_ON_ONE;
     this.CCD_EPSILON = 0.2;
     this.ballResetTimeout = null;
+    this.cannonDebugRenderer = null;
+    this.pan = null;
 
     this.cannon = {
       world: null,
@@ -61,7 +64,8 @@ class PingPong {
       gravity: 8.7,
       tableDepth: 4,
       tableWidth: 2.2,
-      tableHeight: 0.7,
+      tableHeight: 0.65,
+      tableThickness: 0.05,
       tablePositionZ: -2.5,
       netHeight: 0.15,
       netThickness: 0.02,
@@ -126,12 +130,12 @@ class PingPong {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.BasicShadowMap;
 
-    // thisly VR headset positional data to camera.
+    // apply VR headset positional data to camera.
     this.controls = new THREE.VRControls(this.camera);
     this.controls.standing = true;
     this.controls.userHeight = this.cameraHeight;
 
-    // thisly VR stereo rendering to renderer.
+    // apply VR stereo rendering to renderer.
     this.effect = new THREE.VREffect(this.renderer);
     this.effect.setSize(window.innerWidth, window.innerHeight);
 
@@ -149,6 +153,7 @@ class PingPong {
     //this.skybox.position.y = this.config.boxSize.height/2;
     //this.skybox.position.z = -this.config.boxSize.depth/2 + 1;
     this.skybox.rotation.x = Math.PI / 2;
+    this.skybox.receiveShadow = true;
 
     this.scene.add(this.skybox);
 
@@ -177,9 +182,15 @@ class PingPong {
       this.renderer.domElement.requestPointerLock();
     };
 
+    this.loadPan();
     
     this.setupCannon();
     this.setupScene();
+
+    if (DEBUG_MODE) {
+      this.cannonDebugRenderer = new THREE.CannonDebugRenderer( this.scene, this.cannon.world );
+    }
+
     this.setupLights();
     this.setupPointsDisplay();
     this.setupControllers();
@@ -191,7 +202,7 @@ class PingPong {
   setupGUI() {
     let gui = new dat.GUI();
     gui.remember(this);
-    gui.add(this, 'gamemode', [MODE.ONE_ON_ONE, MODE.AGAINST_THE_WALL]).onChange(val => {
+    gui.add(this, 'gamemode', [MODE.ONE_ON_ONE, MODE.AGAINST_THE_WALL, MODE.HIT_THE_TARGET]).onChange(val => {
       if (val !== this.config.mode) {
         this.setMode(val);
       }
@@ -199,13 +210,38 @@ class PingPong {
     gui.add(this.config, 'ballRadius', 0.001, 0.4);
     gui.add(this.config, 'ballInitVelocity', 0, 2);
     gui.add(this.config, 'gravity', 0.5, 15).onChange(val => this.cannon.world.gravity.set(0, -val, 0));
-    gui.add(this.config, 'ballMass', 0.001, 1).onChange(val => {
-      //this.cannon.balls.forEach(ball => {ball.gravity = val;});
-    });
+    //gui.add(this.config, 'ballMass', 0.001, 1).onChange(val => {
+    //  //this.cannon.balls.forEach(ball => {ball.gravity = val;});
+    //});
     // gui.add(this, 'ballTableFriction', 0, 1).onChange(val => this.ballTableContact.friction = val);
-    gui.add(this.config, 'ballTableBounciness', 0, 5).onChange(val => this.ballTableContact.restitution = val);
+    gui.add(this.config, 'ballTableBounciness', 0, 5).onChange(val => {
+      this.cannon.ballTablePlayerContact.restitution = val
+      this.cannon.ballTableEnemyContact.restitution = val
+    });
     // gui.add(this, 'ballPaddleFriction', 0, 1).onChange(val => this.ballPaddleContact.friction = val);
     gui.add(this.config, 'ballPaddleBounciness', 0, 5).onChange(val => this.ballPaddleContact.restitution = val);
+  }
+
+  loadPan() {
+    let loader = new THREE.OBJLoader();
+    loader.setPath('/models/');
+    loader.load('Pan.obj', object => {
+      this.pan = object;
+      this.pan.children.forEach(child => {
+        child.material.side = THREE.DoubleSide;
+        child.material.side = THREE.DoubleSide;
+        child.material.side = THREE.DoubleSide;
+        child.material.transparent = true;
+        child.material.opacity = 0.5;
+      });
+      let panScale = 0.001;
+      this.pan.scale.set(panScale, panScale, panScale);
+      this.pan.position.set(0, 1.1, -1.2);
+      this.pan.rotateX(Math.PI / 2);
+      this.scene.add(object);
+      this.paddle.visible = false;
+
+    });
   }
 
   setupCannon() {
@@ -231,7 +267,7 @@ class PingPong {
       shape: new CANNON.Box(
         new CANNON.Vec3(
           this.config.tableWidth / 2,
-          this.config.tableHeight / 2,
+          this.config.tableThickness / 2,
           this.config.tableDepth / 4
         )
       ),
@@ -240,7 +276,7 @@ class PingPong {
     this.cannon.tableHalfPlayer._name = 'TABLE_HALF_PLAYER';
     this.cannon.tableHalfPlayer.position.set(
       0,
-      this.config.tableHeight / 2,
+      this.config.tableHeight + this.config.tableThickness / 2,
       this.config.tablePositionZ + this.config.tableDepth / 4
     );
     this.cannon.world.add(this.cannon.tableHalfPlayer);
@@ -250,7 +286,7 @@ class PingPong {
       shape: new CANNON.Box(
         new CANNON.Vec3(
           this.config.tableWidth / 2,
-          this.config.tableHeight / 2,
+          this.config.tableThickness / 2,
           this.config.tableDepth / 4
         )
       ),
@@ -259,7 +295,7 @@ class PingPong {
     this.cannon.tableHalfEnemy._name = 'TABLE_HALF_ENEMY';
     this.cannon.tableHalfEnemy.position.set(
       0,
-      this.config.tableHeight / 2,
+      this.config.tableHeight + this.config.tableThickness / 2,
       this.config.tablePositionZ - this.config.tableDepth / 4
     );
     this.cannon.world.add(this.cannon.tableHalfEnemy);
@@ -279,7 +315,7 @@ class PingPong {
     this.cannon.net._name = 'NET';
     this.cannon.net.position.set(
       0,
-      this.config.tableHeight + this.config.netHeight / 2,
+      this.config.tableHeight + this.config.tableThickness + this.config.netHeight / 2,
       this.config.tablePositionZ
     );
     this.cannon.world.add(this.cannon.net);
@@ -302,50 +338,119 @@ class PingPong {
     this.cannon.world.add(this.cannon.paddlePlayer);
   }
 
-  setMode(mode) {
-    let targetColor = new THREE.Color(mode === MODE.AGAINST_THE_WALL ? this.config.colors.PINK : this.config.colors.BLUE);
-    let no = {
-      rotation: 0,
-      bouncyness: this.config.tableBouncyNess,
-      r: this.tableHalfEnemy.material.color.r,
-      g: this.tableHalfEnemy.material.color.g,
-      b: this.tableHalfEnemy.material.color.b,
-    };
-    //this.tableHalfEnemy.geometry.translate(0, -this.config.tableHeight / 2, -this.config.tableDepth / 4);
-    //// let translationMatrix = new THREE.Matrix4().makeTranslation(0, -this.config.tableHeight / 2, -this.config.tableDepth / 4);
-    //// this.tableHalfEnemy.geometry.applyMatrix(translationMatrix);
-    //this.tableHalfEnemy.position.y += this.config.tableHeight / 2;
-    //this.tableHalfEnemy.position.z += this.config.tableDepth / 4;
-    let originMatrix = this.tableHalfEnemy.matrix.clone()
+  setMode(nextMode) {
+    // revert alterations made by modes
+    if (this.config.mode === MODE.HIT_THE_TARGET) {
+      this.tableHalfEnemy.geometry.dispose();
+      this.tableHalfPlayer.geometry.dispose();
+      this.setupTable();
+      this.net.visible = true;
+    }
 
+    if (this.config.mode === MODE.AGAINST_THE_WALL || nextMode === MODE.AGAINST_THE_WALL) {
+      let targetColor = new THREE.Color(nextMode === MODE.AGAINST_THE_WALL ? this.config.colors.PINK : this.config.colors.BLUE);
+      let no = {
+        rotation: 0,
+        bouncyness: this.config.tableBouncyNess,
+        r: this.tableHalfEnemy.material.color.r,
+        g: this.tableHalfEnemy.material.color.g,
+        b: this.tableHalfEnemy.material.color.b,
+      };
+      //this.tableHalfEnemy.geometry.translate(0, -this.config.tableHeight / 2, -this.config.tableDepth / 4);
+      //// let translationMatrix = new THREE.Matrix4().makeTranslation(0, -this.config.tableHeight / 2, -this.config.tableDepth / 4);
+      //// this.tableHalfEnemy.geometry.applyMatrix(translationMatrix);
+      //this.tableHalfEnemy.position.y += this.config.tableHeight / 2;
+      //this.tableHalfEnemy.position.z += this.config.tableDepth / 4;
+      let originMatrix = this.tableHalfEnemy.matrix.clone()
 
-    TweenMax.to(no, 1.2, {
-      rotation: mode === MODE.AGAINST_THE_WALL ? Math.PI / 2 : -Math.PI / 2,
-      bouncyness: 0,
-      r: targetColor.r,
-      g: targetColor.g,
-      b: targetColor.b,
-      onUpdate: () => {
-        let transformMatrix = originMatrix.clone()
-        transformMatrix.multiply(new THREE.Matrix4().makeTranslation(0, +this.config.tableHeight / 2, +this.config.tableDepth / 4))
-        transformMatrix.multiply(new THREE.Matrix4().makeRotationX(no.rotation))
-        transformMatrix.multiply(new THREE.Matrix4().makeTranslation(0, -this.config.tableHeight / 2, -this.config.tableDepth / 4))
-          //.makeRotationX(no.rotation)
-    
-        this.tableHalfEnemy.matrix = transformMatrix;
-        // this.tableHalfEnemy.rotation.x = no.rotation;
-        this.tableHalfEnemy.material.color.setRGB(no.r, no.g, no.b);
-        //this.tableHalfEnemy.matrixWorldNeedsUpdate = true;
-        this.tableHalfEnemy.matrixAutoUpdate = false;
-        // this.cannon.ballTableEnemyContact = no.bouncyness;
-        // this.cannon.ballTablePlayerContact = no.bouncyness;
-        this.cannon.tableHalfEnemy.position.copy(this.tableHalfEnemy.getWorldPosition());
-        this.cannon.tableHalfEnemy.quaternion.copy(this.tableHalfEnemy.getWorldQuaternion());
-      },
-      onComplete: () => {
-        this.config.mode = mode;
-      }
-    });
+      TweenMax.to(no, 1.2, {
+        rotation: this.config.mode === MODE.AGAINST_THE_WALL ? -Math.PI / 2 : (nextMode === MODE.AGAINST_THE_WALL ? Math.PI / 2 : 0),
+        bouncyness: 0,
+        r: targetColor.r,
+        g: targetColor.g,
+        b: targetColor.b,
+        onUpdate: () => {
+          let transformMatrix = originMatrix.clone()
+          transformMatrix.multiply(new THREE.Matrix4().makeTranslation(0, +this.config.tableThickness / 2, +this.config.tableDepth / 4))
+          transformMatrix.multiply(new THREE.Matrix4().makeRotationX(no.rotation))
+          transformMatrix.multiply(new THREE.Matrix4().makeTranslation(0, -this.config.tableThickness / 2, -this.config.tableDepth / 4))
+            //.makeRotationX(no.rotation)
+      
+          this.tableHalfEnemy.matrix = transformMatrix;
+          // this.tableHalfEnemy.rotation.x = no.rotation;
+          this.tableHalfEnemy.material.color.setRGB(no.r, no.g, no.b);
+          //this.tableHalfEnemy.matrixWorldNeedsUpdate = true;
+          this.tableHalfEnemy.matrixAutoUpdate = false;
+          // this.cannon.ballTableEnemyContact = no.bouncyness;
+          // this.cannon.ballTablePlayerContact = no.bouncyness;
+          this.cannon.tableHalfEnemy.position.copy(this.tableHalfEnemy.getWorldPosition());
+          this.cannon.tableHalfEnemy.quaternion.copy(this.tableHalfEnemy.getWorldQuaternion());
+        },
+        onComplete: () => {
+          this.config.mode = nextMode;
+        }
+      });
+    }
+    if (nextMode === MODE.HIT_THE_TARGET) {
+      let table1 = new ThreeBSP(new THREE.Mesh(this.tableHalfEnemy.geometry.clone()));
+      let table2 = new ThreeBSP(new THREE.Mesh(this.tableHalfPlayer.geometry.clone()));
+      let holes = [
+        {x: -0.7, z: -0.7, r: 0.2},
+        {x: +0.5, z: +0.5, r: 0.15},
+        {x: -0.4, z: +0.47, r: 0.4},
+        {x: +0.4, z: -0.7, r: 0.3},
+      ]
+      holes.forEach(hole => {
+        let threeSphere = new THREE.Mesh(new THREE.CylinderGeometry(hole.r, hole.r, 1, 4));
+        threeSphere.position.x = hole.x;
+        threeSphere.position.z = hole.z;
+        let csgSphere = new ThreeBSP(threeSphere);
+        table1 = table1.subtract(csgSphere);
+
+        threeSphere.position.x = -hole.x;
+        threeSphere.position.z = hole.z;
+        csgSphere = new ThreeBSP(threeSphere);
+        table2 = table2.subtract(csgSphere);
+      });
+      this.net.visible = false;
+      this.tableHalfEnemy.geometry.dispose();
+      this.tableHalfPlayer.geometry.dispose();
+      this.tableHalfEnemy.geometry = table1.toGeometry();
+      this.tableHalfPlayer.geometry = table2.toGeometry();
+
+      let vertices = [];
+      let faces = [];
+      this.tableHalfPlayer.geometry.vertices.forEach(vertex => {
+        vertices.push(vertex.x);
+        vertices.push(vertex.y);
+        vertices.push(vertex.z);
+      });
+      this.tableHalfPlayer.geometry.faces.forEach(face => {
+        faces.push(face.a);
+        faces.push(face.b);
+        faces.push(face.c);
+      });
+      let trimesh = new CANNON.Trimesh(vertices, faces);
+      this.cannon.tableHalfPlayer.shapes = [];
+      this.cannon.tableHalfPlayer.addShape(trimesh);
+
+      vertices = [];
+      faces = [];
+      this.tableHalfEnemy.geometry.vertices.forEach(vertex => {
+        vertices.push(vertex.x);
+        vertices.push(vertex.y);
+        vertices.push(vertex.z);
+      });
+      this.tableHalfEnemy.geometry.faces.forEach(face => {
+        faces.push(face.a);
+        faces.push(face.b);
+        faces.push(face.c);
+      });
+      trimesh = new CANNON.Trimesh(vertices, faces);
+      this.cannon.tableHalfEnemy.shapes = [];
+      this.cannon.tableHalfEnemy.addShape(trimesh);
+    }
+    this.config.mode = nextMode;
   }
 
   groundCollision(e) {
@@ -389,42 +494,10 @@ class PingPong {
     });
     this.paddle = new THREE.Mesh(geometry, material);
     this.paddle.name = 'paddle';
+    this.paddle.castShadow = true;
     this.scene.add(this.paddle);
 
-    // table
-    geometry = new THREE.BoxGeometry(
-      this.config.tableWidth,
-      this.config.tableHeight,
-      this.config.tableDepth / 2
-    );
-    material = new THREE.MeshLambertMaterial({
-      color: this.config.colors.BLUE,
-    });
-    this.tableHalfPlayer = new THREE.Mesh(geometry, material);
-    this.tableHalfPlayer.position.set(
-      0,
-      this.config.tableHeight / 2,
-      this.config.tablePositionZ + this.config.tableDepth / 4
-    );
-    this.tableHalfPlayer.receiveShadow = true;
-    this.scene.add(this.tableHalfPlayer);
-
-    geometry = new THREE.BoxGeometry(
-      this.config.tableWidth,
-      this.config.tableHeight,
-      this.config.tableDepth / 2
-    );
-    material = new THREE.MeshLambertMaterial({
-      color: this.config.colors.BLUE,
-    });
-    this.tableHalfEnemy = new THREE.Mesh(geometry, material);
-    this.tableHalfEnemy.position.set(
-      0,
-      this.config.tableHeight / 2,
-      this.config.tablePositionZ - this.config.tableDepth / 4
-    );
-    this.tableHalfPlayer.receiveShadow = true;
-    this.scene.add(this.tableHalfEnemy);
+    this.setupTable();
 
     // net
     geometry = new THREE.BoxGeometry(
@@ -438,8 +511,9 @@ class PingPong {
       opacity: 0.5,
     });
     this.net = new THREE.Mesh(geometry, material);
-    this.net.position.y = this.config.tableHeight / 2 + this.config.netHeight / 2;
+    this.net.position.y = this.config.tableThickness / 2 + this.config.netHeight / 2;
     // TODO is this correct?
+    this.net.castShadow = true;
     this.net.position.z = -this.config.tableDepth / 4;
     this.tableHalfPlayer.add(this.net);
   }
@@ -452,8 +526,48 @@ class PingPong {
     this.paddlePlane = new THREE.Mesh(geometry, material);
     this.paddlePlane.position.z = this.config.paddlePositionZ;
     this.paddlePlane.position.y = this.config.boxHeight / 2;
+    // TODO find better way of doing this
     //this.paddlePlane.visible = false;
     this.scene.add(this.paddlePlane);
+  }
+
+  setupTable() {
+    // table
+    let geometry = new THREE.BoxGeometry(
+      this.config.tableWidth,
+      this.config.tableThickness,
+      this.config.tableDepth / 2
+    );
+    let material = new THREE.MeshLambertMaterial({
+      color: this.config.colors.BLUE,
+    });
+    this.tableHalfPlayer = new THREE.Mesh(geometry, material);
+    this.tableHalfPlayer.position.set(
+      0,
+      this.config.tableHeight + this.config.tableThickness / 2,
+      this.config.tablePositionZ + this.config.tableDepth / 4
+    );
+    this.tableHalfPlayer.receiveShadow = true;
+    this.tableHalfPlayer.castShadow = true;
+    this.scene.add(this.tableHalfPlayer);
+
+    geometry = new THREE.BoxGeometry(
+      this.config.tableWidth,
+      this.config.tableThickness,
+      this.config.tableDepth / 2
+    );
+    material = new THREE.MeshLambertMaterial({
+      color: this.config.colors.BLUE,
+    });
+    this.tableHalfEnemy = new THREE.Mesh(geometry, material);
+    this.tableHalfEnemy.position.set(
+      0,
+      this.config.tableHeight + this.config.tableThickness / 2,
+      this.config.tablePositionZ - this.config.tableDepth / 4
+    );
+    this.tableHalfPlayer.receiveShadow = true;
+    this.tableHalfPlayer.castShadow = true;
+    this.scene.add(this.tableHalfEnemy);
   }
 
   setupControllers() {
@@ -511,13 +625,15 @@ class PingPong {
     this.scene.add(light);
 
     light.castShadow = true;
-    //light.shadow.bias = 0.001;
-    light.shadow.camera.near = 1;
-    light.shadow.camera.far = 6;
+    light.shadow.mapSize.width = 1024 * 2; 
+    light.shadow.mapSize.height = 1024 * 2 ;
+    light.shadow.bias = 0.01;
+    light.shadow.camera.near = 0.4;
+    light.shadow.camera.far = 2;
     light.shadow.camera.left = 0;
 
-    // let ch = new THREE.CameraHelper(light.shadow.camera);
-    // this.scene.add(ch);
+   // let ch = new THREE.CameraHelper(light.shadow.camera);
+   // this.scene.add(ch);
 
   }
 
@@ -551,6 +667,7 @@ class PingPong {
     this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
     switch (this.config.mode) {
       case MODE.ONE_ON_ONE:
+      case MODE.HIT_THE_TARGET:
         ball.position.set(0, 1, this.config.boxDepth * -0.8);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.2;
         ball.velocity.y = this.config.ballInitVelocity * 2.5;
@@ -690,12 +807,20 @@ class PingPong {
             this.paddle.position.z = this.config.paddlePositionZ + 0.03;
             this.cannon.paddlePlayer.position.x = posX;
             this.cannon.paddlePlayer.position.y = posY;
+            this.cannon.paddlePlayer.position.z = this.config.paddlePositionZ + 0.03;
+
+            if (this.pan) {
+              this.pan.position.x = posX;
+              this.pan.position.y = posY;
+              this.pan.position.z = this.config.paddlePositionZ + 0.08;
+            }
+
           }
         } else if (this.controlMode === 'move' && controller) {
           let direction = new THREE.Vector3(0, 0, -1);
           direction.applyQuaternion(controller.getWorldQuaternion());
           direction.normalize();
-          this.raycaster.set(controller.getWorldPosition(), direction );
+          this.raycaster.set(controller.getWorldPosition(), direction);
           this.raycaster.far = 10;
           let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
           if (intersects.length > 0) {
@@ -711,10 +836,11 @@ class PingPong {
 
     // predict ball position in the next frame (continous collision detection)
     for (let i = 0; i < this.balls.length; i++) {
-      if (this.cannon.balls[i].velocity.length() > 7) {
+      if (this.cannon.balls[i].velocity.length() > 2) {
         this.raycaster.set(this.cannon.balls[i].position.clone(), this.cannon.balls[i].velocity.clone().unit());
-        this.raycaster.far = 0.3;
-        let arr = this.raycaster.intersectObjects([this.paddle, this.net]);
+        this.raycaster.far = this.cannon.balls[i].velocity.clone().length() / 50;
+        //this.raycaster.far = 0.3;
+        let arr = this.raycaster.intersectObjects([this.paddle, this.net, this.tableHalfPlayer, this.tableHalfEnemy]);
         if (arr.length) {
           this.cannon.balls[i].position.copy(arr[0].point);
         }
@@ -723,11 +849,16 @@ class PingPong {
       this.balls[i].quaternion.copy(this.cannon.balls[i].quaternion);
     }
 
+    if (this.pan) {
+      this.pan.rotateY(delta * 0.0003);
+    }
+
     this.cannon.world.step(delta / 1000);
+    if (DEBUG_MODE) {
+      this.cannonDebugRenderer.update();
+    }
 
-
-
-    // Update VR headset position and thisly to camera.
+    // Update VR headset position and apply to camera.
     this.controls.update();
 
     // Render the scene through the manager.
