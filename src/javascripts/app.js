@@ -42,6 +42,8 @@ class PingPong {
     this.ballResetTimeout = null;
     this.cannonDebugRenderer = null;
     this.pan = null;
+    this.correctBallXVelocity = null;
+    this.ballReference = null;
 
     this.cannon = {
       world: null,
@@ -82,6 +84,19 @@ class PingPong {
       ballPaddleFriction: 0.8,
       ballPaddleBounciness: 0.98,
       ballInitVelocity: 1.5,
+      paddleModel: 'box',
+      // holes are relative to table center
+      holes: [
+        //{x: -0.7, z: -1.7, r: 0.2},
+        //{x: +0.5, z: +1.5, r: 0.15},
+        //{x: -0.4, z: +1.47, r: 0.4},
+        //{x: +0.4, z: -1.7, r: 0.3},
+        {x: +0.5, z: +1.3, r: 0.3},
+        {x: +0.5, z: -1.3, r: 0.3},
+        {x: -0.5, z: +1.3, r: 0.3},
+        {x: -0.5, z: -1.3, r: 0.3},
+        {x: 0, z: 0, r: 0.5},
+      ],
       colors: {
         BLUE: 0x124888,
         BACKGROUND_BLUE: 0x2D68A4,
@@ -182,8 +197,6 @@ class PingPong {
       this.renderer.domElement.requestPointerLock();
     };
 
-    this.loadPan();
-    
     this.setupCannon();
     this.setupScene();
 
@@ -220,6 +233,9 @@ class PingPong {
     });
     // gui.add(this, 'ballPaddleFriction', 0, 1).onChange(val => this.ballPaddleContact.friction = val);
     gui.add(this.config, 'ballPaddleBounciness', 0, 5).onChange(val => this.ballPaddleContact.restitution = val);
+    gui.add(this.config, 'paddleModel', ['box', 'pan']).onChange(val => {
+      this.switchPaddle(val);
+    });
   }
 
   loadPan() {
@@ -258,7 +274,6 @@ class PingPong {
       material: new CANNON.Material(),
     });
     this.cannon.ground.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-    this.cannon.ground.addEventListener("collide", this.groundCollision.bind(this));
     this.cannon.world.add(this.cannon.ground);
 
     // table
@@ -279,6 +294,7 @@ class PingPong {
       this.config.tableHeight + this.config.tableThickness / 2,
       this.config.tablePositionZ + this.config.tableDepth / 4
     );
+    this.cannon.tableHalfPlayer.addEventListener("collide", this.tableCollision.bind(this));
     this.cannon.world.add(this.cannon.tableHalfPlayer);
 
     this.cannon.tableHalfEnemy = new CANNON.Body({
@@ -298,6 +314,7 @@ class PingPong {
       this.config.tableHeight + this.config.tableThickness / 2,
       this.config.tablePositionZ - this.config.tableDepth / 4
     );
+    this.cannon.tableHalfEnemy.addEventListener("collide", this.tableCollision.bind(this));
     this.cannon.world.add(this.cannon.tableHalfEnemy);
 
     // net
@@ -341,6 +358,9 @@ class PingPong {
   setMode(nextMode) {
     // revert alterations made by modes
     if (this.config.mode === MODE.HIT_THE_TARGET) {
+      this.scene.remove(this.tableHalfEnemy);
+      this.scene.remove(this.tableHalfPlayer);
+      this.cannon.net.collisionResponse = 1;
       this.tableHalfEnemy.geometry.dispose();
       this.tableHalfPlayer.geometry.dispose();
       this.setupTable();
@@ -356,11 +376,7 @@ class PingPong {
         g: this.tableHalfEnemy.material.color.g,
         b: this.tableHalfEnemy.material.color.b,
       };
-      //this.tableHalfEnemy.geometry.translate(0, -this.config.tableHeight / 2, -this.config.tableDepth / 4);
-      //// let translationMatrix = new THREE.Matrix4().makeTranslation(0, -this.config.tableHeight / 2, -this.config.tableDepth / 4);
-      //// this.tableHalfEnemy.geometry.applyMatrix(translationMatrix);
-      //this.tableHalfEnemy.position.y += this.config.tableHeight / 2;
-      //this.tableHalfEnemy.position.z += this.config.tableDepth / 4;
+
       let originMatrix = this.tableHalfEnemy.matrix.clone()
 
       TweenMax.to(no, 1.2, {
@@ -387,75 +403,91 @@ class PingPong {
           this.cannon.tableHalfEnemy.quaternion.copy(this.tableHalfEnemy.getWorldQuaternion());
         },
         onComplete: () => {
+          if (nextMode === MODE.HIT_THE_TARGET) {
+            this.setHitTheTargetMode();
+          }
           this.config.mode = nextMode;
         }
       });
-    }
-    if (nextMode === MODE.HIT_THE_TARGET) {
-      let table1 = new ThreeBSP(new THREE.Mesh(this.tableHalfEnemy.geometry.clone()));
-      let table2 = new ThreeBSP(new THREE.Mesh(this.tableHalfPlayer.geometry.clone()));
-      let holes = [
-        {x: -0.7, z: -0.7, r: 0.2},
-        {x: +0.5, z: +0.5, r: 0.15},
-        {x: -0.4, z: +0.47, r: 0.4},
-        {x: +0.4, z: -0.7, r: 0.3},
-      ]
-      holes.forEach(hole => {
-        let threeSphere = new THREE.Mesh(new THREE.CylinderGeometry(hole.r, hole.r, 1, 4));
-        threeSphere.position.x = hole.x;
-        threeSphere.position.z = hole.z;
-        let csgSphere = new ThreeBSP(threeSphere);
-        table1 = table1.subtract(csgSphere);
-
-        threeSphere.position.x = -hole.x;
-        threeSphere.position.z = hole.z;
-        csgSphere = new ThreeBSP(threeSphere);
-        table2 = table2.subtract(csgSphere);
-      });
-      this.net.visible = false;
-      this.tableHalfEnemy.geometry.dispose();
-      this.tableHalfPlayer.geometry.dispose();
-      this.tableHalfEnemy.geometry = table1.toGeometry();
-      this.tableHalfPlayer.geometry = table2.toGeometry();
-
-      let vertices = [];
-      let faces = [];
-      this.tableHalfPlayer.geometry.vertices.forEach(vertex => {
-        vertices.push(vertex.x);
-        vertices.push(vertex.y);
-        vertices.push(vertex.z);
-      });
-      this.tableHalfPlayer.geometry.faces.forEach(face => {
-        faces.push(face.a);
-        faces.push(face.b);
-        faces.push(face.c);
-      });
-      let trimesh = new CANNON.Trimesh(vertices, faces);
-      this.cannon.tableHalfPlayer.shapes = [];
-      this.cannon.tableHalfPlayer.addShape(trimesh);
-
-      vertices = [];
-      faces = [];
-      this.tableHalfEnemy.geometry.vertices.forEach(vertex => {
-        vertices.push(vertex.x);
-        vertices.push(vertex.y);
-        vertices.push(vertex.z);
-      });
-      this.tableHalfEnemy.geometry.faces.forEach(face => {
-        faces.push(face.a);
-        faces.push(face.b);
-        faces.push(face.c);
-      });
-      trimesh = new CANNON.Trimesh(vertices, faces);
-      this.cannon.tableHalfEnemy.shapes = [];
-      this.cannon.tableHalfEnemy.addShape(trimesh);
+    } else if (nextMode === MODE.HIT_THE_TARGET) {
+      this.setHitTheTargetMode();
     }
     this.config.mode = nextMode;
   }
 
-  groundCollision(e) {
-    if (e.body.name === 'BALL') {
-      // this.initBallPosition(e.body);
+  setHitTheTargetMode() {
+    this.tableHalfEnemy.matrixAutoUpdate = true;
+    this.cannon.net.collisionResponse = 0;
+    let geometry = new THREE.BoxGeometry(
+      this.config.tableWidth,
+      this.config.tableThickness,
+      this.config.tableDepth
+    );
+    let table = new ThreeBSP(new THREE.Mesh(geometry));
+    this.config.holes.forEach(hole => {
+      let threeSphere = new THREE.Mesh(new THREE.CylinderGeometry(hole.r, hole.r, 1, 16));
+      threeSphere.position.x = hole.x;
+      threeSphere.position.z = hole.z;
+      let csgSphere = new ThreeBSP(threeSphere);
+      table = table.subtract(csgSphere);
+    });
+    this.net.visible = false;
+    this.tableHalfEnemy.geometry.dispose();
+    this.tableHalfPlayer.geometry.dispose();
+    this.scene.remove(this.tableHalfPlayer);
+    this.tableHalfEnemy.geometry = table.toGeometry();
+    this.tableHalfEnemy.position.set(
+      0,
+      this.config.tableHeight + this.config.tableThickness / 2,
+      this.config.tablePositionZ,
+    );
+
+    /*
+    let heightfieldWidth = Math.floor(this.config.tableWidth * 80);
+    let heightfieldDepth = Math.floor((this.config.tableDepth / 2) * 80);
+    let heightfield = []
+    for (let z = 0; z < heightfieldDepth; z++) {
+      heightfield.push([]);
+      for (let x = 0; x < heightfieldWidth; x++) {
+        let isInCircle = false;
+        holes.forEach(hole => {
+          let localX = 2 * ((x / heightfieldWidth) - 0.5);
+          let localZ = 2 * ((z / heightfieldDepth) - 0.5);
+          if (Math.sqrt(Math.pow(localX - hole.x, 2) + Math.pow(localZ - hole.z, 2)) <= hole.r) {
+            isInCircle = true;
+          }
+        });
+        heightfield[z].push(isInCircle ? -1 : 0);
+      }
+    }
+    console.log(heightfield);
+    let heightfieldShape = new CANNON.Heightfield(heightfield, {
+      minValue: -1,
+      maxValue: 0,
+      elementSize: 0.01,
+    });
+    let heightfieldBody = new CANNON.Body({
+      mass: 0,
+      material: new CANNON.Material(),
+    });
+    heightfieldBody.addShape(heightfieldShape);
+    heightfieldBody.position.set(
+      -this.config.tableWidth / 2,
+      this.config.tableHeight + this.config.tableThickness + 0.08,
+      this.config.tablePositionZ + this.config.tableDepth / 2
+    );
+    heightfieldBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
+    this.cannon.world.removeBody(this.cannon.tableHalfPlayer);
+    this.cannon.tableHalfPlayer = heightfieldBody;
+    this.cannon.world.addBody(this.cannon.tableHalfPlayer);
+    //console.log(heightfieldBody);
+    */
+  }
+
+  tableCollision(e) {
+    if (e.body.name === 'BALL' && this.config.mode === MODE.HIT_THE_TARGET) {
+      // this.correctBallYVelocity = e.body.velocity.y;
+      // this.ballReference = e.body;
     }
   }
 
@@ -477,6 +509,9 @@ class PingPong {
       if (this.config.mode === MODE.AGAINST_THE_WALL) {
         e.body.velocity.y = 5;
         e.body.velocity.z = 5;
+      } else if (this.config.mode === MODE.HIT_THE_TARGET) {
+        e.body.velocity.y *= 2 * e.body.velocity.z;
+        e.body.velocity.z = (hitpointY + 0.5) * 7;
       } else {
         e.body.velocity.y *= 2 * e.body.velocity.z;
         e.body.velocity.z *= 4;
@@ -511,11 +546,43 @@ class PingPong {
       opacity: 0.5,
     });
     this.net = new THREE.Mesh(geometry, material);
-    this.net.position.y = this.config.tableThickness / 2 + this.config.netHeight / 2;
+    this.net.position.y = this.config.tableHeight + this.config.tableThickness + this.config.netHeight / 2;
+    this.net.position.z = this.config.tablePositionZ;
     // TODO is this correct?
     this.net.castShadow = true;
-    this.net.position.z = -this.config.tableDepth / 4;
-    this.tableHalfPlayer.add(this.net);
+    //this.net.position.z = -this.config.tableDepth / 4;
+    this.scene.add(this.net);
+  }
+
+  switchPaddle(model) {
+    if (model === 'pan') {
+      if (!this.pan) {
+        let loader = new THREE.OBJLoader();
+        loader.setPath('/models/');
+        loader.load('Pan.obj', object => {
+          this.pan = object;
+          this.pan.children.forEach(child => {
+            child.material.side = THREE.DoubleSide;
+            child.material.side = THREE.DoubleSide;
+            child.material.side = THREE.DoubleSide;
+            child.material.transparent = true;
+            child.material.opacity = 0.5;
+          });
+          let panScale = 0.001;
+          this.pan.scale.set(panScale, panScale, panScale);
+          this.pan.position.set(0, 1.1, -1.2);
+          this.pan.rotateX(Math.PI / 2);
+          this.scene.add(object);
+          this.paddle.visible = false;
+        });
+      } else {
+        this.pan.visible = true;
+      }
+      this.paddle.visible = false;
+    } else {
+      this.pan.visible = false;
+      this.paddle.visible = true;
+    }
   }
 
   setupPaddlePlane() {
@@ -667,11 +734,19 @@ class PingPong {
     this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
     switch (this.config.mode) {
       case MODE.ONE_ON_ONE:
-      case MODE.HIT_THE_TARGET:
         ball.position.set(0, 1, this.config.boxDepth * -0.8);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.2;
         ball.velocity.y = this.config.ballInitVelocity * 2.5;
         ball.velocity.z = this.config.ballInitVelocity * 6.0;
+        ball.angularVelocity.x = 0;
+        ball.angularVelocity.y = 0;
+        ball.angularVelocity.z = 0;
+        break;
+      case MODE.HIT_THE_TARGET:
+        ball.position.set(0, 1, this.config.boxDepth * -0.5);
+        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.2;
+        ball.velocity.y = this.config.ballInitVelocity * 2.5;
+        ball.velocity.z = this.config.ballInitVelocity * 5.0;
         ball.angularVelocity.x = 0;
         ball.angularVelocity.y = 0;
         ball.angularVelocity.z = 0;
@@ -836,13 +911,32 @@ class PingPong {
 
     // predict ball position in the next frame (continous collision detection)
     for (let i = 0; i < this.balls.length; i++) {
-      if (this.cannon.balls[i].velocity.length() > 2) {
+      if (this.cannon.balls[i].velocity.length() > 0.3) {
         this.raycaster.set(this.cannon.balls[i].position.clone(), this.cannon.balls[i].velocity.clone().unit());
         this.raycaster.far = this.cannon.balls[i].velocity.clone().length() / 50;
         //this.raycaster.far = 0.3;
-        let arr = this.raycaster.intersectObjects([this.paddle, this.net, this.tableHalfPlayer, this.tableHalfEnemy]);
+        //let arr = this.raycaster.intersectObjects([this.paddle, this.net, this.tableHalfPlayer, this.tableHalfEnemy]);
+        let arr = this.raycaster.intersectObjects([this.paddle, this.net]);
         if (arr.length) {
           this.cannon.balls[i].position.copy(arr[0].point);
+        }
+        arr = this.raycaster.intersectObjects([this.tableHalfPlayer, this.tableHalfEnemy]);
+        if (arr.length) {
+          if (this.config.mode === MODE.HIT_THE_TARGET) {
+            // temporarily remove the body
+            let localZ = arr[0].point.z - this.config.tablePositionZ;
+            let isInCircle = false;
+            this.config.holes.forEach(hole => {
+              if (Math.sqrt(Math.pow(arr[0].point.x - hole.x, 2) + Math.pow(localZ - hole.z, 2)) <= hole.r) {
+                isInCircle = true;
+              }
+            });
+            if (isInCircle) {
+              this.cannon.balls[i].collisionResponse = false;
+            }
+          } else {
+            this.cannon.balls[i].position.copy(arr[0].point);
+          }
         }
       }
       this.balls[i].position.copy(this.cannon.balls[i].position);
@@ -854,6 +948,13 @@ class PingPong {
     }
 
     this.cannon.world.step(delta / 1000);
+
+    if (this.correctBallYVelocity) {
+      // this.ballReference.velocity.y = this.correctBallYVelocity;
+      // this.correctBallYVelocity = null;
+    }
+
+
     if (DEBUG_MODE) {
       this.cannonDebugRenderer.update();
     }
