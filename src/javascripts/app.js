@@ -3,6 +3,7 @@ import TweenMax from 'gsap';
 import {MODE} from 'constants/modes';
 
 const resetTimeout = 2000;
+const resetTimeoutMultiball = 500;
 const DEBUG_MODE = false;
 
 class PingPong {
@@ -34,7 +35,6 @@ class PingPong {
     this.canvasDOM = document.querySelector('canvas');
     this.seconds = 0;
     this.tabActive = true;
-    this.ballPaddleContact = null;
     this.balls = [];
     this.cameraHeight = 1.2;
     this.gamemode = MODE.ONE_ON_ONE;
@@ -58,6 +58,7 @@ class PingPong {
       ballGroundContact: null,
       ballTablePlayerContact: null,
       ballTableEnemyContact: null,
+      ballPaddleContact: null,
     }
 
     // config
@@ -215,7 +216,7 @@ class PingPong {
   setupGUI() {
     let gui = new dat.GUI();
     gui.remember(this);
-    gui.add(this, 'gamemode', [MODE.ONE_ON_ONE, MODE.AGAINST_THE_WALL, MODE.HIT_THE_TARGET]).onChange(val => {
+    gui.add(this, 'gamemode', [MODE.ONE_ON_ONE, MODE.AGAINST_THE_WALL, MODE.TOO_MANY_BALLS, MODE.HIT_THE_TARGET]).onChange(val => {
       if (val !== this.config.mode) {
         this.setMode(val);
       }
@@ -232,7 +233,7 @@ class PingPong {
       this.cannon.ballTableEnemyContact.restitution = val
     });
     // gui.add(this, 'ballPaddleFriction', 0, 1).onChange(val => this.ballPaddleContact.friction = val);
-    gui.add(this.config, 'ballPaddleBounciness', 0, 5).onChange(val => this.ballPaddleContact.restitution = val);
+    gui.add(this.config, 'ballPaddleBounciness', 0, 5).onChange(val => this.cannon.ballPaddleContact.restitution = val);
     gui.add(this.config, 'paddleModel', ['box', 'pan']).onChange(val => {
       this.switchPaddle(val);
     });
@@ -355,32 +356,50 @@ class PingPong {
     this.cannon.world.add(this.cannon.paddlePlayer);
   }
 
+  setupCannonTable() {
+  }
+
   setMode(nextMode) {
     // revert alterations made by modes
     if (this.config.mode === MODE.HIT_THE_TARGET) {
       this.scene.remove(this.tableHalfEnemy);
       this.scene.remove(this.tableHalfPlayer);
       this.cannon.net.collisionResponse = 1;
+      this.net.visible = true;
       this.tableHalfEnemy.geometry.dispose();
       this.tableHalfPlayer.geometry.dispose();
+      this.tableHalfEnemy = null;
+      this.tableHalfPlayer = null;
+      //this.tableHalfEnemy.matrixAutoUpdate = true;
       this.setupTable();
-      this.net.visible = true;
+      this.tableHalfEnemy.geometry.matrix = new THREE.Matrix4();
+    }
+
+    if (nextMode === MODE.TOO_MANY_BALLS) {
+      clearTimeout(this.ballResetTimeout);
+      this.tooManyBallsInterval = setInterval(this.addBall.bind(this), resetTimeoutMultiball);
+    }
+    if (this.config.mode === MODE.TOO_MANY_BALLS) {
+      clearInterval(this.tooManyBallsInterval);
+      this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
     }
 
     if (this.config.mode === MODE.AGAINST_THE_WALL || nextMode === MODE.AGAINST_THE_WALL) {
+      this.tableHalfEnemy.geometry.matrix = new THREE.Matrix4();
       let targetColor = new THREE.Color(nextMode === MODE.AGAINST_THE_WALL ? this.config.colors.PINK : this.config.colors.BLUE);
       let no = {
         rotation: 0,
-        bouncyness: this.config.tableBouncyNess,
+        bouncyness: this.config.tableBouncyness,
         r: this.tableHalfEnemy.material.color.r,
         g: this.tableHalfEnemy.material.color.g,
         b: this.tableHalfEnemy.material.color.b,
       };
 
-      let originMatrix = this.tableHalfEnemy.matrix.clone()
+      let originMatrix = this.tableHalfEnemy.matrix.clone();
 
       TweenMax.to(no, 1.2, {
-        rotation: this.config.mode === MODE.AGAINST_THE_WALL ? -Math.PI / 2 : (nextMode === MODE.AGAINST_THE_WALL ? Math.PI / 2 : 0),
+        rotation: this.config.mode === MODE.AGAINST_THE_WALL ?
+          -Math.PI / 2 : (nextMode === MODE.AGAINST_THE_WALL ? Math.PI / 2 : 0),
         bouncyness: 0,
         r: targetColor.r,
         g: targetColor.g,
@@ -394,13 +413,14 @@ class PingPong {
       
           this.tableHalfEnemy.matrix = transformMatrix;
           // this.tableHalfEnemy.rotation.x = no.rotation;
-          this.tableHalfEnemy.material.color.setRGB(no.r, no.g, no.b);
           //this.tableHalfEnemy.matrixWorldNeedsUpdate = true;
           this.tableHalfEnemy.matrixAutoUpdate = false;
           // this.cannon.ballTableEnemyContact = no.bouncyness;
           // this.cannon.ballTablePlayerContact = no.bouncyness;
           this.cannon.tableHalfEnemy.position.copy(this.tableHalfEnemy.getWorldPosition());
           this.cannon.tableHalfEnemy.quaternion.copy(this.tableHalfEnemy.getWorldQuaternion());
+
+          this.tableHalfEnemy.material.color.setRGB(no.r, no.g, no.b);
         },
         onComplete: () => {
           if (nextMode === MODE.HIT_THE_TARGET) {
@@ -425,7 +445,7 @@ class PingPong {
     );
     let table = new ThreeBSP(new THREE.Mesh(geometry));
     this.config.holes.forEach(hole => {
-      let threeSphere = new THREE.Mesh(new THREE.CylinderGeometry(hole.r, hole.r, 1, 16));
+      let threeSphere = new THREE.Mesh(new THREE.CylinderGeometry(hole.r, hole.r, 1, 32));
       threeSphere.position.x = hole.x;
       threeSphere.position.z = hole.z;
       let csgSphere = new ThreeBSP(threeSphere);
@@ -436,11 +456,8 @@ class PingPong {
     this.tableHalfPlayer.geometry.dispose();
     this.scene.remove(this.tableHalfPlayer);
     this.tableHalfEnemy.geometry = table.toGeometry();
-    this.tableHalfEnemy.position.set(
-      0,
-      this.config.tableHeight + this.config.tableThickness / 2,
-      this.config.tablePositionZ,
-    );
+    // this.tableHalfEnemy.matrix = new THREE.Matrix4();
+    this.tableHalfEnemy.geometry.translate(0, 0, this.config.tableDepth / 4);
 
     /*
     let heightfieldWidth = Math.floor(this.config.tableWidth * 80);
@@ -609,6 +626,7 @@ class PingPong {
       color: this.config.colors.BLUE,
     });
     this.tableHalfPlayer = new THREE.Mesh(geometry, material);
+    this.tableHalfPlayer.matrix = new THREE.Matrix4();
     this.tableHalfPlayer.position.set(
       0,
       this.config.tableHeight + this.config.tableThickness / 2,
@@ -627,13 +645,14 @@ class PingPong {
       color: this.config.colors.BLUE,
     });
     this.tableHalfEnemy = new THREE.Mesh(geometry, material);
+    this.tableHalfEnemy.matrix = new THREE.Matrix4();
     this.tableHalfEnemy.position.set(
       0,
       this.config.tableHeight + this.config.tableThickness / 2,
       this.config.tablePositionZ - this.config.tableDepth / 4
     );
-    this.tableHalfPlayer.receiveShadow = true;
-    this.tableHalfPlayer.castShadow = true;
+    this.tableHalfEnemy.receiveShadow = true;
+    this.tableHalfEnemy.castShadow = true;
     this.scene.add(this.tableHalfEnemy);
   }
 
@@ -730,12 +749,23 @@ class PingPong {
   }
 
   initBallPosition(ball) {
-    clearTimeout(this.ballResetTimeout);
-    this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
+    if (this.config.mode !== MODE.TOO_MANY_BALLS) {
+      clearTimeout(this.ballResetTimeout);
+      this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
+    }
     switch (this.config.mode) {
       case MODE.ONE_ON_ONE:
         ball.position.set(0, 1, this.config.boxDepth * -0.8);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.2;
+        ball.velocity.y = this.config.ballInitVelocity * 2.5;
+        ball.velocity.z = this.config.ballInitVelocity * 6.0;
+        ball.angularVelocity.x = 0;
+        ball.angularVelocity.y = 0;
+        ball.angularVelocity.z = 0;
+        break;
+      case MODE.TOO_MANY_BALLS:
+        ball.position.set(0, 1, this.config.boxDepth * -0.8);
+        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
         ball.velocity.y = this.config.ballInitVelocity * 2.5;
         ball.velocity.z = this.config.ballInitVelocity * 6.0;
         ball.angularVelocity.x = 0;
@@ -766,7 +796,18 @@ class PingPong {
   }
 
   addBall() {
-    // cannonball
+    // remove inactive balls
+    this.cannon.balls.forEach((ball, i) => {
+      if (ball.position.y < 0.3) {
+        this.cannon.world.removeBody(ball);
+        this.scene.remove(this.balls[i]);
+        ball.removeFlag = true;
+        this.balls[i].removeFlag = true;
+      }
+    });
+    this.cannon.balls = this.cannon.balls.filter(x => !x.removeFlag);
+    this.balls = this.balls.filter(x => !x.removeFlag);
+
     this.cannon.balls.push(new CANNON.Body({
       mass: this.config.ballMass,
       shape: new CANNON.Sphere(this.config.ballRadius),
@@ -911,7 +952,7 @@ class PingPong {
 
     // predict ball position in the next frame (continous collision detection)
     for (let i = 0; i < this.balls.length; i++) {
-      if (this.cannon.balls[i].velocity.length() > 0.3) {
+      if (this.cannon.balls[i].position.y > 0.3) {
         this.raycaster.set(this.cannon.balls[i].position.clone(), this.cannon.balls[i].velocity.clone().unit());
         this.raycaster.far = this.cannon.balls[i].velocity.clone().length() / 50;
         //this.raycaster.far = 0.3;
@@ -921,23 +962,36 @@ class PingPong {
           this.cannon.balls[i].position.copy(arr[0].point);
         }
         arr = this.raycaster.intersectObjects([this.tableHalfPlayer, this.tableHalfEnemy]);
+
         if (arr.length) {
-          if (this.config.mode === MODE.HIT_THE_TARGET) {
-            // temporarily remove the body
-            let localZ = arr[0].point.z - this.config.tablePositionZ;
-            let isInCircle = false;
-            this.config.holes.forEach(hole => {
-              if (Math.sqrt(Math.pow(arr[0].point.x - hole.x, 2) + Math.pow(localZ - hole.z, 2)) <= hole.r) {
-                isInCircle = true;
-              }
-            });
-            if (isInCircle) {
-              this.cannon.balls[i].collisionResponse = false;
-            }
-          } else {
+          //if (this.config.mode === MODE.HIT_THE_TARGET && this.balls[i].collisionResponse) {
+          //  let localZ = arr[0].point.z - this.config.tablePositionZ;
+          //  let ballIsOverHole = false;
+          //  this.config.holes.forEach(hole => {
+          //    if (Math.sqrt(Math.pow(arr[0].point.x - hole.x, 2) + Math.pow(localZ - hole.z, 2)) <= hole.r) {
+          //      ballIsOverHole = true;
+          //    }
+          //  });
+          //  if (ballIsOverHole) {
+          //    this.cannon.balls[i].collisionResponse = false;
+          //  }
+          //} else {
+          if (this.config.mode !== MODE.HIT_THE_TARGET) {
             this.cannon.balls[i].position.copy(arr[0].point);
           }
+          //}
         }
+        if (this.config.mode === MODE.HIT_THE_TARGET) {
+          let localZ = this.cannon.balls[i].position.z - this.config.tablePositionZ;
+          let ballIsOverHole = false;
+          this.config.holes.forEach(hole => {
+            if (Math.sqrt(Math.pow(this.cannon.balls[i].position.x - hole.x, 2) + Math.pow(localZ - hole.z, 2)) <= hole.r && this.cannon.balls[i].velocity.z < -0) {
+              ballIsOverHole = true;
+            }
+          });
+          this.cannon.balls[i].collisionResponse = !ballIsOverHole;
+        }
+
       }
       this.balls[i].position.copy(this.cannon.balls[i].position);
       this.balls[i].quaternion.copy(this.cannon.balls[i].quaternion);
