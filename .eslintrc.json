@@ -1,0 +1,22 @@
+{
+  "plugins": [],
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 6,
+    "ecmaFeatures": {
+      "sourceType": "module"
+    }
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "rules": {
+    "semi": ["error", "always"],
+    "space-before-function-paren": [2, "never"],
+    "comma-dangle": 0,
+    "operator-linebreak": ["error", "before"],
+    "block-spacing": ["error", "never"],
+    "no-useless-constructor": 0
+  }
+}
