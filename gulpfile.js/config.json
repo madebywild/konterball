@@ -15,7 +15,7 @@
       "src": "static",
       "dest": "./"
     },
-
+    "lint": true,
     "js": {
       "src": "javascripts",
       "dest": "javascripts",

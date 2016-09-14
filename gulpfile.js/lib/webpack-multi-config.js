@@ -21,6 +21,9 @@ module.exports = function(env) {
   var webpackConfig = {
     context: jsSrc,
     plugins: [],
+    eslint: {
+      configFile: './.eslintrc.json'
+    },
     resolve: {
       root: jsSrc,
       extensions: [''].concat(extensions)
@@ -33,6 +36,9 @@ module.exports = function(env) {
           exclude: /node_modules/,
           query: config.tasks.js.babel
         }
+      ],
+      preLoaders: [
+          {test: /\.js$/, loader: "eslint-loader", exclude: /node_modules/}
       ]
     }
   }

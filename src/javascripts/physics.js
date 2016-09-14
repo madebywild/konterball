@@ -12,12 +12,8 @@ export default class Physics {
     this.ground = null;
     this.paddlePlayer = null;
     this.paddleEnemy = null;
-    this.tableHalfPlayer = null;
-    this.tableHalfEnemy = null;
     this.ballNetContact = null;
     this.ballGroundContact = null;
-    this.ballTablePlayerContact = null;
-    this.ballTableEnemyContact = null;
     this.ballPaddleContact = null;
     this.raycaster = new THREE.Raycaster();
 
@@ -30,10 +26,7 @@ export default class Physics {
     this.world.gravity.set(0, -this.config.gravity, 0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
     this.world.solver.iterations = 20;
-    // this.setupGround();
     this.setupBox();
-    // this.setupTable();
-    // this.setupNet();
     this.setupPaddle();
   }
 
@@ -46,47 +39,6 @@ export default class Physics {
     });
     this.ground.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
     this.world.add(this.ground);
-  }
-
-  setupTable() {
-    // table
-    this.tableHalfPlayer = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.tableWidth / 2,
-          this.config.tableThickness / 2,
-          this.config.tableDepth / 4
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.tableHalfPlayer._name = 'TABLE_HALF_PLAYER';
-    this.tableHalfPlayer.position.set(
-      0,
-      this.config.tableHeight + this.config.tableThickness / 2,
-      this.config.tablePositionZ + this.config.tableDepth / 4
-    );
-    this.world.add(this.tableHalfPlayer);
-
-    this.tableHalfEnemy = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.tableWidth / 2,
-          this.config.tableThickness / 2,
-          this.config.tableDepth / 4
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.tableHalfEnemy._name = 'TABLE_HALF_ENEMY';
-    this.tableHalfEnemy.position.set(
-      0,
-      this.config.tableHeight + this.config.tableThickness / 2,
-      this.config.tablePositionZ - this.config.tableDepth / 4
-    );
-    this.world.add(this.tableHalfEnemy);
   }
 
   setupNet() {
@@ -112,7 +64,6 @@ export default class Physics {
   }
 
   setupPaddle() {
-
     // paddle
     this.paddlePlayer = new CANNON.Body({
       mass: 0,
@@ -156,7 +107,7 @@ export default class Physics {
     this.leftWall.position.set(
       -this.config.boxWidth / 2 - wallWidth / 2,
       this.config.boxHeight / 2,
-      this.config.tablePositionZ
+      this.config.boxPositionZ
     );
     this.world.add(this.leftWall);
 
@@ -174,7 +125,7 @@ export default class Physics {
     this.rightWall.position.set(
       this.config.boxWidth / 2 + wallWidth / 2,
       this.config.boxHeight / 2,
-      this.config.tablePositionZ
+      this.config.boxPositionZ
     );
     this.world.add(this.rightWall);
 
@@ -192,7 +143,7 @@ export default class Physics {
     this.bottomWall.position.set(
       0,
       -wallWidth / 2,
-      this.config.tablePositionZ
+      this.config.boxPositionZ
     );
     this.world.add(this.bottomWall);
 
@@ -210,7 +161,7 @@ export default class Physics {
     this.topWall.position.set(
       0,
       this.config.boxHeight + wallWidth / 2,
-      this.config.tablePositionZ
+      this.config.boxPositionZ
     );
     this.world.add(this.topWall);
 
@@ -228,7 +179,7 @@ export default class Physics {
     this.frontWall.position.set(
       0,
       this.config.boxHeight / 2,
-      this.config.tablePositionZ - this.config.boxDepth / 2 - wallWidth / 2
+      this.config.boxPositionZ - this.config.boxDepth / 2 - wallWidth / 2
     );
     this.world.add(this.frontWall);
   }
@@ -266,52 +217,11 @@ export default class Physics {
     newBall.linearDamping = 0;
     this.world.add(newBall);
 
-    // // contact materials
-    // this.ballGroundContact = new CANNON.ContactMaterial(
-    //   this.ground.material,
-    //   this.balls[this.balls.length - 1].material,
-    //   {friction: 0.6, restitution: 0.7}
-    // );
-    // this.world.addContactMaterial(this.ballGroundContact);
-
-    // // ball - table
-    // // player
-    // this.ballTablePlayerContact = new CANNON.ContactMaterial(
-    //   this.tableHalfPlayer.material,
-    //   this.balls[this.balls.length - 1].material,
-    //   {friction: this.config.ballTableFriction, restitution: this.config.ballTableBounciness}
-    // );
-    // this.world.addContactMaterial(this.ballTablePlayerContact);
-
-    // // enemy
-    // this.ballTableEnemyContact = new CANNON.ContactMaterial(
-    //   this.tableHalfEnemy.material,
-    //   this.balls[this.balls.length - 1].material,
-    //   {friction: this.config.ballTableFriction, restitution: this.config.ballTableBounciness}
-    // );
-    // this.world.addContactMaterial(this.ballTableEnemyContact);
-
-    // // ball - paddle
-    // this.ballPaddleContact = new CANNON.ContactMaterial(
-    //   this.paddlePlayer.material,
-    //   this.balls[this.balls.length - 1].material,
-    //   {friction: this.config.ballPaddleFriction, restitution: this.config.ballPaddleBounciness}
-    // );
-    // this.world.addContactMaterial(this.ballPaddleContact);
-
-    // // ball - net
-    // this.ballNetContact = new CANNON.ContactMaterial(
-    //   this.net.material,
-    //   this.balls[this.balls.length - 1].material,
-    //   {friction: 0.5, restitution: 0.001}
-    // );
-    // this.world.addContactMaterial(this.ballNetContact);
-
-    this.addContactMaterial(newBall.material, this.leftWall.material, this.config.ballTableBounciness, 0);
-    this.addContactMaterial(newBall.material, this.topWall.material, this.config.ballTableBounciness, 0);
-    this.addContactMaterial(newBall.material, this.rightWall.material, this.config.ballTableBounciness, 0);
-    this.addContactMaterial(newBall.material, this.bottomWall.material, this.config.ballTableBounciness, 0);
-    this.addContactMaterial(newBall.material, this.frontWall.material, this.config.ballTableBounciness, 0);
+    this.addContactMaterial(newBall.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(newBall.material, this.topWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(newBall.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(newBall.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(newBall.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
     this.addContactMaterial(newBall.material, this.paddlePlayer.material, 1, 0);
 
     this.initBallPosition(newBall);
@@ -400,7 +310,7 @@ export default class Physics {
         ball.angularVelocity.z = 0;
         break;
       case MODE.AGAINST_THE_WALL:
-        ball.position.set(0, 1.4, this.config.tablePositionZ + 0.01);
+        ball.position.set(0, 1.4, this.config.boxPositionZ + 0.01);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
         ball.velocity.y = this.config.ballInitVelocity * -4;
         ball.velocity.z = this.config.ballInitVelocity * 2.0;
@@ -413,38 +323,16 @@ export default class Physics {
     }
   }
 
-  predictCollisions(paddle, net=null, tableHalfPlayer=null, tableHalfEnemy=null) {
+  predictCollisions(paddle) {
     // predict ball position in the next frame (continous collision detection)
     for (let i = 0; i < this.balls.length; i++) {
-      // TODO
-      if (true || this.balls[i].position.y > 0.3) {
-        this.raycaster.set(this.balls[i].position.clone(), this.balls[i].velocity.clone().unit());
-        this.raycaster.far = this.balls[i].velocity.clone().length() / 50;
+      this.raycaster.set(this.balls[i].position.clone(), this.balls[i].velocity.clone().unit());
+      this.raycaster.far = this.balls[i].velocity.clone().length() / 50;
 
-        // TODO add net
-        let arr = this.raycaster.intersectObjects([paddle]);
-        if (arr.length) {
-          this.balls[i].position.copy(arr[0].point);
-        }
-        /*
-        arr = this.raycaster.intersectObjects([tableHalfPlayer, tableHalfEnemy]);
-
-        if (arr.length) {
-          if (this.config.mode !== MODE.HIT_THE_TARGET) {
-            this.balls[i].position.copy(arr[0].point);
-          }
-        }
-        if (this.config.mode === MODE.HIT_THE_TARGET) {
-          let localZ = this.balls[i].position.z - this.config.tablePositionZ;
-          let ballIsOverHole = false;
-          this.config.holes.forEach(hole => {
-            if (Math.sqrt(Math.pow(this.balls[i].position.x - hole.x, 2) + Math.pow(localZ - hole.z, 2)) <= hole.r && this.balls[i].velocity.z < -0) {
-              ballIsOverHole = true;
-            }
-          });
-          this.balls[i].collisionResponse = !ballIsOverHole;
-        }
-        */
+      // TODO add net
+      let arr = this.raycaster.intersectObjects([paddle]);
+      if (arr.length) {
+        this.balls[i].position.copy(arr[0].point);
       }
     }
   }
