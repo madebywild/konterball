@@ -45,24 +45,24 @@ export default class Scene {
     this.physicsDebugRenderer = null;
     this.pan = null;
     this.ballReference = null;
+    this.paddleHelpers = {
+      top: null,
+      left: null,
+      right: null,
+      bottom: null,
+    }
 
     // config
     this.config = {
       mode: MODE.ONE_ON_ONE,
-      //gravity: 8.7,
       gravity: 0,
-      tableDepth: 4,
-      tableWidth: 2.2,
-      tableHeight: 0.65,
-      tableThickness: 0.05,
-      tablePositionZ: -2.5,
       netHeight: 0.15,
       netThickness: 0.02,
       boxWidth: 3,
       boxDepth: 10,
       boxHeight: 2,
       paddleThickness: 0.04,
-      paddleSize: 0.3,
+      paddleSize: 0.5,
       paddlePositionZ: -1,
       ballRadius: 0.03,
       ballMass: 0.001,
@@ -72,14 +72,7 @@ export default class Scene {
       ballPaddleBounciness: 1,
       ballInitVelocity: 1,
       paddleModel: 'box',
-      // holes are relative to table center
-      holes: [
-        {x: +0.5, z: +1.3, r: 0.3},
-        {x: +0.5, z: -1.3, r: 0.3},
-        {x: -0.5, z: +1.3, r: 0.3},
-        {x: -0.5, z: -1.3, r: 0.3},
-        {x: 0, z: 0, r: 0.5},
-      ],
+
       colors: {
         BLUE: 0x124888,
         BACKGROUND_BLUE: 0x2D68A4,
@@ -307,6 +300,7 @@ export default class Scene {
 
   setupScene() {
     this.setupPaddle();
+    this.setupPaddleHelpers();
     // this.setupTable();
     // this.setupNet();
   }
@@ -398,6 +392,55 @@ export default class Scene {
     this.net.castShadow = true;
     //this.net.position.z = -this.config.tableDepth / 4;
     this.scene.add(this.net);
+  }
+
+  setupPaddleHelpers() {
+    let helperWidth = 0.03;
+    let geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
+    let material = new THREE.MeshLambertMaterial({
+      color: 0x00ff00,
+      side: THREE.DoubleSide,
+    });
+    this.paddleHelpers.top = new THREE.Mesh(geometry, material);
+    this.paddleHelpers.top.position.z = this.config.paddlePositionZ;
+    this.paddleHelpers.top.position.y = this.config.boxHeight - 0.001;
+    this.paddleHelpers.top.rotation.x = Math.PI / 2;
+    this.paddleHelpers.top.rotation.z = Math.PI / 2;
+    this.scene.add(this.paddleHelpers.top);
+
+    geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
+    material = new THREE.MeshLambertMaterial({
+      color: 0x00ff00,
+      side: THREE.DoubleSide,
+    });
+    this.paddleHelpers.bottom = new THREE.Mesh(geometry, material);
+    this.paddleHelpers.bottom.position.z = this.config.paddlePositionZ;
+    this.paddleHelpers.bottom.position.y = 0.001;
+    this.paddleHelpers.bottom.rotation.x = Math.PI / 2;
+    this.paddleHelpers.bottom.rotation.z = Math.PI / 2;
+    this.scene.add(this.paddleHelpers.bottom);
+
+    geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
+    material = new THREE.MeshLambertMaterial({
+      color: 0x00ff00,
+      side: THREE.DoubleSide,
+    });
+    this.paddleHelpers.left = new THREE.Mesh(geometry, material);
+    this.paddleHelpers.left.position.z = this.config.paddlePositionZ;
+    this.paddleHelpers.left.position.x = -this.config.boxWidth / 2 + 0.001;
+    this.paddleHelpers.left.rotation.y = Math.PI / 2;
+    this.scene.add(this.paddleHelpers.left);
+
+    geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
+    material = new THREE.MeshLambertMaterial({
+      color: 0x00ff00,
+      side: THREE.DoubleSide,
+    });
+    this.paddleHelpers.right = new THREE.Mesh(geometry, material);
+    this.paddleHelpers.right.position.z = this.config.paddlePositionZ;
+    this.paddleHelpers.right.position.x = this.config.boxWidth / 2 - 0.001;
+    this.paddleHelpers.right.rotation.y = Math.PI / 2;
+    this.scene.add(this.paddleHelpers.right);
   }
 
   setupGUI() {
@@ -742,15 +785,7 @@ export default class Scene {
     this.physics.setPaddlePosition(newX, newY, this.config.paddlePositionZ);
   }
 
-  animate(timestamp) {
-    let delta = Math.min(timestamp - this.lastRender, 500);
-    this.totaltime += delta;
-
-    if (!this.tabActive) {;
-      requestAnimationFrame(this.animate.bind(this));
-      return;
-    }
-
+  updateControls() {
     // TODO proper controller managment
     let controller = null;
     if (this.controller1 && this.controller1.visible) {
@@ -795,6 +830,27 @@ export default class Scene {
         }
       }
     }
+  }
+
+  updateHelpers() {
+    this.paddleHelpers.top.position.x = this.paddle.position.x;
+    this.paddleHelpers.bottom.position.x = this.paddle.position.x;
+    this.paddleHelpers.left.position.y = this.paddle.position.y;
+    this.paddleHelpers.right.position.y = this.paddle.position.y;
+  }
+
+  animate(timestamp) {
+    let delta = Math.min(timestamp - this.lastRender, 500);
+    this.totaltime += delta;
+
+    if (!this.tabActive) {;
+      requestAnimationFrame(this.animate.bind(this));
+      return;
+    }
+
+    this.updateControls();
+
+    this.updateHelpers();
 
     if (this.pan) {
       this.pan.rotateY(delta * 0.0003);
