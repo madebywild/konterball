@@ -2,6 +2,7 @@ import dat from 'dat-gui';
 import TweenMax from 'gsap';
 import {MODE} from 'constants/modes';
 import Physics from './physics';
+import Hud from './hud';
 import SoundManager from './sound-manager';
 
 const resetTimeout = 2000;
@@ -118,6 +119,7 @@ export default class Scene {
 
     this.physics.setupWorld();
     this.setupScene();
+    this.hud = new Hud(this.scene);
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer = new THREE.CannonDebugRenderer( this.scene, this.physics.world );
@@ -176,7 +178,6 @@ export default class Scene {
     this.effect = new THREE.VREffect(this.renderer);
     this.effect.setSize(window.innerWidth, window.innerHeight);
 
-
     this.loader = new THREE.TextureLoader();
   }
 
@@ -223,6 +224,7 @@ export default class Scene {
       this.config.colors.PONG_GREEN_9,
       this.config.colors.PONG_GREEN_9,
     ];
+    // delete front side
     delete geometry.faces[10];
     delete geometry.faces[11];
     geometry.faces = geometry.faces.filter(v => v);
@@ -272,6 +274,7 @@ export default class Scene {
       this.config.colors.PONG_GREEN_9,
       this.config.colors.PONG_GREEN_9,
     ];
+    // delete back side
     delete geometry.faces[8];
     delete geometry.faces[9];
     geometry.faces = geometry.faces.filter(v => v);
@@ -426,8 +429,8 @@ export default class Scene {
     // this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
   }
 
-  ballPaddleCollision() {
-    this.sound.hit();
+  ballPaddleCollision(point) {
+    this.sound.hit(point);
     this.resetBallTimeout();
   }
 
@@ -543,7 +546,6 @@ export default class Scene {
 
     // let ch = new THREE.CameraHelper(light.shadow.camera);
     // this.scene.add(ch);
-
   }
 
   setupPointsDisplay() {

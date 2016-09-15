@@ -230,7 +230,7 @@ export default class Physics {
   paddleCollision(e) {
     if (e.body.name === 'BALL') {
 
-      this.ballPaddleCollisionCallback();
+      this.ballPaddleCollisionCallback(e.body.position);
 
       let hitpointX = e.body.position.x - e.target.position.x;
       let hitpointY = e.body.position.y - e.target.position.y;

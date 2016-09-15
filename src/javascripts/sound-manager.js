@@ -10,7 +10,9 @@ export default class SoundManager {
     });
   }
 
-  hit() {
+  hit(point) {
+    point = point || {x: 0, y: 0, z: 0};
+    this.playerSound.pos(point.x, point.y, point.z);
     this.playerSound.play();
   }
 
