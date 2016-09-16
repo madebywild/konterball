@@ -1,4 +1,4 @@
-import {MODE} from 'constants/modes';
+import {MODE} from './constants';
 
 export default class Physics {
   constructor(config, ballPaddleCollisionCallback) {

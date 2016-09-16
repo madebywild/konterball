@@ -1,6 +1,6 @@
 import dat from 'dat-gui';
 import TweenMax from 'gsap';
-import {MODE} from 'constants/modes';
+import {MODE} from './constants';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
@@ -38,12 +38,12 @@ export default class Scene {
     this.seconds = 0;
     this.tabActive = true;
     this.balls = [];
-    this.cameraHeight = 1;
     this.gamemode = MODE.ONE_ON_ONE;
     this.ballResetTimeout = null;
     this.physicsDebugRenderer = null;
     this.pan = null;
     this.ballReference = null;
+
 
     this.frameNumber = 0;
     this.paddleHelpers = {
@@ -55,7 +55,7 @@ export default class Scene {
 
     // config
     this.config = {
-      mode: MODE.ONE_ON_ONE,
+      mode: MODE.SINGLEPLAYER,
       gravity: 0,
       netHeight: 0.15,
       netThickness: 0.02,
@@ -73,10 +73,11 @@ export default class Scene {
       ballInitVelocity: 1,
       paddleModel: 'box',
       boxPositionZ: -2.5,
+      cameraHeight: 1,
 
       colors: {
         BLUE: 0x124888,
-        BACKGROUND_BLUE: 0x2D68A4,
+        BACKGROUND: 0x000000,
         DARK_BLUE: 0x143A61,
         WHITE: 0xFFFFFF,
         YELLOW: 0xFAFD58,
@@ -123,26 +124,42 @@ export default class Scene {
     };
 
     this.physics.setupWorld();
-    this.setupScene();
+    this.setupPaddle();
+    this.setupPaddleHelpers();
+    this.setupPaddleOpponent();
     this.hud = new Hud(this.scene, this.config);
+    this.setupLights();
+    this.setupPointsDisplay();
+    this.setupControllers();
+    this.setupPaddlePlane();
+    //this.setupGUI();
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
     }
 
-    this.setupLights();
-    this.setupPointsDisplay();
-    this.setupControllers();
-    this.setupPaddlePlane();
-    this.setupGUI();
     requestAnimationFrame(this.animate.bind(this));
 
-    setTimeout(() => {
-      this.addBall();
-    }, 1000);
+
+    this.camera.position.x = 6 * 10;
+    this.camera.position.z = 3 * 10;
+    this.camera.position.y = 3 * 10;
+    this.camera.lookAt(new THREE.Vector3(0, 1, this.config.boxPositionZ));
+    document.getElementById('start-singleplayer').addEventListener('click', this.introAnimation.bind(this));
+  }
+
+  setupVRControls() {
+    // apply VR headset positional data to camera.
+    this.controls = new THREE.VRControls(this.camera);
+    this.controls.standing = true;
+    this.controls.userHeight = this.config.cameraHeight;
   }
 
   setupVR() {
+    // apply VR stereo rendering to renderer.
+    this.effect = new THREE.VREffect(this.renderer);
+    this.effect.setSize(window.innerWidth, window.innerHeight);
+
     // Create a VR manager helper to enter and exit VR mode.
     let params = {
       hideButton: false, // Default: false.
@@ -160,7 +177,7 @@ export default class Scene {
     // Only enable it if you actually need to.
     this.renderer = new THREE.WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setClearColor(0x499BEE, 1);
+    this.renderer.setClearColor(this.config.colors.BACKGROUND, 1);
 
     // thisend the canvas element created by the renderer to document body element.
     document.body.appendChild(this.renderer.domElement);
@@ -169,19 +186,11 @@ export default class Scene {
     this.scene = new THREE.Scene();
 
     // Create a three.js camera.
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    this.camera = new THREE.PerspectiveCamera(10, window.innerWidth / window.innerHeight, 0.1, 10000);
+    this.camera.position.y = this.config.cameraHeight;
 
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.BasicShadowMap;
-
-    // apply VR headset positional data to camera.
-    this.controls = new THREE.VRControls(this.camera);
-    this.controls.standing = true;
-    this.controls.userHeight = this.cameraHeight;
-
-    // apply VR stereo rendering to renderer.
-    this.effect = new THREE.VREffect(this.renderer);
-    this.effect.setSize(window.innerWidth, window.innerHeight);
 
     this.loader = new THREE.TextureLoader();
   }
@@ -234,7 +243,6 @@ export default class Scene {
     shadowMesh.rotation.x = Math.PI / 2;
     shadowMesh.rotation.y = Math.PI;
     shadowMesh.position.y = 0.001;
-    console.log(shadowMesh);
     shadowMesh.receiveShadow = true;
     this.scene.add(shadowMesh);
 
@@ -278,12 +286,6 @@ export default class Scene {
     this.scene.add(frontBox);
 
     this.boxZBounds = -(this.boxDepth - 1);
-  }
-
-  setupScene() {
-    this.setupPaddle();
-    this.setupPaddleHelpers();
-    this.setupPaddleOpponent();
   }
 
   setupPaddle() {
@@ -350,7 +352,7 @@ export default class Scene {
     });
     this.paddleHelpers.top = new THREE.Mesh(geometry, material);
     this.paddleHelpers.top.position.z = this.config.paddlePositionZ;
-    this.paddleHelpers.top.position.y = this.config.boxHeight - 0.001;
+    this.paddleHelpers.top.position.y = this.config.boxHeight - 0.01;
     this.paddleHelpers.top.rotation.x = Math.PI / 2;
     this.paddleHelpers.top.rotation.z = Math.PI / 2;
     this.scene.add(this.paddleHelpers.top);
@@ -362,7 +364,7 @@ export default class Scene {
     });
     this.paddleHelpers.bottom = new THREE.Mesh(geometry, material);
     this.paddleHelpers.bottom.position.z = this.config.paddlePositionZ;
-    this.paddleHelpers.bottom.position.y = 0.001;
+    this.paddleHelpers.bottom.position.y = 0.01;
     this.paddleHelpers.bottom.rotation.x = Math.PI / 2;
     this.paddleHelpers.bottom.rotation.z = Math.PI / 2;
     this.scene.add(this.paddleHelpers.bottom);
@@ -374,7 +376,7 @@ export default class Scene {
     });
     this.paddleHelpers.left = new THREE.Mesh(geometry, material);
     this.paddleHelpers.left.position.z = this.config.paddlePositionZ;
-    this.paddleHelpers.left.position.x = -this.config.boxWidth / 2 + 0.001;
+    this.paddleHelpers.left.position.x = -this.config.boxWidth / 2 + 0.01;
     this.paddleHelpers.left.rotation.y = Math.PI / 2;
     this.scene.add(this.paddleHelpers.left);
 
@@ -385,7 +387,7 @@ export default class Scene {
     });
     this.paddleHelpers.right = new THREE.Mesh(geometry, material);
     this.paddleHelpers.right.position.z = this.config.paddlePositionZ;
-    this.paddleHelpers.right.position.x = this.config.boxWidth / 2 - 0.001;
+    this.paddleHelpers.right.position.x = this.config.boxWidth / 2 - 0.01;
     this.paddleHelpers.right.rotation.y = Math.PI / 2;
     this.scene.add(this.paddleHelpers.right);
   }
@@ -393,11 +395,6 @@ export default class Scene {
   setupGUI() {
     let gui = new dat.GUI();
     gui.remember(this);
-    gui.add(this, 'gamemode', [MODE.ONE_ON_ONE, MODE.AGAINST_THE_WALL, MODE.TOO_MANY_BALLS, MODE.HIT_THE_TARGET]).onChange(val => {
-      if (val !== this.config.mode) {
-        this.setMode(val);
-      }
-    });
     gui.add(this.config, 'ballRadius', 0.001, 0.4).onChange(val => {
       this.physics.config.ballRadius = val;
       this.config.ballRadius = val;
@@ -420,9 +417,50 @@ export default class Scene {
     });
   }
 
+  introAnimation() {
+    let no = {
+      fov: this.camera.fov,
+    };
+    let tl = new TimelineMax();
+    tl.to('.intro', 0.4, {
+      autoAlpha: 0,
+    }, 0);
+    const panDuration = 2;
+    tl.to(no, panDuration, {
+      fov: 75,
+      ease: Power3.easeIn,
+      onUpdate: () => {
+        this.camera.fov = no.fov;
+        this.camera.updateProjectionMatrix();
+      },
+    }, 0);
+    tl.to(this.camera.position, panDuration, {
+      x: 0,
+      y: this.config.cameraHeight,
+      z: 0,
+      onUpdate: () => {
+        this.camera.lookAt(new THREE.Vector3(0, 1, this.config.boxPositionZ));
+      },
+      onComplete: () => {
+        this.setupVRControls();
+        this.addBall();
+      }
+    }, 0);
+  }
+
   receivedMove(move) {
-    this.paddleOpponent.position.x = move.x;
-    this.paddleOpponent.position.y = move.y;
+    let no = {
+      x: this.paddleOpponent.position.x,
+      y: this.paddleOpponent.position.y,
+    };
+    TweenMax.to(no, 0.14, {
+      x: move.x,
+      y: move.y,
+      onUpdate: () => {
+        this.paddleOpponent.position.x = no.x;
+        this.paddleOpponent.position.y = no.y;
+      }
+    });
   }
 
   mirrorBallPosition(pos) {
@@ -448,7 +486,6 @@ export default class Scene {
     // so invert x and z velocity and mirror the point across the center of the box
     this.physics.balls[0].position.copy(this.mirrorBallPosition(data.point));
     this.physics.balls[0].velocity.copy(this.mirrorBallVelocity(data.velocity));
-    console.log(this.physics.balls[0].position);
   }
 
   receivedMiss(data) {
@@ -475,7 +512,7 @@ export default class Scene {
         y: this.physics.balls[0].velocity.y,
         z: this.physics.balls[0].velocity.z,
       });
-    }, 90);
+    }, 10);
     //this.resetBallTimeout();
   }
 
@@ -704,7 +741,7 @@ export default class Scene {
           if (intersects.length > 0) {
             let intersectionPoint = intersects[0].point;
             let posX =  intersectionPoint.x * 4;
-            let posY = this.cameraHeight + (this.cameraHeight - intersectionPoint.y) * -4;
+            let posY = this.config.cameraHeight + (this.config.cameraHeight - intersectionPoint.y) * -4;
             this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.03);
             if (this.pan) {
               this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.08);
@@ -767,7 +804,7 @@ export default class Scene {
       this.physicsDebugRenderer.update();
     }
 
-    if (this.physics.balls.length && this.physics.balls[0].position.z > 0) {
+    if (this.physics.balls.length && this.physics.balls[0].position.z > 1) {
       this.addBall();
 
       let z = this.physics.balls[0].position.z;
@@ -785,7 +822,9 @@ export default class Scene {
     }
 
     // Update VR headset position and apply to camera.
-    this.controls.update();
+    if (this.controls) {
+      this.controls.update();
+    }
 
     // Render the scene through the manager.
     this.lastRender = timestamp;

@@ -1,4 +1,5 @@
 import Peer from 'peerjs';
+import {ACTION} from './constants';
 
 export default class Communication {
   constructor(callbacks) {
@@ -6,34 +7,29 @@ export default class Communication {
     this.connectionIsOpen = false;
     this.conn = null;
     this.id = navigator.userAgent.indexOf('Macintosh') === -1 ? 'peer1' : 'peer2';
-    console.log('MY ID: ' + this.id);
     this.peer = new Peer(this.id, {host: '192.168.1.182', port: 9000, path: '/'});
 
 
     // connect to the peer server
     this.peer.on('open', () => {
       if (this.connectionIsOpen) return;
-      console.log('connection opened!');
       this.connectionIsOpen = true;
     });
 
 
     this.listen = this.id === 'peer2';
     if (this.listen) {
-      console.log('WAITING FOR OPPONENT');
       this.peer.on('connection', c => {
         if (this.conn) {
           c.close();
           return;
         }
         this.conn = c;
-        console.log('connection opened!');
         this.connectionIsOpen = true;
         this.startListening();
       });
 
     } else {
-      console.log('CONNECTING TO OPPONENT');
       this.peer.on('open', () => {
         this.conn = this.peer.connect(this.id === 'peer1' ? 'peer2' : 'peer1');
         this.conn.on('open', () => {
@@ -45,18 +41,15 @@ export default class Communication {
   }
 
   startListening() {
-    console.log('Connected');
     this.conn.on('data', data => {
       switch (data.action) {
-        case 'move':
+        case ACTION.MOVE:
           this.callbacks.move(data);
           break;
-        case 'hit':
-          console.log('received hit');
+        case ACTION.HIT:
           this.callbacks.hit(data);
           break;
-        case 'miss':
-          console.log('received miss');
+        case ACTION.MISS:
           this.callbacks.miss(data);
           break;
       }
@@ -66,7 +59,7 @@ export default class Communication {
   sendMove(x, y) {
     if (!this.conn) return;
     this.conn.send({
-      action: 'move',
+      action: ACTION.MOVE,
       x: x,
       y: y,
     });
@@ -74,9 +67,8 @@ export default class Communication {
 
   sendHit(point, velocity) {
     if (!this.conn) return;
-    console.log('sending hit');
     this.conn.send({
-      action: 'hit',
+      action: ACTION.HIT,
       point: point,
       velocity: velocity,
     });
@@ -84,9 +76,8 @@ export default class Communication {
 
   sendMiss() {
     if (!this.conn) return;
-    console.log('sending miss');
     this.conn.send({
-      action: 'miss',
+      action: ACTION.MISS,
     });
   }
 }

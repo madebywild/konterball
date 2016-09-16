@@ -1,3 +1,28 @@
 body {
   overflow: hidden;
+  background-color: #000;
+}
+.intro {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #fff;
+  .intro-headline {
+    font-size: 8vw;
+    text-transform: uppercase;
+    padding-top: 10vh;
+    padding-bottom: 10vh;
+  }
+  button {
+    cursor: pointer;
+    margin-top: 20px;
+    background-color: #fff;
+    color: #000;
+    border: 0;
+    padding: 10px 40px;
+    width: 100%;
+    max-width: 250px;
+  }
 }
