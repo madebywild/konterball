@@ -4,6 +4,7 @@ import {MODE} from 'constants/modes';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
+import Communication from './communication';
 
 const resetTimeout = 2000;
 const resetTimeoutMultiball = 500;
@@ -39,11 +40,12 @@ export default class Scene {
     this.balls = [];
     this.cameraHeight = 1;
     this.gamemode = MODE.ONE_ON_ONE;
-    this.CCD_EPSILON = 0.2;
     this.ballResetTimeout = null;
     this.physicsDebugRenderer = null;
     this.pan = null;
     this.ballReference = null;
+
+    this.frameNumber = 0;
     this.paddleHelpers = {
       top: null,
       left: null,
@@ -80,7 +82,7 @@ export default class Scene {
         YELLOW: 0xFAFD58,
         RED: 0xD31515,
         LIGHT_RED: 0xE35C27,
-        PINK: 0xFD9CA6,
+        PINK: 0xFD9CA3,
         PONG_PADDLE: 0x8FFFBB,
         PONG_GREEN_1: 0x064042,
         PONG_GREEN_2: 0x0E5547,
@@ -96,6 +98,11 @@ export default class Scene {
 
     this.physics = new Physics(this.config, this.ballPaddleCollision.bind(this));
     this.sound = new SoundManager();
+    this.communication = new Communication({
+      move: this.receivedMove.bind(this),
+      hit: this.receivedHit.bind(this),
+      miss: this.receivedMiss.bind(this),
+    });
 
     // boxZBounds: -(this.boxSize.depth - 1),
     this.boxZBounds = 0;
@@ -106,9 +113,7 @@ export default class Scene {
 
   setup() {
     this.setupThree();
-
     this.setupBoxSurroundings();
-    //this.setupSurroundings();
     this.setupVR();
 
     this.renderer.domElement.requestPointerLock = this.renderer.domElement.requestPointerLock
@@ -119,10 +124,10 @@ export default class Scene {
 
     this.physics.setupWorld();
     this.setupScene();
-    this.hud = new Hud(this.scene);
+    this.hud = new Hud(this.scene, this.config);
 
     if (DEBUG_MODE) {
-      this.physicsDebugRenderer = new THREE.CannonDebugRenderer( this.scene, this.physics.world );
+      this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
     }
 
     this.setupLights();
@@ -179,23 +184,6 @@ export default class Scene {
     this.effect.setSize(window.innerWidth, window.innerHeight);
 
     this.loader = new THREE.TextureLoader();
-  }
-
-  setupSurroundings() {
-    let geometry = new THREE.PlaneGeometry(1000, 1000);
-    let material = new THREE.MeshPhongMaterial({
-      color: this.config.colors.BACKGROUND_BLUE,
-      side: THREE.DoubleSide,
-    });
-
-    // Align the skybox to the floor (which is at y=0).
-    this.skybox = new THREE.Mesh(geometry, material);
-    this.skybox.rotation.x = Math.PI / 2;
-    this.skybox.receiveShadow = true;
-
-    this.scene.add(this.skybox);
-
-    this.boxZBounds = -(this.boxDepth - 1);
   }
 
   setupBoxSurroundings() {
@@ -295,18 +283,10 @@ export default class Scene {
   setupScene() {
     this.setupPaddle();
     this.setupPaddleHelpers();
+    this.setupPaddleOpponent();
   }
 
   setupPaddle() {
-    if (false) {
-      let geometry = new THREE.BoxGeometry(this.config.paddleSize, this.config.paddleSize, this.config.paddleThickness);
-      let material = new THREE.MeshLambertMaterial({
-        color: this.config.colors.RED,
-        transparent: true,
-        opacity: 0.6,
-      });
-    }
-
     let geometry = new THREE.RingGeometry(this.config.paddleSize - 0.03, this.config.paddleSize, 4, 1);
     geometry.rotateZ(Math.PI / 4);
     geometry.rotateY(0.001);
@@ -323,6 +303,22 @@ export default class Scene {
     this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
     this.paddleBoundingBox.material.visible = false;
     this.scene.add(this.paddleBoundingBox);
+  }
+
+  setupPaddleOpponent() {
+    let geometry = new THREE.RingGeometry(this.config.paddleSize - 0.03, this.config.paddleSize, 4, 1);
+    geometry.rotateZ(Math.PI / 4);
+    geometry.rotateY(0.001);
+    geometry.scale(0.71, 0.71, 0.71);
+    // let geometry = new THREE.BoxGeometry(this.config.paddleSize, this.config.paddleSize, this.config.paddleThickness);
+    let material = new THREE.MeshBasicMaterial({
+      color: this.config.colors.PONG_PADDLE,
+    });
+    this.paddleOpponent = new THREE.Mesh(geometry, material);
+    this.paddleOpponent.name = 'paddle-enemy';
+    this.scene.add(this.paddleOpponent);
+    this.paddleOpponent.position.z = this.config.boxPositionZ + this.config.paddlePositionZ;
+    this.paddleOpponent.position.y = 1;
   }
 
   setupNet() {
@@ -414,7 +410,7 @@ export default class Scene {
     // gui.add(this, 'ballTableFriction', 0, 1).onChange(val => this.ballTableContact.friction = val);
     gui.add(this.config, 'ballBoxBounciness', 0, 5).onChange(val => {
       //this.physics.ballTablePlayerContact.restitution = val;
-      //this.physics.ballTableEnemyContact.restitution = val;
+      //this.physics.ballTableOpponent.restitution = val;
       this.physics.config.ballBoxBounciness = val;
     });
     // gui.add(this, 'ballPaddleFriction', 0, 1).onChange(val => this.ballPaddleContact.friction = val);
@@ -424,6 +420,41 @@ export default class Scene {
     });
   }
 
+  receivedMove(move) {
+    this.paddleOpponent.position.x = move.x;
+    this.paddleOpponent.position.y = move.y;
+  }
+
+  mirrorBallPosition(pos) {
+    let z = pos.z;
+    z -= Math.abs(z - this.config.boxPositionZ) * 2;
+    return {
+      x: pos.x, 
+      y: pos.y,
+      z: z,
+    };
+  }
+
+  mirrorBallVelocity(vel) {
+    return {
+      x: -vel.x,
+      y: vel.y,
+      z: -vel.z,
+    };
+  }
+
+  receivedHit(data) {
+    // receved vectors are in the other users space
+    // so invert x and z velocity and mirror the point across the center of the box
+    this.physics.balls[0].position.copy(this.mirrorBallPosition(data.point));
+    this.physics.balls[0].velocity.copy(this.mirrorBallVelocity(data.velocity));
+    console.log(this.physics.balls[0].position);
+  }
+
+  receivedMiss(data) {
+    //this.addBall();
+  }
+
   resetBallTimeout() {
     // clearTimeout(this.ballResetTimeout);
     // this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
@@ -431,7 +462,21 @@ export default class Scene {
 
   ballPaddleCollision(point) {
     this.sound.hit(point);
-    this.resetBallTimeout();
+    setTimeout(() => {
+      // this.physics.balls[0].position.copy(this.mirrorBallPosition(this.physics.balls[0].position));
+      // this.physics.balls[0].velocity.copy(this.mirrorBallVelocity(this.physics.balls[0].velocity));
+      // return;
+      this.communication.sendHit({
+        x: point.x,
+        y: point.y,
+        z: point.z,
+      }, {
+        x: this.physics.balls[0].velocity.x,
+        y: this.physics.balls[0].velocity.y,
+        z: this.physics.balls[0].velocity.z,
+      });
+    }, 90);
+    //this.resetBallTimeout();
   }
 
   switchPaddle(model) {
@@ -474,7 +519,7 @@ export default class Scene {
     this.paddlePlane.position.z = this.config.paddlePositionZ;
     this.paddlePlane.position.y = this.config.boxHeight / 2;
     // TODO find better way of doing this
-    //this.paddlePlane.visible = false;
+    // this.paddlePlane.visible = false;
     this.scene.add(this.paddlePlane);
   }
 
@@ -499,8 +544,8 @@ export default class Scene {
             loader.setPath('/models/');
 
             this.controller = object.children[ 0 ];
-            this.controller.material.map = loader.load( 'onepointfive_texture.png' );
-            this.controller.material.specularMap = loader.load( 'onepointfive_spec.png' );
+            this.controller.material.map = loader.load('onepointfive_texture.png');
+            this.controller.material.specularMap = loader.load('onepointfive_spec.png');
 
             this.controller1.add(object.clone());
             this.controller2.add(object.clone());
@@ -585,6 +630,7 @@ export default class Scene {
       this.resetBallTimeout();
     }
     this.physics.addBall();
+    if (this.balls.length > 0) return;
 
     // three object
     let geometry = new THREE.SphereGeometry(this.config.ballRadius, 16, 16);
@@ -593,7 +639,8 @@ export default class Scene {
       //map: this.ballTexture,
     });
 
-    this.balls.push(new THREE.Mesh(geometry, material));
+    //this.balls.push(new THREE.Mesh(geometry, material));
+    this.balls = [new THREE.Mesh(geometry, material)];
     this.balls[this.balls.length - 1].castShadow = true;
     this.scene.add(this.balls[this.balls.length - 1]);
   }
@@ -628,6 +675,9 @@ export default class Scene {
         this.config.paddleSize / 2
       )
     );
+    if (newX === this.paddle.position.x && newY === this.paddle.position.y) {
+      return;
+    }
     this.paddle.position.x = newX;
     this.paddle.position.y = newY;
     this.paddle.position.z = this.config.paddlePositionZ;
@@ -648,10 +698,9 @@ export default class Scene {
       let pose = this.display.getPose();
       if (pose) {
         if (!controller) {
-          this.raycaster.setFromCamera( new THREE.Vector2(0, 0), this.camera );
+          this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
           this.raycaster.far = 2;
-          let intersects = this.raycaster.intersectObjects([this.paddlePlane], false);
-
+          let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
           if (intersects.length > 0) {
             let intersectionPoint = intersects[0].point;
             let posX =  intersectionPoint.x * 4;
@@ -671,9 +720,9 @@ export default class Scene {
           let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
           if (intersects.length > 0) {
             let intersectionPoint = intersects[0].point;
-            this.paddle.position.x = intersectionPoint.x;
-            this.paddle.position.y = intersectionPoint.y;
-            this.paddle.position.z = this.config.paddlePositionZ + 0.03;
+            // this.paddle.position.x = intersectionPoint.x;
+            // this.paddle.position.y = intersectionPoint.y;
+            // this.paddle.position.z = this.config.paddlePositionZ + 0.03;
             this.setPaddlePosition(intersectionPoint.x, intersectionPoint.y, this.config.paddlePositionZ + 0.03);
           }
         }
@@ -705,6 +754,8 @@ export default class Scene {
       this.pan.rotateY(delta * 0.0003);
     }
 
+    this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
+
     this.paddleBoundingBox.update();
 
     this.physics.predictCollisions(this.paddleBoundingBox);
@@ -716,8 +767,21 @@ export default class Scene {
       this.physicsDebugRenderer.update();
     }
 
-    if (this.physics.getInactiveBalls().length > 0) {
+    if (this.physics.balls.length && this.physics.balls[0].position.z > 0) {
       this.addBall();
+
+      let z = this.physics.balls[0].position.z;
+      z -= Math.abs(z - this.config.boxPositionZ) * 2;
+
+      this.communication.sendHit({
+        x: this.physics.balls[0].position.x,
+        y: this.physics.balls[0].position.y,
+        z: this.physics.balls[0].position.z,
+      }, {
+        x: this.physics.balls[0].velocity.x,
+        y: this.physics.balls[0].velocity.y,
+        z: this.physics.balls[0].velocity.z,
+      });
     }
 
     // Update VR headset position and apply to camera.
@@ -728,6 +792,7 @@ export default class Scene {
 
     this.manager.render(this.scene, this.camera, this.timestamp);
 
+    this.frameNumber++;
     requestAnimationFrame(this.animate.bind(this));
   }
 

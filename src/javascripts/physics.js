@@ -10,8 +10,7 @@ export default class Physics {
     this.balls = [];
     this.net = null;
     this.ground = null;
-    this.paddlePlayer = null;
-    this.paddleEnemy = null;
+    this.paddle = null;
     this.ballNetContact = null;
     this.ballGroundContact = null;
     this.ballPaddleContact = null;
@@ -65,7 +64,7 @@ export default class Physics {
 
   setupPaddle() {
     // paddle
-    this.paddlePlayer = new CANNON.Body({
+    this.paddle = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
@@ -76,10 +75,10 @@ export default class Physics {
       ),
       material: new CANNON.Material(),
     });
-    this.paddlePlayer._name = 'PADDLE';
-    this.paddlePlayer.position.set(0, 1, this.config.paddlePositionZ);
-    this.paddlePlayer.addEventListener("collide", this.paddleCollision.bind(this));
-    this.world.add(this.paddlePlayer);
+    this.paddle._name = 'PADDLE';
+    this.paddle.position.set(0, 1, this.config.paddlePositionZ);
+    this.paddle.addEventListener('collide', this.paddleCollision.bind(this));
+    this.world.add(this.paddle);
   }
 
   addContactMaterial(mat1, mat2, bounce, friction) {
@@ -133,7 +132,7 @@ export default class Physics {
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          this.config.boxWidth / 2,
+          this.config.boxWidth * 2,
           wallWidth / 2,
           this.config.boxDepth / 2
         )
@@ -151,7 +150,7 @@ export default class Physics {
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          this.config.boxWidth / 2,
+          this.config.boxWidth * 2,
           wallWidth / 2,
           this.config.boxDepth / 2
         )
@@ -169,8 +168,8 @@ export default class Physics {
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          this.config.boxWidth / 2,
-          this.config.boxHeight / 2,
+          this.config.boxWidth * 2,
+          this.config.boxHeight * 2,
           wallWidth / 2
         )
       ),
@@ -197,6 +196,10 @@ export default class Physics {
   }
 
   addBall() {
+    if (this.balls.length > 0) {
+      this.initBallPosition(this.balls[0]);
+      return;
+    }
     // remove inactive balls
     this.getInactiveBalls().forEach(i => {
       this.world.removeBody(this.balls[i]);
@@ -222,7 +225,7 @@ export default class Physics {
     this.addContactMaterial(newBall.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
     this.addContactMaterial(newBall.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
     this.addContactMaterial(newBall.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(newBall.material, this.paddlePlayer.material, 1, 0);
+    this.addContactMaterial(newBall.material, this.paddle.material, 1, 0);
 
     this.initBallPosition(newBall);
   }
@@ -262,7 +265,7 @@ export default class Physics {
   }
 
   setPaddlePosition(x, y, z) {
-    this.paddlePlayer.position.set(x, y, z);
+    this.paddle.position.set(x, y, z);
   }
 
   setBallPositions(balls) {
@@ -273,7 +276,7 @@ export default class Physics {
   }
 
   initBallPosition(ball) {
-    ball.position.set(0, this.config.boxHeight / 2, this.config.boxDepth * -0.5);
+    ball.position.set(0, this.config.boxHeight / 2, this.config.boxPositionZ);
     ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.01;
     ball.velocity.y = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.01;
     ball.velocity.z = this.config.ballInitVelocity * 2.0;
