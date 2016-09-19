@@ -54,6 +54,7 @@ export default class Hud {
     let intersections = raycaster.intersectObjects(this.buttons.map(b => b.button), false);
     if (intersections.length) {
       let button = intersections[0].object;
+      if (button._name === PRESET_NAMES.CRAZY || button._name === PRESET_NAMES.TENNIS) return;
       if ((!this.activateTween || !this.activateTween.isActive())
           && !this.modeWasSelected
           && (!this.activeButton || this.activeButton.uuid !== button.uuid)

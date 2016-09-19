@@ -38,8 +38,8 @@ export default class Button {
   setupText() {
     let material = new THREE.MeshLambertMaterial({
       color: 0xffffff,
-      transparent: false,
-      opacity: 0.5,
+      transparent: true,
+      opacity: this.name == 'Crazy' || this.name == 'Tennis' ? 0.1 : 0.9,
     });
     let geometry = new THREE.TextGeometry(this.name, {
       font: this.font,

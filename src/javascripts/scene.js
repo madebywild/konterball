@@ -89,7 +89,6 @@ export default class Scene {
     this.hud = new Hud(this.scene, this.config);
     this.setupLights();
     this.setupPointsDisplay();
-    this.setupControllers();
     this.setupPaddlePlane();
     //this.setupGUI();
 
@@ -122,6 +121,7 @@ export default class Scene {
     this.controls = new THREE.VRControls(this.camera);
     this.controls.standing = true;
     this.controls.userHeight = this.config.cameraHeight;
+    this.setupControllers();
   }
 
   setupVR() {
@@ -475,6 +475,7 @@ export default class Scene {
       this.config = Object.assign({}, this.config, PRESETS[name]);
       this.physics.config = this.config;
     }
+    this.addBall();
   }
 
   receivedHit(data) {
@@ -508,7 +509,7 @@ export default class Scene {
         y: this.physics.balls[0].velocity.y,
         z: this.physics.balls[0].velocity.z,
       });
-    }, 10);
+    }, 50);
     //this.resetBallTimeout();
   }
 

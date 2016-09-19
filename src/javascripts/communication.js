@@ -33,11 +33,16 @@ export default class Communication {
       this.peer.on('open', () => {
         this.conn = this.peer.connect(this.id === 'peer1' ? 'peer2' : 'peer1');
         this.conn.on('open', () => {
+          setInterval(() => {
+            this.conn.send({
+              action: 'PING',
+              time: Date.now(),
+            });
+          }, 1000);
           this.startListening();
         });
       });
     }
-
   }
 
   startListening() {
@@ -51,6 +56,16 @@ export default class Communication {
           break;
         case ACTION.MISS:
           this.callbacks.miss(data);
+          break;
+        case 'PING':
+          if (this.listen) {
+            console.log('PING TIME: ' + (Date.now() - data.time) / 2 + 'ms');
+          } else {
+            this.conn.send({
+              action: 'PING',
+              time: data.time,
+            });
+          }
           break;
       }
     });
