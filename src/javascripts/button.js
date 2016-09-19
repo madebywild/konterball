@@ -1,3 +1,6 @@
+import TweenMax from 'gsap';
+import {INITIAL_CONFIG} from './constants';
+
 export default class Button {
   constructor(group, font, name, x, y) {
     this.font = font;
@@ -10,19 +13,20 @@ export default class Button {
     this.buttonWidth = 0.5;
     this.buttonHeight = 0.2;
     this.makeButton(x, y);
+    this.tween = null;
   }
 
   makeButton(x, y) {
     let geometry = new THREE.PlaneGeometry(this.buttonWidth, this.buttonHeight);
     let material = new THREE.MeshPhongMaterial({
-      color: 0xffffff,
+      color: INITIAL_CONFIG.colors.PONG_GREEN_2,
       side: THREE.DoubleSide,
       opacity: 0.3,
       transparent: true,
     });
     this.button = new THREE.Mesh(geometry, material);
+    this.button._name = this.name;
     this.buttonGroup.add(this.button);
-
 
     this.buttonGroup.position.x = x;
     this.buttonGroup.position.y = y;
@@ -34,7 +38,7 @@ export default class Button {
   setupText() {
     let material = new THREE.MeshLambertMaterial({
       color: 0xffffff,
-      transparent: true,
+      transparent: false,
       opacity: 0.5,
     });
     let geometry = new THREE.TextGeometry(this.name, {
@@ -49,4 +53,21 @@ export default class Button {
     this.text.position.y = -geometry.boundingBox.max.y / 2;
     this.buttonGroup.add(this.text);
   }
+
+  /*
+  startActiveAnimation(onComplete) {
+    this.tween = TweenMax.to(this.button.material, 2, {
+      opacity: 1,
+      onComplete: () => {
+        onComplete();
+      },
+    });
+  }
+
+  resetActiveAnimation() {
+    this.tween.kill();
+    this.tween = null;
+    this.button.material.opacity = 0.3;
+  }
+  */
 }

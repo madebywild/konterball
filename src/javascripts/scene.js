@@ -1,6 +1,6 @@
 import dat from 'dat-gui';
 import TweenMax from 'gsap';
-import {MODE} from './constants';
+import {MODE, INITIAL_CONFIG, PRESET_NAMES, PRESETS} from './constants';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
@@ -38,11 +38,11 @@ export default class Scene {
     this.seconds = 0;
     this.tabActive = true;
     this.balls = [];
-    this.gamemode = MODE.ONE_ON_ONE;
     this.ballResetTimeout = null;
     this.physicsDebugRenderer = null;
     this.pan = null;
     this.ballReference = null;
+    this.preset = PRESET_NAMES.STANDARD;
 
 
     this.frameNumber = 0;
@@ -54,48 +54,7 @@ export default class Scene {
     };
 
     // config
-    this.config = {
-      mode: MODE.SINGLEPLAYER,
-      gravity: 0,
-      netHeight: 0.15,
-      netThickness: 0.02,
-      boxWidth: 3,
-      boxDepth: 10,
-      boxHeight: 2,
-      paddleThickness: 0.04,
-      paddleSize: 0.5,
-      paddlePositionZ: -1,
-      ballRadius: 0.03,
-      ballMass: 0.001,
-      ballPaddleFriction: 0.8,
-      ballPaddleBounciness: 1,
-      ballBoxBounciness: 1,
-      ballInitVelocity: 1,
-      paddleModel: 'box',
-      boxPositionZ: -2.5,
-      cameraHeight: 1,
-
-      colors: {
-        BLUE: 0x124888,
-        BACKGROUND: 0x000000,
-        DARK_BLUE: 0x143A61,
-        WHITE: 0xFFFFFF,
-        YELLOW: 0xFAFD58,
-        RED: 0xD31515,
-        LIGHT_RED: 0xE35C27,
-        PINK: 0xFD9CA3,
-        PONG_PADDLE: 0x8FFFBB,
-        PONG_GREEN_1: 0x064042,
-        PONG_GREEN_2: 0x0E5547,
-        PONG_GREEN_3: 0x1E5F4B,
-        PONG_GREEN_4: 0x17714D,
-        PONG_GREEN_5: 0x08484A,
-        PONG_GREEN_6: 0x136853,
-        PONG_GREEN_7: 0x2B7B58,
-        PONG_GREEN_8: 0x23995C,
-        PONG_GREEN_9: 0x23B76D,
-      },
-    };
+    this.config = INITIAL_CONFIG;
 
     this.physics = new Physics(this.config, this.ballPaddleCollision.bind(this));
     this.sound = new SoundManager();
@@ -140,12 +99,22 @@ export default class Scene {
 
     requestAnimationFrame(this.animate.bind(this));
 
-
     this.camera.position.x = 6 * 10;
     this.camera.position.z = 3 * 10;
     this.camera.position.y = 3 * 10;
     this.camera.lookAt(new THREE.Vector3(0, 1, this.config.boxPositionZ));
-    document.getElementById('start-singleplayer').addEventListener('click', this.introAnimation.bind(this));
+    document.getElementById('start-singleplayer').addEventListener('click', () => {
+      this.config.mode = MODE.SINGLEPLAYER;
+      this.introAnimation();
+    });
+    document.getElementById('start-multiplayer').addEventListener('click', () => {
+      console.log('set mode multi');
+      this.config.mode = MODE.MULTIPLAYER;
+      this.introAnimation();
+    });
+    document.getElementsByTagName('body')[0].addEventListener('presetChange', e => {
+      this.presetChange(e.preset);
+    });
   }
 
   setupVRControls() {
@@ -201,7 +170,7 @@ export default class Scene {
     let material = new THREE.MeshBasicMaterial({
       //color: 0x009900,
       vertexColors: THREE.FaceColors,
-      side: THREE.DoubleSide,
+      side: THREE.BackSide,
     });
 
     let colors = [
@@ -250,7 +219,7 @@ export default class Scene {
     geometry = new THREE.BoxGeometry(this.config.boxWidth, this.config.boxHeight, this.config.boxDepth / 2);
     material = new THREE.MeshBasicMaterial({
       vertexColors: THREE.FaceColors,
-      side: THREE.DoubleSide,
+      side: THREE.BackSide,
     });
 
     colors = [
@@ -321,6 +290,7 @@ export default class Scene {
     this.scene.add(this.paddleOpponent);
     this.paddleOpponent.position.z = this.config.boxPositionZ + this.config.paddlePositionZ;
     this.paddleOpponent.position.y = 1;
+    this.paddleOpponent.visible = false;
   }
 
   setupNet() {
@@ -344,6 +314,7 @@ export default class Scene {
   }
 
   setupPaddleHelpers() {
+    return;
     let helperWidth = 0.03;
     let geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
     let material = new THREE.MeshLambertMaterial({
@@ -421,6 +392,9 @@ export default class Scene {
     let no = {
       fov: this.camera.fov,
     };
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      this.paddleOpponent.visible = true;
+    }
     let tl = new TimelineMax();
     tl.to('.intro', 0.4, {
       autoAlpha: 0,
@@ -446,6 +420,11 @@ export default class Scene {
         this.addBall();
       }
     }, 0);
+    if (this.mode === MODE.SINGLEPLAYER) {
+      tl.to(this.paddleOpponent.material, 0.4, {
+        opacity: 0,
+      });
+    }
   }
 
   receivedMove(move) {
@@ -479,6 +458,23 @@ export default class Scene {
       y: vel.y,
       z: -vel.z,
     };
+  }
+
+  presetChange(name) {
+    if (name === this.preset) return;
+    this.physics.world.gravity.set(0, INITIAL_CONFIG.gravity, 0);
+    this.config = Object.assign({}, INITIAL_CONFIG);
+    this.physics.config = Object.assign({}, INITIAL_CONFIG);
+
+    if (name === PRESET_NAMES.GRAVITY) {
+      this.physics.world.gravity.set(0, -PRESETS[name].gravity, 0);
+    }
+
+    if (name in PRESETS) {
+      this.preset = name;
+      this.config = Object.assign({}, this.config, PRESETS[name]);
+      this.physics.config = this.config;
+    }
   }
 
   receivedHit(data) {
@@ -768,6 +764,7 @@ export default class Scene {
   }
 
   updateHelpers() {
+    return;
     this.paddleHelpers.top.position.x = this.paddle.position.x;
     this.paddleHelpers.bottom.position.x = this.paddle.position.x;
     this.paddleHelpers.left.position.y = this.paddle.position.y;
@@ -790,6 +787,10 @@ export default class Scene {
     if (this.pan) {
       this.pan.rotateY(delta * 0.0003);
     }
+
+    this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+    this.raycaster.far = 4;
+    this.hud.cameraRayUpdated(this.raycaster);
 
     this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
 

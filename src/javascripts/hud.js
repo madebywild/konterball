@@ -1,4 +1,6 @@
 import Button from './button';
+import TweenMax from 'gsap';
+import {PRESET_NAMES} from './constants';
 
 export default class Hud {
   constructor(scene, config) {
@@ -10,8 +12,15 @@ export default class Hud {
     this.ballBoxBounciness = 1;
     this.ballInitVelocity = 1;
     this.paddleModel = 'box';
+    this.activateTween = null;
+    this.buttons = [];
+    this.activeButton = null;
+    this.focusedButton = null;
 
+    this.font = null;
     this.container = null;
+    this.initalized = false;
+    this.modeWasSelected = false;
 
     this.loadFont();
   }
@@ -24,7 +33,6 @@ export default class Hud {
     });
   }
 
-
   setup() {
     this.container = new THREE.Group();
     this.container.position.z = 1;
@@ -32,12 +40,46 @@ export default class Hud {
     this.container.rotation.y = Math.PI;
     this.scene.add(this.container);
 
-    this.button1 = new Button(this.container, this.font, 'Preset 1', -0.4, 0.3);
-    this.button2 = new Button(this.container, this.font, 'Preset 2', -0.4, 0);
-    this.button3 = new Button(this.container, this.font, 'Preset 3', -0.4, -0.3);
-    this.button4 = new Button(this.container, this.font, 'Preset 4', +0.4, 0.3);
-    this.button5 = new Button(this.container, this.font, 'Preset 5', +0.4, 0);
-    this.button6 = new Button(this.container, this.font, 'Preset 6', +0.4, -0.3);
+    this.buttons.push(new Button(this.container, this.font, PRESET_NAMES.STANDARD, -0.4, 0.3));
+    this.buttons.push(new Button(this.container, this.font, PRESET_NAMES.HUGE_BALLS, -0.4, 0));
+    this.buttons.push(new Button(this.container, this.font, PRESET_NAMES.CRAZY, -0.4, -0.3));
+    this.buttons.push(new Button(this.container, this.font, PRESET_NAMES.TENNIS, +0.4, 0.3));
+    this.buttons.push(new Button(this.container, this.font, PRESET_NAMES.GRAVITY, +0.4, 0));
+    this.buttons.push(new Button(this.container, this.font, PRESET_NAMES.SLOWMOTION, +0.4, -0.3));
+    this.initialized = true;
   }
 
+  cameraRayUpdated(raycaster) {
+    if (!this.initialized) return;
+    let intersections = raycaster.intersectObjects(this.buttons.map(b => b.button), false);
+    if (intersections.length) {
+      let button = intersections[0].object;
+      if ((!this.activateTween || !this.activateTween.isActive())
+          && !this.modeWasSelected
+          && (!this.activeButton || this.activeButton.uuid !== button.uuid)
+        ) {
+        this.focusedButton = button;
+        this.activateTween = TweenMax.to(button.material, 0.5, {
+          opacity: 1,
+          onComplete: () => {
+            if (this.activeButton) {
+              this.activeButton.material.opacity = 0.3;
+            }
+            this.activeButton = button;
+            this.modeWasSelected = true;
+            let event = new Event('presetChange');
+            event.preset = button._name;
+            document.getElementsByTagName('body')[0].dispatchEvent(event);
+          },
+        });
+      }
+    } else {
+      this.modeWasSelected = false;
+      if (this.activateTween && this.activateTween.isActive()) {
+        // kill tween and reset button states
+        this.activateTween.kill();
+        this.focusedButton.material.opacity = 0.3;
+      }
+    }
+  }
 }
