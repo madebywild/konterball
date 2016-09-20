@@ -51,6 +51,7 @@ export default class Button {
     this.text = new THREE.Mesh(geometry, material);
     this.text.position.x = -geometry.boundingBox.max.x / 2;
     this.text.position.y = -geometry.boundingBox.max.y / 2;
+    this.text.position.z = 0.01;
     this.buttonGroup.add(this.text);
   }
 

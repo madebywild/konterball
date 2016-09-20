@@ -45,7 +45,6 @@ class PingPong {
       autoAlpha: 1,
       onComplete: () => {
         if (this.checkRoom()) {
-          console.log('im a slave 4 u');
           this.scene.startMultiplayer();
           this.scene.introAnimation();
         }

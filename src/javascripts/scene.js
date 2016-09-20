@@ -7,6 +7,9 @@ import SoundManager from './sound-manager';
 import Communication from './communication';
 import $ from 'jquery';
 
+import Box from './models/box';
+import Paddle from './models/paddle';
+
 const DEBUG_MODE = false;
 
 export default class Scene {
@@ -18,7 +21,7 @@ export default class Scene {
     this.controller = null;
     this.effect = null;
     this.loader = null;
-    this.skybox = null;
+    this.box = null;
     this.display = null;
     this.manager = null;
     this.gamePad = null;
@@ -34,9 +37,13 @@ export default class Scene {
     this.tabActive = true;
     this.balls = [];
     this.physicsDebugRenderer = null;
-    this.pan = null;
     this.ballReference = null;
     this.preset = PRESET_NAMES.STANDARD;
+
+    this.viewport = {
+      width: $(document).width(),
+      height: $(document).height(),
+    };
 
     this.score = {
       self: 0,
@@ -66,19 +73,33 @@ export default class Scene {
 
   setup() {
     this.setupThree();
-    this.setupBoxSurroundings();
+    this.box = Box(this.scene, this.config);
     this.setupVR();
 
     this.renderer.domElement.requestPointerLock = this.renderer.domElement.requestPointerLock
       || this.renderer.domElement.mozRequestPointerLock;
     this.renderer.domElement.onclick = () => {
       this.renderer.domElement.requestPointerLock();
+     // $('body').mousemove(e => {
+     //   this.setPaddlePosition(
+     //     this.paddle.position.x + e.originalEvent.movementX / 200,
+     //     this.paddle.position.y - e.originalEvent.movementY / 200
+     //   );
+     // });
     };
 
     this.physics.setupWorld();
-    this.setupPaddle();
-    this.setupPaddleHelpers();
-    this.setupPaddleOpponent();
+
+    this.paddle = Paddle(this.scene, this.config);
+    this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
+    this.paddleBoundingBox.material.visible = false;
+    this.scene.add(this.paddleBoundingBox);
+
+    this.paddleOpponent = Paddle(this.scene, this.config);
+    this.paddleOpponent.position.z = this.config.boxPositionZ + this.config.paddlePositionZ;
+    this.paddleOpponent.position.y = 1;
+    this.paddleOpponent.visible = false;
+
     this.hud = new Hud(this.scene, this.config);
     this.setupLights();
     this.setupPaddlePlane();
@@ -147,213 +168,6 @@ export default class Scene {
     this.renderer.shadowMap.type = THREE.BasicShadowMap;
 
     this.loader = new THREE.TextureLoader();
-  }
-
-  setupBoxSurroundings() {
-    // back box
-    let geometry = new THREE.BoxGeometry(this.config.boxWidth, this.config.boxHeight, this.config.boxDepth);
-    let material = new THREE.MeshBasicMaterial({
-      //color: 0x009900,
-      vertexColors: THREE.FaceColors,
-      side: THREE.BackSide,
-    });
-
-    let colors = [
-      // left
-      this.config.colors.PONG_GREEN_2,
-      this.config.colors.PONG_GREEN_2,
-      // right
-      this.config.colors.PONG_GREEN_4,
-      this.config.colors.PONG_GREEN_4,
-      // top
-      this.config.colors.PONG_GREEN_3,
-      this.config.colors.PONG_GREEN_3,
-      // bottom
-      this.config.colors.PONG_GREEN_1,
-      this.config.colors.PONG_GREEN_1,
-      // back
-      this.config.colors.PONG_GREEN_9,
-      this.config.colors.PONG_GREEN_9,
-    ];
-    // delete front side
-    delete geometry.faces[10];
-    delete geometry.faces[11];
-    geometry.faces = geometry.faces.filter(v => v);
-    geometry.elementsNeedUpdate = true;
-    geometry.faces.forEach((face, index) => {
-      face.color.set(colors[index]);
-    });
-
-    this.skybox = new THREE.Mesh(geometry, material);
-    this.skybox.position.z = this.config.boxPositionZ;
-    this.skybox.position.y = this.config.boxHeight / 2;
-
-    let box = new THREE.BoxHelper((this.skybox), 0xffffff);
-    this.scene.add(box);
-    return;
-
-    this.scene.add(this.skybox);
-
-    let shadowMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(this.config.boxWidth, this.config.boxDepth),
-      new THREE.ShadowMaterial()
-    );
-    shadowMesh.material.opacity = 0.4;
-    shadowMesh.rotation.x = Math.PI / 2;
-    shadowMesh.rotation.y = Math.PI;
-    shadowMesh.position.y = 0.001;
-    shadowMesh.receiveShadow = true;
-    this.scene.add(shadowMesh);
-
-    // front box
-    geometry = new THREE.BoxGeometry(this.config.boxWidth, this.config.boxHeight, this.config.boxDepth / 2);
-    material = new THREE.MeshBasicMaterial({
-      vertexColors: THREE.FaceColors,
-      side: THREE.BackSide,
-    });
-
-    colors = [
-      // left
-      this.config.colors.PONG_GREEN_6,
-      this.config.colors.PONG_GREEN_6,
-      // right
-      this.config.colors.PONG_GREEN_8,
-      this.config.colors.PONG_GREEN_8,
-      // top
-      this.config.colors.PONG_GREEN_7,
-      this.config.colors.PONG_GREEN_7,
-      // bottom
-      this.config.colors.PONG_GREEN_5,
-      this.config.colors.PONG_GREEN_5,
-      // back
-      this.config.colors.PONG_GREEN_9,
-      this.config.colors.PONG_GREEN_9,
-    ];
-    // delete back side
-    delete geometry.faces[8];
-    delete geometry.faces[9];
-    geometry.faces = geometry.faces.filter(v => v);
-    geometry.elementsNeedUpdate = true;
-    geometry.faces.forEach((face, index) => {
-      face.color.set(colors[index]);
-    });
-
-    let frontBox = new THREE.Mesh(geometry, material);
-    frontBox.position.z = this.config.boxPositionZ - this.config.boxDepth / 4;
-    frontBox.position.y = this.config.boxHeight / 2;
-    frontBox.receiveShadow = true;
-    this.scene.add(frontBox);
-
-    this.boxZBounds = -(this.boxDepth - 1);
-  }
-
-  setupPaddle() {
-    let geometry = new THREE.RingGeometry(this.config.paddleSize - 0.03, this.config.paddleSize, 4, 1);
-    geometry.rotateZ(Math.PI / 4);
-    geometry.rotateY(0.001);
-    geometry.scale(0.71, 0.71, 0.71);
-    // let geometry = new THREE.BoxGeometry(this.config.paddleSize, this.config.paddleSize, this.config.paddleThickness);
-    let material = new THREE.MeshBasicMaterial({
-      color: this.config.colors.PONG_PADDLE,
-    });
-    this.paddle = new THREE.Mesh(geometry, material);
-    this.paddle.name = 'paddle';
-    this.paddle.castShadow = true;
-    this.paddle.position.z = this.config.paddlePositionZ;
-    this.paddle.position.y = this.config.cameraHeight;
-    this.scene.add(this.paddle);
-
-
-    this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
-    this.paddleBoundingBox.material.visible = false;
-    this.scene.add(this.paddleBoundingBox);
-  }
-
-  setupPaddleOpponent() {
-    let geometry = new THREE.RingGeometry(this.config.paddleSize - 0.03, this.config.paddleSize, 4, 1);
-    geometry.rotateZ(Math.PI / 4);
-    geometry.rotateY(0.001);
-    geometry.scale(0.71, 0.71, 0.71);
-    // let geometry = new THREE.BoxGeometry(this.config.paddleSize, this.config.paddleSize, this.config.paddleThickness);
-    let material = new THREE.MeshBasicMaterial({
-      color: this.config.colors.PONG_PADDLE,
-    });
-    this.paddleOpponent = new THREE.Mesh(geometry, material);
-    this.paddleOpponent.name = 'paddle-enemy';
-    this.scene.add(this.paddleOpponent);
-    this.paddleOpponent.position.z = this.config.boxPositionZ + this.config.paddlePositionZ;
-    this.paddleOpponent.position.y = 1;
-    this.paddleOpponent.visible = false;
-  }
-
-  setupNet() {
-    let geometry = new THREE.BoxGeometry(
-      this.config.tableWidth,
-      this.config.netHeight,
-      this.config.netThickness
-    );
-    let material = new THREE.MeshLambertMaterial({
-      color: this.config.colors.WHITE,
-      transparent: true,
-      opacity: 0.5,
-    });
-    this.net = new THREE.Mesh(geometry, material);
-    this.net.position.y = this.config.tableHeight + this.config.tableThickness + this.config.netHeight / 2;
-    this.net.position.z = this.config.boxPositionZ;
-    // TODO is this correct?
-    this.net.castShadow = true;
-    //this.net.position.z = -this.config.tableDepth / 4;
-    this.scene.add(this.net);
-  }
-
-  setupPaddleHelpers() {
-    return;
-    let helperWidth = 0.03;
-    let geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
-    let material = new THREE.MeshLambertMaterial({
-      color: 0x00ff00,
-      side: THREE.DoubleSide,
-    });
-    this.paddleHelpers.top = new THREE.Mesh(geometry, material);
-    this.paddleHelpers.top.position.z = this.config.paddlePositionZ;
-    this.paddleHelpers.top.position.y = this.config.boxHeight - 0.01;
-    this.paddleHelpers.top.rotation.x = Math.PI / 2;
-    this.paddleHelpers.top.rotation.z = Math.PI / 2;
-    this.scene.add(this.paddleHelpers.top);
-
-    geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
-    material = new THREE.MeshLambertMaterial({
-      color: 0x00ff00,
-      side: THREE.DoubleSide,
-    });
-    this.paddleHelpers.bottom = new THREE.Mesh(geometry, material);
-    this.paddleHelpers.bottom.position.z = this.config.paddlePositionZ;
-    this.paddleHelpers.bottom.position.y = 0.01;
-    this.paddleHelpers.bottom.rotation.x = Math.PI / 2;
-    this.paddleHelpers.bottom.rotation.z = Math.PI / 2;
-    this.scene.add(this.paddleHelpers.bottom);
-
-    geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
-    material = new THREE.MeshLambertMaterial({
-      color: 0x00ff00,
-      side: THREE.DoubleSide,
-    });
-    this.paddleHelpers.left = new THREE.Mesh(geometry, material);
-    this.paddleHelpers.left.position.z = this.config.paddlePositionZ;
-    this.paddleHelpers.left.position.x = -this.config.boxWidth / 2 + 0.01;
-    this.paddleHelpers.left.rotation.y = Math.PI / 2;
-    this.scene.add(this.paddleHelpers.left);
-
-    geometry = new THREE.PlaneGeometry(0.03, this.config.paddleSize);
-    material = new THREE.MeshLambertMaterial({
-      color: 0x00ff00,
-      side: THREE.DoubleSide,
-    });
-    this.paddleHelpers.right = new THREE.Mesh(geometry, material);
-    this.paddleHelpers.right.position.z = this.config.paddlePositionZ;
-    this.paddleHelpers.right.position.x = this.config.boxWidth / 2 - 0.01;
-    this.paddleHelpers.right.rotation.y = Math.PI / 2;
-    this.scene.add(this.paddleHelpers.right);
   }
 
   setupGUI() {
@@ -426,6 +240,7 @@ export default class Scene {
         opacity: 0,
       }, 1);
     }
+
   }
 
   startMultiplayer() {
@@ -529,37 +344,6 @@ export default class Scene {
       });
     }, 50);
     //this.resetBallTimeout();
-  }
-
-  switchPaddle(model) {
-    if (model === 'pan') {
-      if (!this.pan) {
-        let loader = new THREE.OBJLoader();
-        loader.setPath('/models/');
-        loader.load('Pan.obj', object => {
-          this.pan = object;
-          this.pan.children.forEach(child => {
-            child.material.side = THREE.DoubleSide;
-            child.material.side = THREE.DoubleSide;
-            child.material.side = THREE.DoubleSide;
-            child.material.transparent = true;
-            child.material.opacity = 0.5;
-          });
-          let panScale = 0.001;
-          this.pan.scale.set(panScale, panScale, panScale);
-          this.pan.position.set(0, 1.1, -1.2);
-          this.pan.rotateX(Math.PI / 2);
-          this.scene.add(object);
-          this.paddle.visible = false;
-        });
-      } else {
-        this.pan.visible = true;
-      }
-      this.paddle.visible = false;
-    } else {
-      this.pan.visible = false;
-      this.paddle.visible = true;
-    }
   }
 
   setupPaddlePlane() {
@@ -673,21 +457,6 @@ export default class Scene {
     this.scene.add(this.balls[this.balls.length - 1]);
   }
 
-  setPoints(points) {
-    this.points = points;
-    //this.pointsDOMElement.innerHTML = this.points;
-    if (this.font) {
-      this.pointsDisplay.geometry = new THREE.TextGeometry("" + this.points, {
-        font: this.font,
-        size: 1,
-        height: 0.2,
-        curveSegments: 2,
-      });
-      this.pointsDisplay.geometry.computeBoundingBox();
-      this.pointsDisplay.position.x = -this.pointsDisplay.geometry.boundingBox.max.x / 2;
-    }
-  }
-
   setPaddlePosition(x, y, z) {
     let newX = Math.min(
       this.config.boxWidth / 2 - this.config.paddleSize / 2,
@@ -737,7 +506,6 @@ export default class Scene {
             if (this.pan) {
               this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.08);
             }
-
           }
         } else if (this.controlMode === 'move' && controller) {
           let direction = new THREE.Vector3(0, 0, -1);
