@@ -86,12 +86,18 @@
   "license": "MIT",
   "dependencies": {
     "cannon": "^0.6.2",
+    "clipboard": "^1.5.12",
     "dat-gui": "^0.5.0",
     "es6-promise": "^3.2.1",
+    "express": "^4.13.4",
+    "express-history-api-fallback": "^2.0.0",
     "gsap": "^1.19.0",
     "howler": "^2.0.0",
+    "jquery": "^3.1.0",
     "normalize.css": "^4.0.0",
+    "peer": "^0.2.8",
     "peerjs": "^0.3.14",
+    "randomstring": "^1.1.5",
     "three": "^0.80.1",
     "webvr-polyfill": "^0.9.18"
   }

@@ -1,33 +1,93 @@
-body {
-  overflow: hidden;
-  background-color: #000;
+@font-face {
+  font-family: Atari;
+  src: url('/fonts/AtariSmall.ttf');
 }
-.intro {
+$font-size: 22px;
+
+body {
+  font-family: Atari;
+  overflow: hidden;
+  font-size: $font-size;
+  background-color: #000;
+  color: #fff;
+}
+.absolute-center {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
+}
+.intro-wrapper {
+  position: absolute;
+  height: 100vh;
+  width: 100%;
+  top: 0;
+  left: 0;
+  background-color: #000;
+}
+button {
+  font-size: $font-size;
+  cursor: pointer;
+  background-color: #000;
+  border: 0;
+  padding: 10px 40px;
+  width: 100%;
   color: #fff;
-  .intro-headline {
-    font-size: 8vw;
-    text-transform: uppercase;
-    padding-top: 10vh;
-    padding-bottom: 10vh;
+}
+.mode-chooser {
+  display: none;
+  @extend .absolute-center;
+  max-width: 200px;
+  .button-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 41px;
+    display: block;
+    width: calc(100% - 4px);
+    border: 2px solid #fff;
+  }
+}
+
+.intro {
+  // @extend .absolute-center;
+  top: 50%;
+  transform: translateY(-50%);
+  position: absolute;
+  left: 50%;
+  //margin-left: -50px;
+  white-space: nowrap;
+  & > * {
+    font-size: $font-size;
+    display: inline;
+    margin-right: 100px;
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+}
+
+.room-screen {
+  display: none;
+  background-color: #000;
+  @extend .absolute-center;
+  width: 100%;
+  max-width: 400px;
+  input {
+    margin: auto;
+    width: auto;
+    background-color: #333;
+    border: 0;
+    color: #fff;
+    padding: 10px 30px;
+    margin-bottom: 15px;
   }
   button {
-    cursor: pointer;
-    margin-top: 20px;
-    background-color: #fff;
-    color: #000;
-    border: 0;
-    padding: 10px 40px;
-    width: 100%;
-    max-width: 200px;
-  }
-  #start-singleplayer {
-    padding: 10px 30px;
-    max-width: 400px;
-    font-size: 30px;
+    border: 2px solid #fff;
+    width: auto;
+    display: inline;
+
   }
 }

@@ -1,14 +1,22 @@
 import Peer from 'peerjs';
-import {ACTION} from './constants';
+import randomstring from 'randomstring';
+import {ACTION, INITIAL_CONFIG} from './constants';
+import $ from 'jquery';
 
 export default class Communication {
-  constructor(callbacks) {
+  constructor(callbacks, joinRoom) {
     this.callbacks = callbacks;
     this.connectionIsOpen = false;
     this.conn = null;
-    this.id = navigator.userAgent.indexOf('Macintosh') === -1 ? 'peer1' : 'peer2';
-    this.peer = new Peer(this.id, {host: '192.168.1.182', port: 9000, path: '/'});
 
+    this.id = randomstring.generate({
+      length: INITIAL_CONFIG.ROOM_CODE_LENGTH,
+      readable: true,
+    });
+
+    this.isHost = !joinRoom;
+
+    this.peer = new Peer(this.id, {host: '192.168.1.182', port: 8080, path: '/api'});
 
     // connect to the peer server
     this.peer.on('open', () => {
@@ -16,22 +24,24 @@ export default class Communication {
       this.connectionIsOpen = true;
     });
 
-
-    this.listen = this.id === 'peer2';
-    if (this.listen) {
+    if (this.isHost) {
+      // use my id as a room code and listen for incoming connections
+      $('#room-url').val('http://192.168.1.182:8080/' + this.id);
       this.peer.on('connection', c => {
         if (this.conn) {
           c.close();
           return;
         }
+        let event = new Event('opponentConnected');
+        $('body')[0].dispatchEvent(event);
         this.conn = c;
         this.connectionIsOpen = true;
         this.startListening();
       });
-
     } else {
+      // use code (from url) to connect to room host
       this.peer.on('open', () => {
-        this.conn = this.peer.connect(this.id === 'peer1' ? 'peer2' : 'peer1');
+        this.conn = this.peer.connect(joinRoom);
         this.conn.on('open', () => {
           setInterval(() => {
             this.conn.send({

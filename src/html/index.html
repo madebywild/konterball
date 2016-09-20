@@ -7,15 +7,25 @@
 {% extends 'layouts/application.html' %}
 
 {% block content %}
-<div class="intro">
-  <div class='intro-top'>
-    virtual reality pong
+<div class='intro-wrapper'>
+  <div class='intro'>
+    <h1 class='intro-headline'>Pong Pong</h1>
+    <p>created by Wild in Vienna</p>
+    <p>created by Wild in Vienna</p>
+    <p>created by Wild in Vienna</p>
   </div>
-  <h1 class='intro-headline'>Head Pong</h1>
-  <div class='intro-bottom'>
-    a google chrome experiment made by wild in vienna<br>
-    <button id='start-singleplayer'>start singleplayer</button><br>
-    <button id='start-multiplayer'>start multiplayer</button>
+
+  <div class='mode-chooser'>
+    <button id='start-singleplayer'>1 Player
+      <div class='button-frame'></div>
+    </button>
+    <button id='start-multiplayer'>2 Player</button>
+  </div>
+
+  <div class='room-screen'>
+    <input type='text' id='room-url' value='Generating URL...' size='25' data-clipboard-target="#room-url"><br>
+    <p>Send URL to your Opponent</p><br>
+    <button id='join-waiting-room'>Join waiting room</button>
   </div>
 </div>
 {% endblock %}

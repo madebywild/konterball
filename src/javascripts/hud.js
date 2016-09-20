@@ -1,5 +1,6 @@
 import Button from './button';
 import TweenMax from 'gsap';
+import ScoreDisplay from './score-display';
 import {PRESET_NAMES} from './constants';
 
 export default class Hud {
@@ -27,7 +28,7 @@ export default class Hud {
 
   loadFont() {
     let fontloader = new THREE.FontLoader();
-    fontloader.load('lib/helvetiker_bold.typeface.js', font => {
+    fontloader.load('fonts/atari-small.json', font => {
       this.font = font;
       this.setup();
     });
@@ -47,6 +48,8 @@ export default class Hud {
     this.buttons.push(new Button(this.container, this.font, PRESET_NAMES.GRAVITY, +0.4, 0));
     this.buttons.push(new Button(this.container, this.font, PRESET_NAMES.SLOWMOTION, +0.4, -0.3));
     this.initialized = true;
+
+    this.scoreDisplay = new ScoreDisplay(this.scene, this.font);
   }
 
   cameraRayUpdated(raycaster) {

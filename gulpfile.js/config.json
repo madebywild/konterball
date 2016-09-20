@@ -20,7 +20,9 @@
       "src": "javascripts",
       "dest": "javascripts",
       "entries": {
-        "app": ["./app.js"]
+        "app": [
+          "./app.js"
+        ]
       },
       "extensions": ["js", "json"],
       "babel": {
@@ -64,7 +66,7 @@
     "fonts": {
       "src": "fonts",
       "dest": "fonts",
-      "extensions": ["woff2", "woff", "eot", "ttf", "svg"]
+      "extensions": ["woff2", "woff", "eot", "ttf", "svg", "json"]
     },
 
     "iconFont": {

@@ -5,9 +5,8 @@ import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
 import Communication from './communication';
+import $ from 'jquery';
 
-const resetTimeout = 2000;
-const resetTimeoutMultiball = 500;
 const DEBUG_MODE = false;
 
 export default class Scene {
@@ -22,7 +21,6 @@ export default class Scene {
     this.skybox = null;
     this.display = null;
     this.manager = null;
-    this.font = null;
     this.gamePad = null;
     this.controller1 = null;
     this.controller2 = null;
@@ -30,20 +28,20 @@ export default class Scene {
     this.paddlePlane = null;
     this.controlMode = 'pan';
     this.controllerRay = null;
-    this.points = 0;
-    this.pointsDisplay = null;
     this.net = null;
-    this.ballTexture = null;
     this.canvasDOM = document.querySelector('canvas');
     this.seconds = 0;
     this.tabActive = true;
     this.balls = [];
-    this.ballResetTimeout = null;
     this.physicsDebugRenderer = null;
     this.pan = null;
     this.ballReference = null;
     this.preset = PRESET_NAMES.STANDARD;
 
+    this.score = {
+      self: 0,
+      opponent: 0,
+    };
 
     this.frameNumber = 0;
     this.paddleHelpers = {
@@ -58,11 +56,6 @@ export default class Scene {
 
     this.physics = new Physics(this.config, this.ballPaddleCollision.bind(this));
     this.sound = new SoundManager();
-    this.communication = new Communication({
-      move: this.receivedMove.bind(this),
-      hit: this.receivedHit.bind(this),
-      miss: this.receivedMiss.bind(this),
-    });
 
     // boxZBounds: -(this.boxSize.depth - 1),
     this.boxZBounds = 0;
@@ -88,7 +81,6 @@ export default class Scene {
     this.setupPaddleOpponent();
     this.hud = new Hud(this.scene, this.config);
     this.setupLights();
-    this.setupPointsDisplay();
     this.setupPaddlePlane();
     //this.setupGUI();
 
@@ -98,20 +90,12 @@ export default class Scene {
 
     requestAnimationFrame(this.animate.bind(this));
 
-    this.camera.position.x = 6 * 10;
-    this.camera.position.z = 3 * 10;
-    this.camera.position.y = 3 * 10;
+    this.camera.position.x = 0;
+    this.camera.position.z = this.config.boxPositionZ;
+    this.camera.position.y = 5;
+    this.camera.up.set(-1, 0, 0);
     this.camera.lookAt(new THREE.Vector3(0, 1, this.config.boxPositionZ));
-    document.getElementById('start-singleplayer').addEventListener('click', () => {
-      this.config.mode = MODE.SINGLEPLAYER;
-      this.introAnimation();
-    });
-    document.getElementById('start-multiplayer').addEventListener('click', () => {
-      console.log('set mode multi');
-      this.config.mode = MODE.MULTIPLAYER;
-      this.introAnimation();
-    });
-    document.getElementsByTagName('body')[0].addEventListener('presetChange', e => {
+    $('body').on('presetChange', e => {
       this.presetChange(e.preset);
     });
   }
@@ -153,9 +137,10 @@ export default class Scene {
 
     // Create a three.js scene.
     this.scene = new THREE.Scene();
+    this.scene.scale.y = 0.01;
 
     // Create a three.js camera.
-    this.camera = new THREE.PerspectiveCamera(10, window.innerWidth / window.innerHeight, 0.1, 10000);
+    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
     this.camera.position.y = this.config.cameraHeight;
 
     this.renderer.shadowMap.enabled = true;
@@ -166,7 +151,7 @@ export default class Scene {
 
   setupBoxSurroundings() {
     // back box
-    let geometry = new THREE.BoxGeometry(this.config.boxWidth, this.config.boxHeight, this.config.boxDepth / 2);
+    let geometry = new THREE.BoxGeometry(this.config.boxWidth, this.config.boxHeight, this.config.boxDepth);
     let material = new THREE.MeshBasicMaterial({
       //color: 0x009900,
       vertexColors: THREE.FaceColors,
@@ -200,8 +185,13 @@ export default class Scene {
     });
 
     this.skybox = new THREE.Mesh(geometry, material);
-    this.skybox.position.z = this.config.boxPositionZ + this.config.boxDepth / 4;
+    this.skybox.position.z = this.config.boxPositionZ;
     this.skybox.position.y = this.config.boxHeight / 2;
+
+    let box = new THREE.BoxHelper((this.skybox), 0xffffff);
+    this.scene.add(box);
+    return;
+
     this.scene.add(this.skybox);
 
     let shadowMesh = new THREE.Mesh(
@@ -269,7 +259,10 @@ export default class Scene {
     this.paddle = new THREE.Mesh(geometry, material);
     this.paddle.name = 'paddle';
     this.paddle.castShadow = true;
+    this.paddle.position.z = this.config.paddlePositionZ;
+    this.paddle.position.y = this.config.cameraHeight;
     this.scene.add(this.paddle);
+
 
     this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
     this.paddleBoundingBox.material.visible = false;
@@ -391,23 +384,31 @@ export default class Scene {
   introAnimation() {
     let no = {
       fov: this.camera.fov,
+      upX: -1,
+      upY: 0,
+      scaleY: 0.01,
     };
     if (this.config.mode === MODE.MULTIPLAYER) {
       this.paddleOpponent.visible = true;
     }
     let tl = new TimelineMax();
-    tl.to('.intro', 0.4, {
+    tl.to('.intro-wrapper', 0.4, {
       autoAlpha: 0,
     }, 0);
     const panDuration = 2;
     tl.to(no, panDuration, {
       fov: 75,
+      upX: 0,
+      upY: 1,
+      scaleY: 1,
       ease: Power3.easeIn,
       onUpdate: () => {
+        this.scene.scale.y = no.scaleY;
         this.camera.fov = no.fov;
+        this.camera.up.set(no.upX, no.upY, 0);
         this.camera.updateProjectionMatrix();
       },
-    }, 0);
+    }, 1);
     tl.to(this.camera.position, panDuration, {
       x: 0,
       y: this.config.cameraHeight,
@@ -419,12 +420,31 @@ export default class Scene {
         this.setupVRControls();
         this.addBall();
       }
-    }, 0);
+    }, 1);
     if (this.mode === MODE.SINGLEPLAYER) {
       tl.to(this.paddleOpponent.material, 0.4, {
         opacity: 0,
-      });
+      }, 1);
     }
+  }
+
+  startMultiplayer() {
+    this.config.mode = MODE.MULTIPLAYER;
+    this.physics.frontWall.collisionResponse = 0;
+    this.communication = new Communication({
+      move: this.receivedMove.bind(this),
+      hit: this.receivedHit.bind(this),
+      miss: this.receivedMiss.bind(this),
+    }, window.location.pathname.substr(1));
+    $('body').on('opponentConnected', () => {
+      console.log('the opponent connected');
+    });
+    return window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1;
+  }
+
+  startSingleplayer() {
+    this.config.mode = MODE.SINGLEPLAYER;
+    this.introAnimation();
   }
 
   receivedMove(move) {
@@ -486,16 +506,14 @@ export default class Scene {
   }
 
   receivedMiss(data) {
-    //this.addBall();
-  }
-
-  resetBallTimeout() {
-    // clearTimeout(this.ballResetTimeout);
-    // this.ballResetTimeout = setTimeout(this.addBall.bind(this), resetTimeout);
+    this.score.self++;
+    this.hud.pointsDisplay.setSelfPoints(this.score.self);
+    this.receivedHit(data);
   }
 
   ballPaddleCollision(point) {
     this.sound.hit(point);
+    if (this.config.mode !== MODE.MULTIPLAYER) return;
     setTimeout(() => {
       // this.physics.balls[0].position.copy(this.mirrorBallPosition(this.physics.balls[0].position));
       // this.physics.balls[0].velocity.copy(this.mirrorBallVelocity(this.physics.balls[0].velocity));
@@ -627,30 +645,6 @@ export default class Scene {
     // this.scene.add(ch);
   }
 
-  setupPointsDisplay() {
-    return;
-    var fontloader = new THREE.FontLoader();
-    fontloader.load('build/helvetiker_bold.typeface.js', font => {
-      this.font = font;
-      let material = new THREE.MeshLambertMaterial({
-        color: 0x00ff00,
-        wireframe: true,
-      });
-      let geometry = new THREE.TextGeometry('0', {
-        font: font,
-        size: 1,
-        height: 0.01,
-        curveSegments: 1,
-      });
-      geometry.computeBoundingBox();
-      this.pointsDisplay = new THREE.Mesh(geometry, material);
-      this.pointsDisplay.position.x = -geometry.boundingBox.max.x / 2;
-      this.pointsDisplay.position.y = 1;
-      this.pointsDisplay.position.z = -5;
-      this.scene.add(this.pointsDisplay);
-    });
-  }
-
   addBall() {
     this.sound.gameOver();
     // remove inactive balls
@@ -661,7 +655,7 @@ export default class Scene {
     this.balls = this.balls.filter(x => !x.removeFlag);
 
     if (this.config.mode !== MODE.TOO_MANY_BALLS) {
-      this.resetBallTimeout();
+      //this.resetBallTimeout();
     }
     this.physics.addBall();
     if (this.balls.length > 0) return;
@@ -793,7 +787,9 @@ export default class Scene {
     this.raycaster.far = 4;
     this.hud.cameraRayUpdated(this.raycaster);
 
-    this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
+    }
 
     this.paddleBoundingBox.update();
 
@@ -812,15 +808,19 @@ export default class Scene {
       let z = this.physics.balls[0].position.z;
       z -= Math.abs(z - this.config.boxPositionZ) * 2;
 
-      this.communication.sendHit({
-        x: this.physics.balls[0].position.x,
-        y: this.physics.balls[0].position.y,
-        z: this.physics.balls[0].position.z,
-      }, {
-        x: this.physics.balls[0].velocity.x,
-        y: this.physics.balls[0].velocity.y,
-        z: this.physics.balls[0].velocity.z,
-      });
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
+        this.score.opponent++;
+        this.communication.sendMiss({
+          x: this.physics.balls[0].position.x,
+          y: this.physics.balls[0].position.y,
+          z: this.physics.balls[0].position.z,
+        }, {
+          x: this.physics.balls[0].velocity.x,
+          y: this.physics.balls[0].velocity.y,
+          z: this.physics.balls[0].velocity.z,
+        });
+      }
     }
 
     // Update VR headset position and apply to camera.
