@@ -27,7 +27,7 @@ export default class ScoreDisplay {
     this.opponentScore.position.x = scoreSpacing;
 
     this.selfScore = new THREE.Mesh(geometry.clone(), material);
-    this.selfScore.position.x = -geometry.boundingBox.max.x;
+    this.selfScore.position.x = -geometry.boundingBox.max.x - scoreSpacing;
 
     this.group.position.z = INITIAL_CONFIG.boxPositionZ;
     this.group.add(this.selfScore);
