@@ -35,6 +35,7 @@ export default class Scene {
     this.seconds = 0;
     this.tabActive = true;
     this.ball = null;
+    this.ballShadow = null;
     this.physicsDebugRenderer = null;
     this.ballReference = null;
     this.preset = PRESET_NAMES.STANDARD;
@@ -366,13 +367,26 @@ export default class Scene {
     if (this.ball) return;
     this.physics.addBall();
 
+    // ball
     let geometry = new THREE.SphereGeometry(this.config.ballRadius, 16, 16);
     let material = new THREE.MeshBasicMaterial({
-      color: this.config.colors.YELLOW,
+      color: this.config.colors.WHITE,
     });
 
     this.ball = new THREE.Mesh(geometry, material);
     this.scene.add(this.ball);
+
+    // ball shadow
+    geometry = new THREE.CircleGeometry(this.config.ballRadius, 16);
+    material = new THREE.MeshBasicMaterial({
+      color: this.config.colors.WHITE,
+      transparent: true,
+      opacity: 0.3,
+    });
+    geometry.rotateX(-Math.PI / 2);
+    this.ballShadow = new THREE.Mesh(geometry, material);
+    this.ballShadow.position.y = 0.001;
+    this.scene.add(this.ballShadow);
   }
 
   setPaddlePosition(x, y, z) {
@@ -487,6 +501,11 @@ export default class Scene {
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer.update();
+    }
+
+    if (this.ball) {
+      this.ballShadow.position.x = this.ball.position.x;
+      this.ballShadow.position.z = this.ball.position.z;
     }
 
     if (this.physics.ball && this.physics.ball.position.z > 1) {
