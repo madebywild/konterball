@@ -7,7 +7,7 @@ export default class Physics {
     this.config = config;
 
     this.world = null;
-    this.balls = [];
+    this.ball = null;
     this.net = null;
     this.ground = null;
     this.paddle = null;
@@ -183,51 +183,27 @@ export default class Physics {
     this.world.add(this.frontWall);
   }
 
-  getInactiveBalls() {
-    let inactiveBalls = [];
-    this.balls.forEach((ball, i) => {
-      // if (ball.position.y < 0.3) {
-      // TODO
-      if (ball.position.z > 1) {
-        inactiveBalls.push(i);
-      }
-    });
-    return inactiveBalls;
-  }
-
   addBall() {
-    if (this.balls.length > 0) {
-      this.initBallPosition(this.balls[0]);
-      return;
-    }
-    // remove inactive balls
-    this.getInactiveBalls().forEach(i => {
-      this.world.removeBody(this.balls[i]);
-      this.balls[i].removeFlag = true;
-    });
-    this.balls = this.balls.filter(x => !x.removeFlag);
-
-    this.balls.push(new CANNON.Body({
+    this.ball = new CANNON.Body({
       mass: this.config.ballMass,
       shape: new CANNON.Sphere(this.config.ballRadius),
       material: new CANNON.Material(),
-    }));
+    });
 
-    let newBall = this.balls[this.balls.length - 1];
-    newBall.name = 'BALL';
+    this.ball.name = 'BALL';
     // TODO
     // newBall.linearDamping = 0.4;
-    newBall.linearDamping = 0;
-    this.world.add(newBall);
+    this.ball.linearDamping = 0;
+    this.world.add(this.ball);
 
-    this.addContactMaterial(newBall.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(newBall.material, this.topWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(newBall.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(newBall.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(newBall.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(newBall.material, this.paddle.material, 1, 0);
+    this.addContactMaterial(this.ball.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(this.ball.material, this.topWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(this.ball.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(this.ball.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(this.ball.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(this.ball.material, this.paddle.material, 1, 0);
 
-    this.initBallPosition(newBall);
+    this.initBallPosition(this.ball);
   }
 
   paddleCollision(e) {
@@ -268,11 +244,10 @@ export default class Physics {
     this.paddle.position.set(x, y, z);
   }
 
-  setBallPositions(balls) {
-    this.balls.forEach((ball, index) => {
-      balls[index].position.copy(ball.position);
-      balls[index].quaternion.copy(ball.quaternion);
-    });
+  setBallPosition(ball) {
+    if (!this.ball) return;
+    ball.position.copy(this.ball.position);
+    ball.quaternion.copy(this.ball.quaternion);
   }
 
   initBallPosition(ball) {
@@ -327,16 +302,15 @@ export default class Physics {
   }
 
   predictCollisions(paddle) {
+    if (!this.ball) return;
     // predict ball position in the next frame (continous collision detection)
-    for (let i = 0; i < this.balls.length; i++) {
-      this.raycaster.set(this.balls[i].position.clone(), this.balls[i].velocity.clone().unit());
-      this.raycaster.far = this.balls[i].velocity.clone().length() / 50;
+    this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
+    this.raycaster.far = this.ball.velocity.clone().length() / 50;
 
-      // TODO add net
-      let arr = this.raycaster.intersectObjects([paddle]);
-      if (arr.length) {
-        this.balls[i].position.copy(arr[0].point);
-      }
+    // TODO add net
+    let arr = this.raycaster.intersectObjects([paddle]);
+    if (arr.length) {
+      this.ball.position.copy(arr[0].point);
     }
   }
 

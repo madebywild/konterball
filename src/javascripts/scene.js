@@ -34,7 +34,7 @@ export default class Scene {
     this.canvasDOM = document.querySelector('canvas');
     this.seconds = 0;
     this.tabActive = true;
-    this.balls = [];
+    this.ball = null;
     this.physicsDebugRenderer = null;
     this.ballReference = null;
     this.preset = PRESET_NAMES.STANDARD;
@@ -270,19 +270,19 @@ export default class Scene {
       this.config = Object.assign({}, this.config, PRESETS[name]);
       this.physics.config = this.config;
     }
-    this.addBall();
+    this.physics.initBallPosition(this.physics.ball);
   }
 
   receivedHit(data) {
     // receved vectors are in the other users space
     // so invert x and z velocity and mirror the point across the center of the box
-    this.physics.balls[0].position.copy(this.mirrorBallPosition(data.point));
-    this.physics.balls[0].velocity.copy(this.mirrorBallVelocity(data.velocity));
+    this.physics.ball.position.copy(this.mirrorBallPosition(data.point));
+    this.physics.ball.velocity.copy(this.mirrorBallVelocity(data.velocity));
   }
 
   receivedMiss(data) {
     this.score.self++;
-    this.hud.pointsDisplay.setSelfPoints(this.score.self);
+    this.hud.scoreDisplay.setSelfScore(this.score.self);
     this.receivedHit(data);
   }
 
@@ -290,17 +290,14 @@ export default class Scene {
     this.sound.hit(point);
     if (this.config.mode !== MODE.MULTIPLAYER) return;
     setTimeout(() => {
-      // this.physics.balls[0].position.copy(this.mirrorBallPosition(this.physics.balls[0].position));
-      // this.physics.balls[0].velocity.copy(this.mirrorBallVelocity(this.physics.balls[0].velocity));
-      // return;
       this.communication.sendHit({
         x: point.x,
         y: point.y,
         z: point.z,
       }, {
-        x: this.physics.balls[0].velocity.x,
-        y: this.physics.balls[0].velocity.y,
-        z: this.physics.balls[0].velocity.z,
+        x: this.physics.ball.velocity.x,
+        y: this.physics.ball.velocity.y,
+        z: this.physics.ball.velocity.z,
       });
     }, 50);
     //this.resetBallTimeout();
@@ -366,30 +363,16 @@ export default class Scene {
   }
 
   addBall() {
-    this.sound.gameOver();
-    // remove inactive balls
-    this.physics.getInactiveBalls().forEach(i => {
-      this.scene.remove(this.balls[i]);
-      this.balls[i].removeFlag = true;
-    });
-    this.balls = this.balls.filter(x => !x.removeFlag);
-
-    if (this.config.mode !== MODE.TOO_MANY_BALLS) {
-      //this.resetBallTimeout();
-    }
+    if (this.ball) return;
     this.physics.addBall();
-    if (this.balls.length > 0) return;
 
-    // three object
     let geometry = new THREE.SphereGeometry(this.config.ballRadius, 16, 16);
     let material = new THREE.MeshBasicMaterial({
       color: this.config.colors.YELLOW,
-      //map: this.ballTexture,
     });
 
-    //this.balls.push(new THREE.Mesh(geometry, material));
-    this.balls = [new THREE.Mesh(geometry, material)];
-    this.scene.add(this.balls[this.balls.length - 1]);
+    this.ball = new THREE.Mesh(geometry, material);
+    this.scene.add(this.ball);
   }
 
   setPaddlePosition(x, y, z) {
@@ -497,7 +480,8 @@ export default class Scene {
     this.paddleBoundingBox.update();
 
     this.physics.predictCollisions(this.paddleBoundingBox);
-    this.physics.setBallPositions(this.balls);
+    this.physics.setBallPosition(this.ball);
+
     this.physics.step(delta / 1000);
 
 
@@ -505,23 +489,23 @@ export default class Scene {
       this.physicsDebugRenderer.update();
     }
 
-    if (this.physics.balls.length && this.physics.balls[0].position.z > 1) {
-      this.addBall();
-
-      let z = this.physics.balls[0].position.z;
+    if (this.physics.ball && this.physics.ball.position.z > 1) {
+      // player has missed the ball, reset position to center
+      this.physics.initBallPosition(this.physics.ball);
+      let z = this.physics.ball.position.z;
       z -= Math.abs(z - this.config.boxPositionZ) * 2;
 
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
         this.score.opponent++;
         this.communication.sendMiss({
-          x: this.physics.balls[0].position.x,
-          y: this.physics.balls[0].position.y,
-          z: this.physics.balls[0].position.z,
+          x: this.physics.ball.position.x,
+          y: this.physics.ball.position.y,
+          z: this.physics.ball.position.z,
         }, {
-          x: this.physics.balls[0].velocity.x,
-          y: this.physics.balls[0].velocity.y,
-          z: this.physics.balls[0].velocity.z,
+          x: this.physics.ball.velocity.x,
+          y: this.physics.ball.velocity.y,
+          z: this.physics.ball.velocity.z,
         });
       }
     }
