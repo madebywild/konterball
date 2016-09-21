@@ -1,4 +1,3 @@
-import dat from 'dat-gui';
 import TweenMax from 'gsap';
 import {MODE, INITIAL_CONFIG, PRESET_NAMES, PRESETS} from './constants';
 import Physics from './physics';
@@ -80,12 +79,6 @@ export default class Scene {
       || this.renderer.domElement.mozRequestPointerLock;
     this.renderer.domElement.onclick = () => {
       this.renderer.domElement.requestPointerLock();
-     // $('body').mousemove(e => {
-     //   this.setPaddlePosition(
-     //     this.paddle.position.x + e.originalEvent.movementX / 200,
-     //     this.paddle.position.y - e.originalEvent.movementY / 200
-     //   );
-     // });
     };
 
     this.physics.setupWorld();
@@ -101,9 +94,7 @@ export default class Scene {
     this.paddleOpponent.visible = false;
 
     this.hud = new Hud(this.scene, this.config);
-    this.setupLights();
     this.setupPaddlePlane();
-    //this.setupGUI();
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
@@ -111,14 +102,10 @@ export default class Scene {
 
     requestAnimationFrame(this.animate.bind(this));
 
-    this.camera.position.x = 0;
-    this.camera.position.z = this.config.boxPositionZ;
-    this.camera.position.y = 5;
-    this.camera.up.set(-1, 0, 0);
-    this.camera.lookAt(new THREE.Vector3(0, 1, this.config.boxPositionZ));
     $('body').on('presetChange', e => {
       this.presetChange(e.preset);
     });
+
   }
 
   setupVRControls() {
@@ -147,52 +134,24 @@ export default class Scene {
   }
 
   setupThree() {
-    // Setup three.js WebGL renderer. Note: Antialiasing is a big performance hit.
-    // Only enable it if you actually need to.
     this.renderer = new THREE.WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(this.config.colors.BACKGROUND, 1);
 
-    // thisend the canvas element created by the renderer to document body element.
     document.body.appendChild(this.renderer.domElement);
 
-    // Create a three.js scene.
     this.scene = new THREE.Scene();
     this.scene.scale.y = 0.01;
 
-    // Create a three.js camera.
     this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
-    this.camera.position.y = this.config.cameraHeight;
-
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+    // position over the box
+    this.camera.position.x = 0;
+    this.camera.position.z = this.config.boxPositionZ;
+    this.camera.position.y = 5;
+    this.camera.up.set(-1, 0, 0);
+    this.camera.lookAt(new THREE.Vector3(0, 1, this.config.boxPositionZ));
 
     this.loader = new THREE.TextureLoader();
-  }
-
-  setupGUI() {
-    let gui = new dat.GUI();
-    gui.remember(this);
-    gui.add(this.config, 'ballRadius', 0.001, 0.4).onChange(val => {
-      this.physics.config.ballRadius = val;
-      this.config.ballRadius = val;
-    });
-    gui.add(this.config, 'ballInitVelocity', 0, 2);
-    gui.add(this.config, 'gravity', 0, 15).onChange(val => this.physics.world.gravity.set(0, -val, 0));
-    //gui.add(this.config, 'ballMass', 0.001, 1).onChange(val => {
-    //  //this.physics.balls.forEach(ball => {ball.gravity = val;});
-    //});
-    // gui.add(this, 'ballTableFriction', 0, 1).onChange(val => this.ballTableContact.friction = val);
-    gui.add(this.config, 'ballBoxBounciness', 0, 5).onChange(val => {
-      //this.physics.ballTablePlayerContact.restitution = val;
-      //this.physics.ballTableOpponent.restitution = val;
-      this.physics.config.ballBoxBounciness = val;
-    });
-    // gui.add(this, 'ballPaddleFriction', 0, 1).onChange(val => this.ballPaddleContact.friction = val);
-    gui.add(this.config, 'ballPaddleBounciness', 0, 5).onChange(val => this.physics.ballPaddleContact.restitution = val);
-    gui.add(this.config, 'paddleModel', ['box', 'pan']).onChange(val => {
-      this.switchPaddle(val);
-    });
   }
 
   introAnimation() {
@@ -240,7 +199,6 @@ export default class Scene {
         opacity: 0,
       }, 1);
     }
-
   }
 
   startMultiplayer() {
@@ -251,8 +209,10 @@ export default class Scene {
       hit: this.receivedHit.bind(this),
       miss: this.receivedMiss.bind(this),
     }, window.location.pathname.substr(1));
+
     $('body').on('opponentConnected', () => {
-      console.log('the opponent connected');
+      $('#multiplayer-waiting-text').text('Player 2 has joined the room');
+      $('#join-waiting-room').text('Start game');
     });
     return window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1;
   }
@@ -405,30 +365,6 @@ export default class Scene {
     */
   }
 
-  setupLights() {
-    let light = new THREE.AmbientLight(0xffffff, 1);
-    this.scene.add(light);
-
-    light = new THREE.DirectionalLight(0xffffff, 0.9);
-    light.position.set(0, 8, -4);
-    this.scene.add(light);
-
-    light.castShadow = true;
-    light.shadow.mapSize.width = 1024 * 1;
-    light.shadow.mapSize.height = 1024 * 1;
-    light.shadow.bias = 0.01;
-    light.shadow.camera.near = 3;
-    light.shadow.camera.far = 12;
-
-    light.shadow.camera.right = 2;
-    light.shadow.camera.left = -2;
-    light.shadow.camera.top = 1;
-    light.shadow.camera.bottom = -8;
-
-    // let ch = new THREE.CameraHelper(light.shadow.camera);
-    // this.scene.add(ch);
-  }
-
   addBall() {
     this.sound.gameOver();
     // remove inactive balls
@@ -453,7 +389,6 @@ export default class Scene {
 
     //this.balls.push(new THREE.Mesh(geometry, material));
     this.balls = [new THREE.Mesh(geometry, material)];
-    this.balls[this.balls.length - 1].castShadow = true;
     this.scene.add(this.balls[this.balls.length - 1]);
   }
 

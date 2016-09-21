@@ -12,7 +12,7 @@
     "url": "git://github.com/vigetlabs/gulp-starter.git"
   },
   "scripts": {
-    "start": "gulp",
+    "start": "gulp production && node server.js",
     "gulp": "gulp",
     "development": "gulp",
     "production": "gulp production",

@@ -17,9 +17,12 @@ export default class Button {
   }
 
   makeButton(x, y) {
-    let geometry = new THREE.PlaneGeometry(this.buttonWidth, this.buttonHeight);
-    let material = new THREE.MeshPhongMaterial({
-      color: INITIAL_CONFIG.colors.PONG_GREEN_2,
+    var geometry = new THREE.RingGeometry( this.buttonWidth * 0.6, this.buttonWidth * 0.7, 4, 1 );
+    geometry.rotateZ(Math.PI / 4);
+    geometry.scale(1, 0.4, 1);
+    //let geometry = new THREE.PlaneGeometry(this.buttonWidth, this.buttonHeight);
+    let material = new THREE.MeshBasicMaterial({
+      color: 0xFFFFFF,
       side: THREE.DoubleSide,
       opacity: 0.3,
       transparent: true,
@@ -36,10 +39,10 @@ export default class Button {
   }
 
   setupText() {
-    let material = new THREE.MeshLambertMaterial({
+    let material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: this.name == 'Crazy' || this.name == 'Tennis' ? 0.1 : 0.9,
+      opacity: this.name == 'Crazy' || this.name == 'Tennis' ? 0.4 : 0.9,
     });
     let geometry = new THREE.TextGeometry(this.name, {
       font: this.font,
