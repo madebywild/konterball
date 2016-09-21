@@ -3,6 +3,17 @@ export const MODE = {
   SINGLEPLAYER: 'SINGLEPLAYER',
 };
 
+export const STATE = {
+  PRELOADER: 'PRELOADER',
+  MODE_SELECTION: 'MODE_SELECTION',
+  ROOM_URL_DISPLAY: 'ROOM_URL_DISPLAY',
+  PLAYING: 'PLAYING',
+};
+
+export const EVENT = {
+  OPPONENT_CONNECTED: 'OPPONENT_CONNECTED',
+};
+
 export const ACTION = {
   MOVE: 'M',
   HIT: 'H',

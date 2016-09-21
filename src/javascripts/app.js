@@ -1,15 +1,26 @@
 import Scene from './scene';
 import TweenMax from 'gsap';
-import {MODE, INITIAL_CONFIG} from './constants';
+import {EVENT, MODE, INITIAL_CONFIG} from './constants';
 import $ from 'jquery';
 import Clipboard from 'clipboard';
+import EventEmitter from 'event-emitter';
 
 class PingPong {
   constructor() {
+    this.emitter = EventEmitter({});
+    this.emitter.on('test', e => {
+      console.log(e);
+    });
     this.introTicker();
-    this.scene = new Scene();
+    console.log(this.emitter);
+    this.scene = new Scene(this.emitter);
     this.scene.setup();
     this.setupHandlers();
+
+    if (this.checkRoom()) {
+      $('.mode-chooser').hide();
+      $('#room-url, #join-waiting-room').hide();
+    }
   }
 
   setupHandlers() {
@@ -20,7 +31,7 @@ class PingPong {
       this.viewRoomScreenAnimation();
     });
     $('#join-waiting-room').click(e => {
-      this.scene.introAnimation();
+      this.scene.startGame();
     });
   }
 
@@ -45,19 +56,31 @@ class PingPong {
       autoAlpha: 1,
       onComplete: () => {
         if (this.checkRoom()) {
+          $('.room-screen').show();
           this.scene.startMultiplayer();
-          this.scene.introAnimation();
+          this.scene.startGame();
         }
       }
     }, '-=1');
   }
 
   viewRoomScreenAnimation() {
-    let hasJoinedRoom = this.scene.startMultiplayer();
-    if (hasJoinedRoom) {
-      this.scene.introAnimation();
+    this.scene.startMultiplayer();
+    console.log(this.scene.communication.isHost);
+    if (!this.scene.communication.isHost) {
+      this.scene.startGame();
       return;
     }
+
+    $('#room-url').val('http://192.168.1.182:8080/' + this.scene.communication.id);
+    // TODO annoying during development
+    // history.pushState(null, null, this.scene.communication.id);
+    this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
+      this.scene.startGame();
+      $('#multiplayer-waiting-text').text('Player 2 has joined the room');
+      $('#join-waiting-room').hide();
+    });
+
     new Clipboard('#room-url');
     let tl = new TimelineMax();
     tl.to('.button-frame', 0.3, {

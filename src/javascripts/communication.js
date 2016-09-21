@@ -1,12 +1,15 @@
 import Peer from 'peerjs';
 import randomstring from 'randomstring';
-import {ACTION, INITIAL_CONFIG} from './constants';
+import {ACTION, INITIAL_CONFIG, EVENT} from './constants';
 import $ from 'jquery';
 
 export default class Communication {
-  constructor(callbacks, joinRoom) {
+  constructor(callbacks, joinRoom, emitter) {
+    this.emitter = emitter;
+    console.log(this.emitter);
     this.callbacks = callbacks;
     this.connectionIsOpen = false;
+    this.opponentConnected = false;
     this.conn = null;
 
     this.id = randomstring.generate({
@@ -26,16 +29,16 @@ export default class Communication {
 
     if (this.isHost) {
       // use my id as a room code and listen for incoming connections
-      $('#room-url').val('http://192.168.1.182:8080/' + this.id);
       this.peer.on('connection', c => {
         if (this.conn) {
           c.close();
           return;
         }
-        let event = new Event('opponentConnected');
-        $('body')[0].dispatchEvent(event);
+        this.emitter.emit(EVENT.OPPONENT_CONNECTED);
+
         this.conn = c;
         this.connectionIsOpen = true;
+        this.opponentConnected = true;
         this.startListening();
       });
     } else {
@@ -43,6 +46,7 @@ export default class Communication {
       this.peer.on('open', () => {
         this.conn = this.peer.connect(joinRoom);
         this.conn.on('open', () => {
+          this.opponentConnected = true;
           setInterval(() => {
             this.conn.send({
               action: 'PING',
@@ -99,10 +103,12 @@ export default class Communication {
     });
   }
 
-  sendMiss() {
+  sendMiss(point, velocity) {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.MISS,
+      point: point,
+      velocity: velocity,
     });
   }
 }

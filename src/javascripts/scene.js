@@ -1,5 +1,5 @@
 import TweenMax from 'gsap';
-import {MODE, INITIAL_CONFIG, PRESET_NAMES, PRESETS} from './constants';
+import {MODE, INITIAL_CONFIG, PRESET_NAMES, PRESETS, EVENT} from './constants';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
@@ -12,7 +12,9 @@ import Paddle from './models/paddle';
 const DEBUG_MODE = false;
 
 export default class Scene {
-  constructor() {
+  constructor(emitter) {
+    this.emitter = emitter;
+
     this.renderer = null;
     this.scene = null;
     this.camera = null;
@@ -39,6 +41,12 @@ export default class Scene {
     this.physicsDebugRenderer = null;
     this.ballReference = null;
     this.preset = PRESET_NAMES.STANDARD;
+    this.paddleHelpers = {
+      top: null,
+      left: null,
+      right: null,
+      bottom: null,
+    };
 
     this.viewport = {
       width: $(document).width(),
@@ -50,13 +58,6 @@ export default class Scene {
       opponent: 0,
     };
 
-    this.frameNumber = 0;
-    this.paddleHelpers = {
-      top: null,
-      left: null,
-      right: null,
-      bottom: null,
-    };
 
     // config
     this.config = INITIAL_CONFIG;
@@ -67,6 +68,7 @@ export default class Scene {
     // boxZBounds: -(this.boxSize.depth - 1),
     this.boxZBounds = 0;
 
+    this.frameNumber = 0;
     this.totaltime = 0;
     this.lastRender = 0;
   }
@@ -90,7 +92,7 @@ export default class Scene {
     this.scene.add(this.paddleBoundingBox);
 
     this.paddleOpponent = Paddle(this.scene, this.config);
-    this.paddleOpponent.position.z = this.config.boxPositionZ + this.config.paddlePositionZ;
+    this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
     this.paddleOpponent.position.y = 1;
     this.paddleOpponent.visible = false;
 
@@ -103,10 +105,9 @@ export default class Scene {
 
     requestAnimationFrame(this.animate.bind(this));
 
-    $('body').on('presetChange', e => {
-      this.presetChange(e.preset);
+    this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
+      this.paddleOpponent.visible = true;
     });
-
   }
 
   setupVRControls() {
@@ -155,20 +156,32 @@ export default class Scene {
     this.loader = new THREE.TextureLoader();
   }
 
-  introAnimation() {
+  startGame() {
     let no = {
       fov: this.camera.fov,
       upX: -1,
       upY: 0,
       scaleY: 0.01,
     };
+    let tl = new TimelineMax({paused: this.config.mode === MODE.MULTIPLAYER});
+
     if (this.config.mode === MODE.MULTIPLAYER) {
-      this.paddleOpponent.visible = true;
+      // play countdown first
+      let counter = 3;
+      let countdown = setInterval(() => {
+        $('#multiplayer-waiting-text').text(counter === 0 ? 'Go' : counter);
+        counter--;
+        if (counter < 0) {
+          clearInterval(countdown);
+          tl.play();
+        }
+      }, 1000);
     }
-    let tl = new TimelineMax();
+
     tl.to('.intro-wrapper', 0.4, {
       autoAlpha: 0,
     }, 0);
+
     const panDuration = 2;
     tl.to(no, panDuration, {
       fov: 75,
@@ -195,11 +208,6 @@ export default class Scene {
         this.addBall();
       }
     }, 1);
-    if (this.mode === MODE.SINGLEPLAYER) {
-      tl.to(this.paddleOpponent.material, 0.4, {
-        opacity: 0,
-      }, 1);
-    }
   }
 
   startMultiplayer() {
@@ -209,18 +217,12 @@ export default class Scene {
       move: this.receivedMove.bind(this),
       hit: this.receivedHit.bind(this),
       miss: this.receivedMiss.bind(this),
-    }, window.location.pathname.substr(1));
-
-    $('body').on('opponentConnected', () => {
-      $('#multiplayer-waiting-text').text('Player 2 has joined the room');
-      $('#join-waiting-room').text('Start game');
-    });
-    return window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1;
+    }, window.location.pathname.substr(1), this.emitter);
   }
 
   startSingleplayer() {
     this.config.mode = MODE.SINGLEPLAYER;
-    this.introAnimation();
+    this.startGame();
   }
 
   receivedMove(move) {
@@ -239,7 +241,7 @@ export default class Scene {
   }
 
   mirrorBallPosition(pos) {
-    let z = pos.z;
+    let z = pos.z; // undefined
     z -= Math.abs(z - this.config.boxPositionZ) * 2;
     return {
       x: pos.x, 
