@@ -47,12 +47,12 @@ export default class Communication {
         this.conn = this.peer.connect(joinRoom);
         this.conn.on('open', () => {
           this.opponentConnected = true;
-          setInterval(() => {
-            this.conn.send({
-              action: 'PING',
-              time: Date.now(),
-            });
-          }, 1000);
+          // setInterval(() => {
+          //   this.conn.send({
+          //     action: 'PING',
+          //     time: Date.now(),
+          //   });
+          // }, 1000);
           this.startListening();
         });
       });
