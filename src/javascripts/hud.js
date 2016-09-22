@@ -1,7 +1,7 @@
 import Button from './button';
 import TweenMax from 'gsap';
 import ScoreDisplay from './score-display';
-import {PRESET_NAMES} from './constants';
+import {PRESET_NAMES, EVENT} from './constants';
 
 export default class Hud {
   constructor(scene, config, emitter) {
@@ -46,12 +46,12 @@ export default class Hud {
     this.buttons.push(new Button(this.container, this.font, 'Ping Pong', 0, 0));
     this.buttons.push(new Button(this.container, this.font, 'Insane Mode', +0.7, -0));
     this.initialized = true;
+    this.activeButton = this.buttons[0].hitbox;
 
     this.scoreDisplay = new ScoreDisplay(this.scene, this.font);
   }
 
   cameraRayUpdated(raycaster) {
-    return;
     if (!this.initialized) return;
     let intersections = raycaster.intersectObjects(this.buttons.map(b => b.hitbox), false);
     if (intersections.length) {
@@ -74,14 +74,15 @@ export default class Hud {
             });
           },
           onComplete: () => {
+            console.log(this.activeButton);
             if (this.activeButton) {
               this.activeButton.parent.children.forEach(child => {
-                child.material.opacity = 1;
+                child.material.opacity = 0.5;
               });
             }
             this.activeButton = button;
             this.modeWasSelected = true;
-            this.emitter.emit(EVENT.PRESET_CHANGED);
+            this.emitter.emit(EVENT.PRESET_CHANGED, button.parent._name);
           },
         });
       }

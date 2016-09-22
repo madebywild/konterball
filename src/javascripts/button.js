@@ -49,7 +49,7 @@ export default class Button {
 
 
     geometry = new THREE.PlaneGeometry(this.buttonWidth, this.buttonHeight);
-    material = new THREE.MeshBasicMaterial({color: 0xFF0000});
+    material = new THREE.MeshBasicMaterial({color: 0x000000, transparent: true});
     this.hitbox = new THREE.Mesh(geometry, material);
     this.hitbox.position.z = -0.001;
     this.buttonGroup.add(this.hitbox);
@@ -57,6 +57,8 @@ export default class Button {
 
     this.buttonGroup.position.x = x;
     this.buttonGroup.position.y = y;
+
+    this.buttonGroup._name = this.name;
 
     this.setupText();
     this.parent.add(this.buttonGroup);
@@ -81,21 +83,4 @@ export default class Button {
     this.text.position.z = 0.01;
     this.buttonGroup.add(this.text);
   }
-
-  /*
-  startActiveAnimation(onComplete) {
-    this.tween = TweenMax.to(this.button.material, 2, {
-      opacity: 1,
-      onComplete: () => {
-        onComplete();
-      },
-    });
-  }
-
-  resetActiveAnimation() {
-    this.tween.kill();
-    this.tween = null;
-    this.button.material.opacity = 0.3;
-  }
-  */
 }

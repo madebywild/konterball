@@ -12,8 +12,8 @@
     "url": "git://github.com/vigetlabs/gulp-starter.git"
   },
   "scripts": {
-    "start": "gulp production && node server.js",
-    "gulp": "gulp",
+    "start": "NODE_ENV=production gulp production && node server.js",
+    "gulp": "NODE_ENV=development gulp",
     "development": "gulp",
     "production": "gulp production",
     "deploy": "gulp deploy",

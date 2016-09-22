@@ -1,20 +1,20 @@
-export default (parent, config) {
-  // TODO
+export default (parent, config) => {
   let geometry = new THREE.BoxGeometry(
-    this.config.tableWidth,
-    this.config.netHeight,
-    this.config.netThickness
+    config.boxWidth,
+    config.netHeight,
+    config.netThickness
   );
-  let material = new THREE.MeshLambertMaterial({
-    color: this.config.colors.WHITE,
+  let material = new THREE.MeshBasicMaterial({
+    color: config.colors.WHITE,
     transparent: true,
     opacity: 0.5,
   });
-  this.net = new THREE.Mesh(geometry, material);
-  this.net.position.y = this.config.tableHeight + this.config.tableThickness + this.config.netHeight / 2;
-  this.net.position.z = this.config.boxPositionZ;
+
+  let net = new THREE.Mesh(geometry, material);
+  net.position.y = config.netHeight / 2;
+  net.position.z = config.boxPositionZ;
   // TODO is this correct?
-  this.net.castShadow = true;
   //this.net.position.z = -this.config.tableDepth / 4;
-  this.scene.add(this.net);
-}
+  parent.add(net);
+  return net;
+};
