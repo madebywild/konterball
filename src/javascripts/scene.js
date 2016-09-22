@@ -197,6 +197,7 @@ export default class Scene {
     let tl = new TimelineMax({paused: this.config.mode === MODE.MULTIPLAYER});
 
     if (this.config.mode === MODE.MULTIPLAYER) {
+      this.paddleOpponent.visible = true;
       // play countdown first
       let counter = 2;
       $('#multiplayer-waiting-text').text('3');
@@ -485,7 +486,7 @@ export default class Scene {
     let delta = Math.min(timestamp - this.lastRender, 500);
     this.totaltime += delta;
 
-    if (!this.tabActive) {;
+    if (!this.tabActive) {
       requestAnimationFrame(this.animate.bind(this));
       return;
     }
