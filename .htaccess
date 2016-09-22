@@ -1,4 +1,0 @@
-AuthType Basic
-AuthName "Google Pong Prototype"
-AuthUserFile /etc/httpd/.htpasswd
-Require valid-user
