@@ -19,7 +19,7 @@ export default class Communication {
 
     this.isHost = !joinRoom;
 
-    this.peer = new Peer(this.id, {host: '192.168.1.182', port: 8080, path: '/api'});
+    this.peer = new Peer(this.id, {host: location.host, port: 8080, path: '/api'});
 
     // connect to the peer server
     this.peer.on('open', () => {
