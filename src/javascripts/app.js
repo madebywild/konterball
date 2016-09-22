@@ -72,7 +72,7 @@ class PingPong {
       return;
     }
 
-    $('#room-url').val('http://192.168.1.182:8080/' + this.scene.communication.id);
+    $('#room-url').val('http://pong.wild.plus/' + this.scene.communication.id);
     // TODO annoying during development
     // history.pushState(null, null, this.scene.communication.id);
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
