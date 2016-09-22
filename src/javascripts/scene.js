@@ -198,7 +198,8 @@ export default class Scene {
 
     if (this.config.mode === MODE.MULTIPLAYER) {
       // play countdown first
-      let counter = 3;
+      let counter = 2;
+      $('#multiplayer-waiting-text').text('3');
       let countdown = setInterval(() => {
         $('#multiplayer-waiting-text').text(counter === 0 ? 'Go' : counter);
         counter--;
@@ -491,7 +492,8 @@ export default class Scene {
 
     this.updateControls();
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      this.setPaddlePosition(this.ball.position.x, this.ball.position.y);
+      // for multiplayer testing
+      // this.setPaddlePosition(this.ball.position.x, this.ball.position.y);
     }
     // raycaster position and direction is now either camera
     // or controller on vive

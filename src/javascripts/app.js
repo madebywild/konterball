@@ -44,7 +44,7 @@ class PingPong {
     let tickerWidth = $('.intro').width();
     let viewportWidth = $(document).width();
     let animateDistance = tickerWidth + viewportWidth / 2;
-    tl.to('.intro', 1.1, {
+    tl.to('.intro', 10.1, {
       x: -animateDistance,
       ease: Power0.easeNone,
     }, 0);
@@ -74,7 +74,7 @@ class PingPong {
 
     $('#room-url').val('http://192.168.1.182:8080/' + this.scene.communication.id);
     // TODO annoying during development
-    // history.pushState(null, null, this.scene.communication.id);
+    history.pushState(null, null, this.scene.communication.id);
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
       this.scene.startGame();
       $('#multiplayer-waiting-text').text('Player 2 has joined the room');
