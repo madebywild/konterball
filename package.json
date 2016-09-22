@@ -13,7 +13,7 @@
   },
   "scripts": {
     "preinstall": "npm install -g gulp",
-    "prestart": "npm run production",
+    "prestart": "gulp production",
     "start": "node server.js",
     "gulp": "gulp",
     "development": "gulp",
