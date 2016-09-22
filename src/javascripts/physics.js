@@ -1,4 +1,4 @@
-import {MODE} from './constants';
+import {PRESET, MODE} from './constants';
 
 export default class Physics {
   constructor(config, ballPaddleCollisionCallback) {
@@ -27,6 +27,8 @@ export default class Physics {
     this.world.solver.iterations = 20;
     this.setupBox();
     this.setupPaddle();
+    this.setupNet();
+    //this.net.collisionResponse = 0;
   }
 
   setupGround(){
@@ -46,7 +48,7 @@ export default class Physics {
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          this.config.tableWidth / 2,
+          this.config.boxWidth / 2,
           this.config.netHeight / 2,
           this.config.netThickness / 2
         )
@@ -56,8 +58,8 @@ export default class Physics {
     this.net._name = 'NET';
     this.net.position.set(
       0,
-      this.config.tableHeight + this.config.tableThickness + this.config.netHeight / 2,
-      this.config.tablePositionZ
+      this.config.netHeight / 2,
+      this.config.boxPositionZ
     );
     this.world.add(this.net);
   }
@@ -208,7 +210,6 @@ export default class Physics {
 
   paddleCollision(e) {
     if (e.body.name === 'BALL') {
-
       this.ballPaddleCollisionCallback(e.body.position);
 
       let hitpointX = e.body.position.x - e.target.position.x;
@@ -222,7 +223,8 @@ export default class Physics {
       e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
       e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
       e.body.velocity.z += 0.1;
-      return;
+      console.log(this.config.preset);
+      if (this.config.preset !== PRESET.PINGPONG) return;
 
       // these values are heavily tweakable
       e.body.velocity.x += hitpointX * 4;
@@ -301,14 +303,15 @@ export default class Physics {
     }
   }
 
-  predictCollisions(paddle) {
+  predictCollisions(paddle, net) {
     if (!this.ball) return;
-    // predict ball position in the next frame (continous collision detection)
+    // predict ball position in the next frame
     this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
     this.raycaster.far = this.ball.velocity.clone().length() / 50;
 
-    // TODO add net
-    let arr = this.raycaster.intersectObjects([paddle]);
+    // the raycaster only intersects visible objects, so if the net is invisible
+    // in non-pingpong-mode, it wont get an intersection
+    let arr = this.raycaster.intersectObjects([paddle, net]);
     if (arr.length) {
       this.ball.position.copy(arr[0].point);
     }

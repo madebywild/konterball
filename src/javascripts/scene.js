@@ -1,5 +1,5 @@
 import TweenMax from 'gsap';
-import {MODE, INITIAL_CONFIG, PRESET, EVENT} from './constants';
+import {STATE, MODE, INITIAL_CONFIG, PRESET, EVENT} from './constants';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
@@ -8,11 +8,13 @@ import $ from 'jquery';
 
 import Box from './models/box';
 import Paddle from './models/paddle';
+import Net from './models/net';
 
 const DEBUG_MODE = false;
 
 export default class Scene {
   constructor(emitter) {
+    console.log(process.env.NODE_ENV);
     this.emitter = emitter;
 
     this.renderer = null;
@@ -40,6 +42,7 @@ export default class Scene {
     this.ballShadow = null;
     this.physicsDebugRenderer = null;
     this.ballReference = null;
+    this.state = STATE.PRELOADER;
     this.paddleHelpers = {
       top: null,
       left: null,
@@ -76,6 +79,9 @@ export default class Scene {
     this.setupThree();
     this.box = Box(this.scene, this.config);
     this.setupVR();
+    console.log('setupnet');
+    this.net = Net(this.scene, this.config);
+    this.net.visible = false;
 
     this.renderer.domElement.requestPointerLock = this.renderer.domElement.requestPointerLock
       || this.renderer.domElement.mozRequestPointerLock;
@@ -84,6 +90,7 @@ export default class Scene {
     };
 
     this.physics.setupWorld();
+    this.physics.net.collisionResponse = 0;
 
     this.paddle = Paddle(this.scene, this.config);
     this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
@@ -107,6 +114,33 @@ export default class Scene {
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
       this.paddleOpponent.visible = true;
     });
+    this.emitter.on(EVENT.PRESET_CHANGED, e => {
+      this.presetChanged(e);
+    });
+  }
+
+  presetChanged(name) {
+    if (this.config.preset === name) return;
+    if (name === PRESET.INSANE) {
+      console.log('crunchy crunchy');
+    }
+    if (name === PRESET.NORMAL) {
+    }
+    if (name === PRESET.PINGPONG) {
+      this.physics.net.collisionResponse = 1;
+      this.net.visible = true;
+      this.physics.world.gravity.set(0, -9.4, 0);
+      //this.physics.
+    } else {
+      this.physics.net.collisionResponse = 0;
+      this.net.visible = false;
+      this.physics.world.gravity.set(0, 0, 0);
+    }
+    if (this.config.preset === PRESET.INSANE) {
+      this.renderer.setClearColor(0x000000);
+    }
+    this.config.preset = name;
+    this.physics.config.preset = name;
   }
 
   setupVRControls() {
@@ -156,6 +190,7 @@ export default class Scene {
   }
 
   startGame() {
+    this.state = STATE.PLAYING;
     let no = {
       fov: this.camera.fov,
       upX: -1,
@@ -255,26 +290,6 @@ export default class Scene {
       y: vel.y,
       z: -vel.z,
     };
-  }
-
-  presetChange(name) {
-    return;
-
-    if (name === this.preset) return;
-    this.physics.world.gravity.set(0, INITIAL_CONFIG.gravity, 0);
-    this.config = Object.assign({}, INITIAL_CONFIG);
-    this.physics.config = Object.assign({}, INITIAL_CONFIG);
-
-    if (name === PRESET_NAMES.GRAVITY) {
-      this.physics.world.gravity.set(0, -PRESETS[name].gravity, 0);
-    }
-
-    if (name in PRESETS) {
-      this.preset = name;
-      this.config = Object.assign({}, this.config, PRESETS[name]);
-      this.physics.config = this.config;
-    }
-    this.physics.initBallPosition(this.physics.ball);
   }
 
   receivedHit(data) {
@@ -489,25 +504,27 @@ export default class Scene {
     this.raycaster.far = 4;
     this.hud.cameraRayUpdated(this.raycaster);
 
+
     if (this.config.mode === MODE.MULTIPLAYER) {
       this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
     }
 
-    this.paddleBoundingBox.update();
+    if (this.state === STATE.PLAYING) {
+      this.paddleBoundingBox.update();
+      this.physics.predictCollisions(this.paddleBoundingBox, this.net);
 
-    this.physics.predictCollisions(this.paddleBoundingBox);
-    this.physics.setBallPosition(this.ball);
+      this.physics.step(delta / 1000);
 
-    this.physics.step(delta / 1000);
+      if (this.ball) {
+        this.physics.setBallPosition(this.ball);
+        this.ballShadow.position.x = this.ball.position.x;
+        this.ballShadow.position.z = this.ball.position.z;
+      }
+    }
 
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer.update();
-    }
-
-    if (this.ball) {
-      this.ballShadow.position.x = this.ball.position.x;
-      this.ballShadow.position.z = this.ball.position.z;
     }
 
     if (this.physics.ball && this.physics.ball.position.z > 1) {
@@ -529,6 +546,10 @@ export default class Scene {
           z: this.physics.ball.velocity.z,
         });
       }
+    }
+
+    if (this.config.preset === PRESET.INSANE) {
+      this.renderer.setClearColor('hsl(' + Math.floor(Math.random() * 360) + ', 100%, 50%)');
     }
 
     // Update VR headset position and apply to camera.

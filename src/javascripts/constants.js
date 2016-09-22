@@ -22,20 +22,20 @@ export const ACTION = {
 };
 
 export const PRESET = {
-  INSANE: 'INSANE',
-  NORMAL: 'NORMAL',
-  PINGPONG: 'PINGPONG',
+  INSANE: 'Insane Mode',
+  NORMAL: 'Normal Mode',
+  PINGPONG: 'Ping Pong',
 };
 
 export const INITIAL_CONFIG = {
   mode: MODE.SINGLEPLAYER,
   preset: PRESET.NORMAL,
   gravity: 0,
-  netHeight: 0.15,
   netThickness: 0.02,
   boxWidth: 3,
   boxDepth: 5,
   boxHeight: 2,
+  netHeight: 0.5,
   boxPositionZ: -3.5,
   paddleThickness: 0.04,
   paddleSize: 0.5,
@@ -44,10 +44,11 @@ export const INITIAL_CONFIG = {
   ballMass: 0.001,
   ballPaddleFriction: 0.8,
   ballPaddleBounciness: 1,
-  ballBoxBounciness: 1,
+  ballBoxBounciness: 0.95,
   ballInitVelocity: 1,
   paddleModel: 'box',
   cameraHeight: 1,
+  preset: PRESET.NORMAL,
 
   ROOM_CODE_LENGTH: 6,
 
