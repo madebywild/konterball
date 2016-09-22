@@ -7,12 +7,11 @@ let ExpressPeerServer = require('peer').ExpressPeerServer;
 
 const port = process.env.PORT || 8080;
 
-
 const root = `${__dirname}/public`;
-
-app.use(express.static(root));
-
-app.use(fallback('index.html', {root}))
+if (process.env.NODE_ENV !== "staging" && process.env.NODE_ENV !== "production") {
+  app.use(express.static(root));
+  app.use(fallback('index.html', {root}))
+}
 
 let server = app.listen(port);
 
