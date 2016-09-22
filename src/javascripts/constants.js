@@ -12,6 +12,7 @@ export const STATE = {
 
 export const EVENT = {
   OPPONENT_CONNECTED: 'OPPONENT_CONNECTED',
+  PRESET_CHANGED: 'PRESET_CHANGED',
 };
 
 export const ACTION = {
@@ -20,30 +21,15 @@ export const ACTION = {
   MISS: 'I',
 };
 
-export const PRESET_NAMES = {
-  GRAVITY: 'Gravity',
-  HUGE_BALLS: 'Huge Balls',
-  CRAZY: 'Crazy',
-  TENNIS: 'Tennis',
-  STANDARD: 'Standard',
-  SLOWMOTION: 'Slowmotion',
+export const PRESET = {
+  INSANE: 'INSANE',
+  NORMAL: 'NORMAL',
+  PINGPONG: 'PINGPONG',
 };
-
-const PRESETS = {};
-PRESETS[PRESET_NAMES.GRAVITY] = {
-  gravity: 4,
-};
-PRESETS[PRESET_NAMES.HUGE_BALLS] = {
-  ballRadius: 0.1,
-};
-PRESETS[PRESET_NAMES.SLOWMOTION] = {
-  ballInitVelocity: 0.5,
-};
-
-export {PRESETS};
 
 export const INITIAL_CONFIG = {
   mode: MODE.SINGLEPLAYER,
+  preset: PRESET.NORMAL,
   gravity: 0,
   netHeight: 0.15,
   netThickness: 0.02,

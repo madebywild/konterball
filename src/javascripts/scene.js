@@ -1,5 +1,5 @@
 import TweenMax from 'gsap';
-import {MODE, INITIAL_CONFIG, PRESET_NAMES, PRESETS, EVENT} from './constants';
+import {MODE, INITIAL_CONFIG, PRESET, EVENT} from './constants';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
@@ -40,7 +40,6 @@ export default class Scene {
     this.ballShadow = null;
     this.physicsDebugRenderer = null;
     this.ballReference = null;
-    this.preset = PRESET_NAMES.STANDARD;
     this.paddleHelpers = {
       top: null,
       left: null,
@@ -96,7 +95,7 @@ export default class Scene {
     this.paddleOpponent.position.y = 1;
     this.paddleOpponent.visible = false;
 
-    this.hud = new Hud(this.scene, this.config);
+    this.hud = new Hud(this.scene, this.config, this.emitter);
     this.setupPaddlePlane();
 
     if (DEBUG_MODE) {
@@ -259,6 +258,8 @@ export default class Scene {
   }
 
   presetChange(name) {
+    return;
+
     if (name === this.preset) return;
     this.physics.world.gravity.set(0, INITIAL_CONFIG.gravity, 0);
     this.config = Object.assign({}, INITIAL_CONFIG);
@@ -303,7 +304,6 @@ export default class Scene {
         z: this.physics.ball.velocity.z,
       });
     }, 50);
-    //this.resetBallTimeout();
   }
 
   setupPaddlePlane() {
