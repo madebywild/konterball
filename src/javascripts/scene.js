@@ -14,7 +14,6 @@ const DEBUG_MODE = false;
 
 export default class Scene {
   constructor(emitter) {
-    console.log(process.env.NODE_ENV);
     this.emitter = emitter;
 
     this.renderer = null;
@@ -79,7 +78,6 @@ export default class Scene {
     this.setupThree();
     this.box = Box(this.scene, this.config);
     this.setupVR();
-    console.log('setupnet');
     this.net = Net(this.scene, this.config);
     this.net.visible = false;
 
@@ -122,7 +120,6 @@ export default class Scene {
   presetChanged(name) {
     if (this.config.preset === name) return;
     if (name === PRESET.INSANE) {
-      console.log('crunchy crunchy');
     }
     if (name === PRESET.NORMAL) {
     }
@@ -493,16 +490,15 @@ export default class Scene {
     }
 
     this.updateControls();
+    // raycaster position and direction is now either camera
+    // or controller on vive
+    this.hud.cameraRayUpdated(this.raycaster);
 
     this.updateHelpers();
 
     if (this.pan) {
       this.pan.rotateY(delta * 0.0003);
     }
-
-    this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-    this.raycaster.far = 4;
-    this.hud.cameraRayUpdated(this.raycaster);
 
 
     if (this.config.mode === MODE.MULTIPLAYER) {

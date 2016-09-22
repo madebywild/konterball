@@ -223,7 +223,6 @@ export default class Physics {
       e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
       e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
       e.body.velocity.z += 0.1;
-      console.log(this.config.preset);
       if (this.config.preset !== PRESET.PINGPONG) return;
 
       // these values are heavily tweakable
