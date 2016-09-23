@@ -19,6 +19,9 @@ export const ACTION = {
   MOVE: 'M',
   HIT: 'H',
   MISS: 'I',
+  PRESETCHANGE: 'P',
+  PING: 'A',
+  PONG: 'I',
 };
 
 export const PRESET = {

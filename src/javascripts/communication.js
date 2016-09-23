@@ -10,7 +10,9 @@ export default class Communication {
     this.callbacks = callbacks;
     this.connectionIsOpen = false;
     this.opponentConnected = false;
+    this.latency = null;
     this.conn = null;
+    this.lastPings = [];
 
     this.id = randomstring.generate({
       length: INITIAL_CONFIG.ROOM_CODE_LENGTH,
@@ -19,7 +21,7 @@ export default class Communication {
 
     this.isHost = !joinRoom;
 
-    this.peer = new Peer(this.id, {host: '192.168.1.182', port: 8080, path: '/api'});
+    this.peer = new Peer(this.id, {host: location.hostname, port: 8081, path: '/api'});
 
     // connect to the peer server
     this.peer.on('open', () => {
@@ -44,22 +46,38 @@ export default class Communication {
     } else {
       // use code (from url) to connect to room host
       this.peer.on('open', () => {
-        this.conn = this.peer.connect(joinRoom);
+        this.conn = this.peer.connect(joinRoom, {reliable: true});
         this.conn.on('open', () => {
           this.opponentConnected = true;
-          setInterval(() => {
-            this.conn.send({
-              action: 'PING',
-              time: Date.now(),
-            });
-          }, 1000);
           this.startListening();
         });
       });
     }
   }
 
+  sendPings() {
+    setInterval(() => {
+      console.log('SEND PING');
+      this.conn.send({
+        action: 'PING',
+        time: Date.now(),
+      });
+    }, 1000);
+  }
+
+  receivedPing(data) {
+    this.conn.send({
+      action: 'PONG',
+      time: data.time,
+    });
+  }
+
+  receivedPong(data) {
+    console.log('PING TIME: ' + (Date.now() - data.time) / 2 + 'ms');
+  }
+
   startListening() {
+    this.sendPings();
     this.conn.on('data', data => {
       switch (data.action) {
         case ACTION.MOVE:
@@ -71,15 +89,14 @@ export default class Communication {
         case ACTION.MISS:
           this.callbacks.miss(data);
           break;
+        case ACTION.PRESETCHANGE:
+          this.callbacks.presetChange(data);
+          break;
         case 'PING':
-          if (this.listen) {
-            console.log('PING TIME: ' + (Date.now() - data.time) / 2 + 'ms');
-          } else {
-            this.conn.send({
-              action: 'PING',
-              time: data.time,
-            });
-          }
+          this.receivedPing(data);
+          break;
+        case 'PONG':
+          this.receivedPong(data);
           break;
       }
     });
@@ -109,6 +126,13 @@ export default class Communication {
       action: ACTION.MISS,
       point: point,
       velocity: velocity,
+    });
+  }
+  sendPresetChange(name) {
+    if (!this.conn) return;
+    this.conn.send({
+      action: ACTION.PRESETCHANGE,
+      name: name,
     });
   }
 }

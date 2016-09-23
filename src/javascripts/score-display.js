@@ -1,12 +1,13 @@
 import TweenMax from 'gsap';
-import {INITIAL_CONFIG} from './constants';
+import {INITIAL_CONFIG, MODE} from './constants';
 
 const scoreSpacing = 0.3;
 
 export default class ScoreDisplay {
-  constructor(parent, font) {
+  constructor(parent, font, mode) {
     this.parent = parent;
     this.font = font;
+    this.mode = mode;
 
     this.group = new THREE.Group();
     this.setupText();
@@ -32,6 +33,8 @@ export default class ScoreDisplay {
     this.group.position.z = INITIAL_CONFIG.boxPositionZ;
     this.group.add(this.selfScore);
     this.group.add(this.opponentScore);
+
+    this.opponentScore.visible = this.mode === MODE.MULTIPLAYER;
 
     this.group.rotation.x = -Math.PI / 2;
     this.group.rotation.z = Math.PI / 2;

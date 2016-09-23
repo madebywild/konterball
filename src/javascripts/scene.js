@@ -10,6 +10,7 @@ import Box from './models/box';
 import Paddle from './models/paddle';
 import Net from './models/net';
 
+
 const DEBUG_MODE = false;
 
 export default class Scene {
@@ -38,7 +39,6 @@ export default class Scene {
     this.seconds = 0;
     this.tabActive = true;
     this.ball = null;
-    this.ballShadow = null;
     this.physicsDebugRenderer = null;
     this.ballReference = null;
     this.state = STATE.PRELOADER;
@@ -107,14 +107,18 @@ export default class Scene {
       this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
     }
 
-    requestAnimationFrame(this.animate.bind(this));
-
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
       this.paddleOpponent.visible = true;
     });
     this.emitter.on(EVENT.PRESET_CHANGED, e => {
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        this.communication.sendPresetChange(e);
+      }
+      console.log(e);
       this.presetChanged(e);
     });
+
+    requestAnimationFrame(this.animate.bind(this));
   }
 
   presetChanged(name) {
@@ -126,7 +130,7 @@ export default class Scene {
     if (name === PRESET.PINGPONG) {
       this.physics.net.collisionResponse = 1;
       this.net.visible = true;
-      this.physics.world.gravity.set(0, -9.4, 0);
+      this.physics.world.gravity.set(0, -6, 0);
       //this.physics.
     } else {
       this.physics.net.collisionResponse = 0;
@@ -197,8 +201,11 @@ export default class Scene {
     let tl = new TimelineMax({paused: this.config.mode === MODE.MULTIPLAYER});
 
     if (this.config.mode === MODE.MULTIPLAYER) {
+      this.hud.scoreDisplay.opponentScore.visible = true;
+      this.paddleOpponent.visible = true;
       // play countdown first
-      let counter = 3;
+      let counter = 2;
+      $('#multiplayer-waiting-text').text('3');
       let countdown = setInterval(() => {
         $('#multiplayer-waiting-text').text(counter === 0 ? 'Go' : counter);
         counter--;
@@ -248,6 +255,7 @@ export default class Scene {
       move: this.receivedMove.bind(this),
       hit: this.receivedHit.bind(this),
       miss: this.receivedMiss.bind(this),
+      presetChange: this.receivedPresetChange.bind(this),
     }, window.location.pathname.substr(1), this.emitter);
   }
 
@@ -302,8 +310,30 @@ export default class Scene {
     this.receivedHit(data);
   }
 
+  receivedPresetChange(data) {
+    this.presetChanged(data.name);
+  }
+
+  ballIsInBox() {
+    // add tolerance to be sure ball wont be reset if the ball is
+    // 'inside' of a wall for a short period
+    const E = 0.1;
+    return this.physics.ball.position.z - E <= this.config.boxPositionZ + this.config.boxDepth / 2
+        && this.physics.ball.position.z + E >= this.config.boxPositionZ - this.config.boxDepth / 2;
+    return this.ball.position.x - E >= -this.config.boxWidth
+        && this.ball.position.x + E <= this.config.boxWidth
+        && this.ball.position.y - E >= 0
+        && this.ball.position.y + E <= this.config.boxHeight
+        && this.ball.position.z - E >= this.config.boxPositionZ - this.config.boxDepth / 2
+        && this.ball.position.z + E <= this.config.boxPositionZ + this.config.boxDepth / 2;
+  }
+
   ballPaddleCollision(point) {
     this.sound.hit(point);
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.score.self++;
+      this.hud.scoreDisplay.setSelfScore(this.score.self);
+    }
     if (this.config.mode !== MODE.MULTIPLAYER) return;
     setTimeout(() => {
       this.communication.sendHit({
@@ -315,7 +345,7 @@ export default class Scene {
         y: this.physics.ball.velocity.y,
         z: this.physics.ball.velocity.z,
       });
-    }, 50);
+    }, 10);
   }
 
   setupPaddlePlane() {
@@ -389,18 +419,6 @@ export default class Scene {
 
     this.ball = new THREE.Mesh(geometry, material);
     this.scene.add(this.ball);
-
-    // ball shadow
-    geometry = new THREE.CircleGeometry(this.config.ballRadius, 16);
-    material = new THREE.MeshBasicMaterial({
-      color: this.config.colors.WHITE,
-      transparent: true,
-      opacity: 0.3,
-    });
-    geometry.rotateX(-Math.PI / 2);
-    this.ballShadow = new THREE.Mesh(geometry, material);
-    this.ballShadow.position.y = 0.001;
-    this.scene.add(this.ballShadow);
   }
 
   setPaddlePosition(x, y, z) {
@@ -473,6 +491,13 @@ export default class Scene {
   }
 
   updateHelpers() {
+    if (!this.ball) return;
+    let line = this.scene.getObjectByName('ballHelperLine');
+    line.position.z = Math.min(
+      Math.max(
+        this.ball.position.z, this.config.boxPositionZ - this.config.boxDepth / 2
+      ), this.config.boxPositionZ + this.config.boxDepth / 2
+    );
     return;
     this.paddleHelpers.top.position.x = this.paddle.position.x;
     this.paddleHelpers.bottom.position.x = this.paddle.position.x;
@@ -484,14 +509,15 @@ export default class Scene {
     let delta = Math.min(timestamp - this.lastRender, 500);
     this.totaltime += delta;
 
-    if (!this.tabActive) {;
+    if (!this.tabActive) {
       requestAnimationFrame(this.animate.bind(this));
       return;
     }
 
     this.updateControls();
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      this.setPaddlePosition(this.ball.position.x, this.ball.position.y);
+      // for multiplayer testing
+      //this.setPaddlePosition(this.ball.position.x, this.ball.position.y);
     }
     // raycaster position and direction is now either camera
     // or controller on vive
@@ -502,7 +528,6 @@ export default class Scene {
     if (this.pan) {
       this.pan.rotateY(delta * 0.0003);
     }
-
 
     if (this.config.mode === MODE.MULTIPLAYER) {
       this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
@@ -516,34 +541,36 @@ export default class Scene {
 
       if (this.ball) {
         this.physics.setBallPosition(this.ball);
-        this.ballShadow.position.x = this.ball.position.x;
-        this.ballShadow.position.z = this.ball.position.z;
       }
     }
-
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer.update();
     }
 
-    if (this.physics.ball && this.physics.ball.position.z > 1) {
+    if (this.physics.ball && !this.ballIsInBox()) {
       // player has missed the ball, reset position to center
-      this.physics.initBallPosition(this.physics.ball);
-      let z = this.physics.ball.position.z;
-      z -= Math.abs(z - this.config.boxPositionZ) * 2;
 
       if (this.config.mode === MODE.MULTIPLAYER) {
-        this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
-        this.score.opponent++;
-        this.communication.sendMiss({
-          x: this.physics.ball.position.x,
-          y: this.physics.ball.position.y,
-          z: this.physics.ball.position.z,
-        }, {
-          x: this.physics.ball.velocity.x,
-          y: this.physics.ball.velocity.y,
-          z: this.physics.ball.velocity.z,
-        });
+        // TODO change this to a timeout
+        if (this.physics.ball.position.z > this.config.boxPositionZ - this.config.boxDepth / 2 + 0.4) {
+          this.physics.initBallPosition(this.physics.ball);
+          this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
+          this.score.opponent++;
+          this.communication.sendMiss({
+            x: this.physics.ball.position.x,
+            y: this.physics.ball.position.y,
+            z: this.physics.ball.position.z,
+          }, {
+            x: this.physics.ball.velocity.x,
+            y: this.physics.ball.velocity.y,
+            z: this.physics.ball.velocity.z,
+          });
+        }
+      } else {
+        this.physics.initBallPosition(this.physics.ball);
+        this.score.self = 0;
+        this.hud.scoreDisplay.setSelfScore(this.score.self);
       }
     }
 

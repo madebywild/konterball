@@ -1,6 +1,11 @@
 {
+  "fonts/AtariClassicChunky.eot": "fonts/AtariClassicChunky-bc8ea122c4.eot",
+  "fonts/AtariClassicChunky.svg": "fonts/AtariClassicChunky-106726bd6b.svg",
+  "fonts/AtariClassicChunky.ttf": "fonts/AtariClassicChunky-ea1ed79e63.ttf",
+  "fonts/AtariClassicChunky.woff": "fonts/AtariClassicChunky-5f36f1c1b3.woff",
+  "fonts/AtariClassicChunky.woff2": "fonts/AtariClassicChunky-13a8ac16bd.woff2",
   "fonts/AtariSmall.ttf": "fonts/AtariSmall-4f0ec11368.ttf",
   "images/box.png": "images/box-61305a6df2.png",
-  "javascripts/app.js": "javascripts/app-613efd575e9609bdf7ee.js",
-  "stylesheets/app.css": "stylesheets/app-3d0381cd1f.css"
+  "javascripts/app.js": "javascripts/app-03d3f4c7b52f8b264af4.js",
+  "stylesheets/app.css": "stylesheets/app-46c04f4918.css"
 }

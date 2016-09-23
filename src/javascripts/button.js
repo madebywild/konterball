@@ -10,7 +10,7 @@ export default class Button {
     this.text = null;
 
     this.buttonGroup = new THREE.Group();
-    this.buttonWidth = 0.4;
+    this.buttonWidth = 0.6;
     this.buttonHeight = 0.3;
     this.borderWidth = 0.02;
     this.makeButton(x, y);

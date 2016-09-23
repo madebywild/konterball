@@ -222,7 +222,7 @@ export default class Physics {
       if (hitpointY > 1 || hitpointY < -1) return;
       e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
       e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
-      e.body.velocity.z += 0.1;
+      e.body.velocity.z += 0.05;
       if (this.config.preset !== PRESET.PINGPONG) return;
 
       // these values are heavily tweakable
@@ -252,47 +252,21 @@ export default class Physics {
   }
 
   initBallPosition(ball) {
-    ball.position.set(0, this.config.boxHeight / 2, this.config.boxPositionZ);
-    ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
-    ball.velocity.y = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
-    ball.velocity.z = this.config.ballInitVelocity * 2.0;
-    ball.angularVelocity.x = 0;
-    ball.angularVelocity.y = 0;
-    ball.angularVelocity.z = 0;
-    return;
-    switch (this.config.mode) {
-      case MODE.ONE_ON_ONE:
-        ball.position.set(0, 1, this.config.boxDepth * -0.8);
-        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.2;
-        ball.velocity.y = this.config.ballInitVelocity * 2.5;
-        ball.velocity.z = this.config.ballInitVelocity * 6.0;
+    switch (this.config.preset) {
+      case PRESET.NORMAL:
+        ball.position.set(0, this.config.boxHeight / 2, this.config.boxPositionZ);
+        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
+        ball.velocity.y = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
+        ball.velocity.z = this.config.ballInitVelocity * 2.0;
         ball.angularVelocity.x = 0;
         ball.angularVelocity.y = 0;
         ball.angularVelocity.z = 0;
         break;
-      case MODE.TOO_MANY_BALLS:
-        ball.position.set(0, 1, this.config.boxDepth * -0.8);
+      case PRESET.PINGPONG:
+        ball.position.set(0, 1, this.config.boxPositionZ + this.config.boxDepth * -0.4);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
         ball.velocity.y = this.config.ballInitVelocity * 2.5;
         ball.velocity.z = this.config.ballInitVelocity * 6.0;
-        ball.angularVelocity.x = 0;
-        ball.angularVelocity.y = 0;
-        ball.angularVelocity.z = 0;
-        break;
-      case MODE.HIT_THE_TARGET:
-        ball.position.set(0, 1, this.config.boxDepth * -0.5);
-        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.2;
-        ball.velocity.y = this.config.ballInitVelocity * 2.5;
-        ball.velocity.z = this.config.ballInitVelocity * 5.0;
-        ball.angularVelocity.x = 0;
-        ball.angularVelocity.y = 0;
-        ball.angularVelocity.z = 0;
-        break;
-      case MODE.AGAINST_THE_WALL:
-        ball.position.set(0, 1.4, this.config.boxPositionZ + 0.01);
-        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
-        ball.velocity.y = this.config.ballInitVelocity * -4;
-        ball.velocity.z = this.config.ballInitVelocity * 2.0;
         ball.angularVelocity.x = 0;
         ball.angularVelocity.y = 0;
         ball.angularVelocity.z = 0;

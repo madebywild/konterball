@@ -1,11 +1,9 @@
-@font-face {
-  font-family: Atari;
-  src: url('/fonts/AtariSmall.ttf');
-}
+@include font-face('AtariClassic', '/fonts/AtariClassicChunky');
+
 $font-size: 22px;
 
 body {
-  font-family: Atari;
+  font-family: AtariClassic;
   overflow: hidden;
   font-size: $font-size;
   background-color: #000;
@@ -38,7 +36,7 @@ button {
 .mode-chooser {
   display: none;
   @extend .absolute-center;
-  max-width: 200px;
+  max-width: 300px;
   .button-frame {
     position: absolute;
     top: 0;

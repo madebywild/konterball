@@ -30,6 +30,15 @@ export default (parent, config) => {
   geometry.computeLineDistances();
   centerLine.position.z = config.boxPositionZ;
 
+  material = new THREE.LineBasicMaterial({
+    color: 0xFFFFFF,
+    transparent: true,
+    opacity: 0.5,
+  });
+  let ballHelperLine = new THREE.Line(geometry.clone(), material);
+  ballHelperLine.name = 'ballHelperLine';
+  parent.add(ballHelperLine);
+
   parent.add(centerLine);
   parent.add(boxhelper);
 

@@ -29,7 +29,8 @@ export default class Hud {
 
   loadFont() {
     let fontloader = new THREE.FontLoader();
-    fontloader.load('fonts/atari-small.json', font => {
+    //fontloader.load('fonts/atari-small.json', font => {
+    fontloader.load('fonts/AtariClassicChunky.json', font => {
       this.font = font;
       this.setup();
     });
@@ -48,7 +49,7 @@ export default class Hud {
     this.initialized = true;
     this.activeButton = this.buttons[0].hitbox;
 
-    this.scoreDisplay = new ScoreDisplay(this.scene, this.font);
+    this.scoreDisplay = new ScoreDisplay(this.scene, this.font, this.config.mode);
   }
 
   cameraRayUpdated(raycaster) {
