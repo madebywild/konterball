@@ -19,7 +19,6 @@ export default class Communication {
       readable: true,
     });
 
-    console.log(process.env.PORT);
     this.isHost = !joinRoom;
 
     this.peer = new Peer(this.id, {host: location.hostname, port: 80, path: '/api'});
@@ -37,6 +36,7 @@ export default class Communication {
           c.close();
           return;
         }
+        console.log('opponent connected!');
         this.emitter.emit(EVENT.OPPONENT_CONNECTED);
 
         this.conn = c;

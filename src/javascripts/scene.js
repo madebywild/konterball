@@ -115,7 +115,6 @@ export default class Scene {
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.communication.sendPresetChange(e);
       }
-      console.log(e);
       this.presetChanged(e);
     });
 
@@ -244,7 +243,6 @@ export default class Scene {
       },
       onComplete: () => {
         this.setupVRControls();
-        console.log('request pointer lock');
         this.renderer.domElement.requestPointerLock();
         this.addBall();
       }
@@ -581,12 +579,9 @@ export default class Scene {
     if (this.physics.ball && !this.ballIsInBox()) {
       // player has missed the ball, reset position to center
 
-      console.log('ball is out the box');
       if (this.config.mode === MODE.MULTIPLAYER) {
-        console.log('mode is multiplayer');
         // TODO change this to a timeout
         if (this.physics.ball.position.z > this.config.boxPositionZ - this.config.boxDepth / 2 + 0.4) {
-          console.log('ball is far enough');
           this.score.opponent++;
           this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
           this.communication.sendMiss({
