@@ -490,6 +490,17 @@ export default class Scene {
     }
   }
 
+  makeScore() {
+    if (this.ball.position.z > this.config.tablePositionZ) {
+      // point for opponent
+      this.score.opponent++;
+      this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
+    } else {
+      this.score.self++;
+      this.hud.scoreDisplay.setSelfScore(this.score.self);
+    }
+  }
+
   updateHelpers() {
     if (!this.ball) return;
     let line = this.scene.getObjectByName('ballHelperLine');
@@ -555,8 +566,8 @@ export default class Scene {
         // TODO change this to a timeout
         if (this.physics.ball.position.z > this.config.boxPositionZ - this.config.boxDepth / 2 + 0.4) {
           this.physics.initBallPosition(this.physics.ball);
-          this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
           this.score.opponent++;
+          this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
           this.communication.sendMiss({
             x: this.physics.ball.position.x,
             y: this.physics.ball.position.y,
