@@ -10,7 +10,6 @@ import Box from './models/box';
 import Paddle from './models/paddle';
 import Net from './models/net';
 
-
 const DEBUG_MODE = false;
 
 export default class Scene {
@@ -48,6 +47,8 @@ export default class Scene {
       right: null,
       bottom: null,
     };
+    this.playerRequestedRestart = false;
+    this.opponentRequestedRestart = false;
 
     this.viewport = {
       width: $(document).width(),
@@ -243,9 +244,25 @@ export default class Scene {
       },
       onComplete: () => {
         this.setupVRControls();
+        console.log('request pointer lock');
+        this.renderer.domElement.requestPointerLock();
         this.addBall();
       }
     }, 1);
+  }
+
+  restartGame() {
+    if (this.opponentRequestedRestart && this.playerRequestedRestart) {
+      this.emitter.emit(EVENT.RESTART_GAME, this.score);
+      this.score.self = 0;
+      this.score.opponent = 0;
+      this.hud.scoreDisplay.setSelfScore(0);
+      this.hud.scoreDisplay.setOpponentScore(0);
+      this.physics.initBallPosition(this.physics.ball);
+      this.playerRequestedRestart = false;
+      this.opponentRequestedRestart = false;
+      this.state = STATE.PLAYING;
+    }
   }
 
   startMultiplayer() {
@@ -256,6 +273,7 @@ export default class Scene {
       hit: this.receivedHit.bind(this),
       miss: this.receivedMiss.bind(this),
       presetChange: this.receivedPresetChange.bind(this),
+      restartGame: this.receivedRestartGame.bind(this),
     }, window.location.pathname.substr(1), this.emitter);
   }
 
@@ -277,6 +295,11 @@ export default class Scene {
         this.paddleOpponent.position.y = no.y;
       }
     });
+  }
+
+  receivedRestartGame() {
+    this.opponentRequestedRestart = true;
+    this.restartGame();
   }
 
   mirrorBallPosition(pos) {
@@ -307,7 +330,14 @@ export default class Scene {
   receivedMiss(data) {
     this.score.self++;
     this.hud.scoreDisplay.setSelfScore(this.score.self);
-    this.receivedHit(data);
+    if (this.score.self >= this.config.POINTS_FOR_WIN) {
+      this.emitter.emit(EVENT.GAME_OVER, this.score);
+      this.physics.ball.velocity.x = 0;
+      this.physics.ball.velocity.y = 0;
+      this.physics.ball.velocity.z = 0;
+    } else {
+      this.receivedHit(data);
+    }
   }
 
   receivedPresetChange(data) {
@@ -490,17 +520,6 @@ export default class Scene {
     }
   }
 
-  makeScore() {
-    if (this.ball.position.z > this.config.tablePositionZ) {
-      // point for opponent
-      this.score.opponent++;
-      this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
-    } else {
-      this.score.self++;
-      this.hud.scoreDisplay.setSelfScore(this.score.self);
-    }
-  }
-
   updateHelpers() {
     if (!this.ball) return;
     let line = this.scene.getObjectByName('ballHelperLine');
@@ -562,10 +581,12 @@ export default class Scene {
     if (this.physics.ball && !this.ballIsInBox()) {
       // player has missed the ball, reset position to center
 
+      console.log('ball is out the box');
       if (this.config.mode === MODE.MULTIPLAYER) {
+        console.log('mode is multiplayer');
         // TODO change this to a timeout
         if (this.physics.ball.position.z > this.config.boxPositionZ - this.config.boxDepth / 2 + 0.4) {
-          this.physics.initBallPosition(this.physics.ball);
+          console.log('ball is far enough');
           this.score.opponent++;
           this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
           this.communication.sendMiss({
@@ -577,6 +598,16 @@ export default class Scene {
             y: this.physics.ball.velocity.y,
             z: this.physics.ball.velocity.z,
           });
+          if (this.score.opponent < this.config.POINTS_FOR_WIN) {
+            this.physics.initBallPosition(this.physics.ball);
+          } else {
+            this.emitter.emit(EVENT.GAME_OVER, this.score);
+            this.state = STATE.GAME_OVER;
+            this.physics.initBallPosition(this.physics.ball);
+            this.physics.ball.velocity.x = 0;
+            this.physics.ball.velocity.y = 0;
+            this.physics.ball.velocity.z = 0;
+          }
         }
       } else {
         this.physics.initBallPosition(this.physics.ball);

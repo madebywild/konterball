@@ -78,7 +78,7 @@ export default class Communication {
   }
 
   startListening() {
-    this.sendPings();
+    //this.sendPings();
     this.conn.on('data', data => {
       switch (data.action) {
         case ACTION.MOVE:
@@ -92,6 +92,9 @@ export default class Communication {
           break;
         case ACTION.PRESETCHANGE:
           this.callbacks.presetChange(data);
+          break;
+        case ACTION.RESTART_GAME:
+          this.callbacks.restartGame(data);
           break;
         case 'PING':
           this.receivedPing(data);
@@ -129,6 +132,14 @@ export default class Communication {
       velocity: velocity,
     });
   }
+
+  sendRestartGame() {
+    if (!this.conn) return;
+    this.conn.send({
+      action: ACTION.RESTART_GAME,
+    });
+  }
+
   sendPresetChange(name) {
     if (!this.conn) return;
     this.conn.send({

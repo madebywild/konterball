@@ -16,7 +16,7 @@ body {
   transform: translate(-50%, -50%);
   text-align: center;
 }
-.intro-wrapper {
+.intro-wrapper, .game-over-screen-wrapper {
   position: absolute;
   height: 100vh;
   width: 100%;
@@ -87,4 +87,10 @@ button {
     display: inline;
 
   }
+}
+.game-over-screen-wrapper {
+  display: none;
+}
+.game-over-screen {
+  @extend .absolute-center;
 }

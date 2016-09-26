@@ -8,11 +8,14 @@ export const STATE = {
   MODE_SELECTION: 'MODE_SELECTION',
   ROOM_URL_DISPLAY: 'ROOM_URL_DISPLAY',
   PLAYING: 'PLAYING',
+  GAME_OVER: 'GAME_OVER',
 };
 
 export const EVENT = {
   OPPONENT_CONNECTED: 'OPPONENT_CONNECTED',
   PRESET_CHANGED: 'PRESET_CHANGED',
+  GAME_OVER: 'GAME_OVER',
+  RESTART_GAME: 'RESTART_GAME',
 };
 
 export const ACTION = {
@@ -22,6 +25,7 @@ export const ACTION = {
   PRESETCHANGE: 'P',
   PING: 'A',
   PONG: 'I',
+  RESTART_GAME: 'R',
 };
 
 export const PRESET = {
@@ -53,6 +57,7 @@ export const INITIAL_CONFIG = {
   cameraHeight: 1,
   preset: PRESET.NORMAL,
 
+  POINTS_FOR_WIN: 2,
   ROOM_CODE_LENGTH: 6,
 
   colors: {

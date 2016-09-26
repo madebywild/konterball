@@ -21,17 +21,43 @@ class PingPong {
       $('.mode-chooser').hide();
       $('#room-url, #join-waiting-room').hide();
     }
+
+    this.emitter.on(EVENT.RESTART_GAME, () => {
+      $('.game-over-screen-wrapper').hide();
+      $('#play-again').text('Play again');
+    });
+
+    this.emitter.on(EVENT.GAME_OVER, score => {
+      $('.game-over-screen-wrapper').show();
+      document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+      document.exitPointerLock();
+      console.log(score);
+      if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
+        $('#result').text('You won!');
+      } else {
+        $('#result').text('Your opponent won!');
+      }
+    });
   }
 
   setupHandlers() {
     $('#start-singleplayer').click(e => {
       this.scene.startSingleplayer();
     });
+
     $('#start-multiplayer').click(e => {
       this.viewRoomScreenAnimation();
     });
+
     $('#join-waiting-room').click(e => {
       this.scene.startGame();
+    });
+
+    $('#play-again').click(() => {
+      this.scene.communication.sendRestartGame();
+      $('#play-again').text('Waiting for opponent to restart...');
+      this.scene.playerRequestedRestart = true;
+      this.scene.restartGame();
     });
   }
 
