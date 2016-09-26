@@ -57,7 +57,7 @@ export const INITIAL_CONFIG = {
   cameraHeight: 1,
   preset: PRESET.NORMAL,
 
-  POINTS_FOR_WIN: 2,
+  POINTS_FOR_WIN: 11,
   ROOM_CODE_LENGTH: 6,
 
   colors: {
