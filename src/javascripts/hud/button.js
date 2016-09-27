@@ -1,5 +1,4 @@
 import TweenMax from 'gsap';
-import {INITIAL_CONFIG} from './constants';
 
 export default class Button {
   constructor(parent, font, name, x, y) {

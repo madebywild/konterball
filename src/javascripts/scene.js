@@ -101,7 +101,6 @@ export default class Scene {
     this.paddleBoundingBox.material.visible = false;
     this.scene.add(this.paddleBoundingBox);
 
-    this.addBall();
 
     this.paddleOpponent = SquarePaddle(this.scene, this.config);
     this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
@@ -288,9 +287,7 @@ export default class Scene {
       },
       onComplete: () => {
         this.setupVRControls();
-        if (this.config.mode === MODE.MULTIPLAYER) {
-          this.countdown();
-        }
+        this.countdown();
       }
     }, 1);
   }
@@ -298,12 +295,15 @@ export default class Scene {
   countdown() {
     let n = 2;
     let countdown = setInterval(() => {
-      this.hud.setCountdown(n);
+      this.hud.countdown.setCountdown(n);
       n--;
       if (n < 0) {
         clearInterval(countdown);
-        this.hud.hideCountdown();
-        if (!this.communication.isHost) {
+        this.hud.countdown.hideCountdown();
+        this.addBall();
+        if (this.config.mode === MODE.SINGLEPLAYER) {
+          this.physics.initBallPosition(this.physics.ball);
+        } else if (this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
           this.physics.initBallPosition(this.physics.ball);
           this.communication.sendHit(
             this.physics.ball.position,
@@ -334,7 +334,6 @@ export default class Scene {
 
   startMultiplayer() {
     this.config.mode = MODE.MULTIPLAYER;
-    this.hud.setupCountdown();
     this.physics.frontWall.collisionResponse = 0;
     this.communication = new Communication({
       move: this.receivedMove.bind(this),

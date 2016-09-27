@@ -112,11 +112,6 @@ class PingPong {
 
   viewRoomScreenAnimation() {
     this.scene.startMultiplayer();
-    console.log(this.scene.communication.isHost);
-    if (!this.scene.communication.isHost) {
-      this.scene.startGame();
-      return;
-    }
 
     $('#room-url').val('http://' + location.hostname + '/' + this.scene.communication.id);
 

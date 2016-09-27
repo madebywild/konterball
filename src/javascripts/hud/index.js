@@ -1,7 +1,8 @@
 import Button from './button';
 import TweenMax from 'gsap';
 import ScoreDisplay from './score-display';
-import {PRESET_NAMES, MODE, EVENT} from './constants';
+import Countdown from './countdown';
+import {PRESET_NAMES, MODE, EVENT} from '../constants';
 
 export default class Hud {
   constructor(scene, config, emitter) {
@@ -49,44 +50,8 @@ export default class Hud {
     this.initialized = true;
     this.activeButton = this.buttons[0].hitbox;
 
-    this.scoreDisplay = new ScoreDisplay(this.scene, this.font, this.config.mode);
-  }
-
-  setupCountdown() {
-    let material = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.5,
-    });
-    let geometry = new THREE.TextGeometry('3', {
-      font: this.font,
-      size: 1.3,
-      height: 0.001,
-      curveSegments: 3,
-    });
-    geometry.computeBoundingBox();
-    this.countdown = new THREE.Mesh(geometry, material);
-    this.countdown.position.x = -geometry.boundingBox.max.x / 2;
-    this.countdown.position.y = this.config.boxHeight / 2 - geometry.boundingBox.max.y / 2;
-    this.countdown.position.z = this.config.boxPositionZ;
-    this.scene.add(this.countdown);
-  }
-
-  setCountdown(n) {
-    let geometry = new THREE.TextGeometry(n, {
-      font: this.font,
-      size: 1.3,
-      height: 0.001,
-      curveSegments: 3,
-    });
-    geometry.computeBoundingBox();
-    this.countdown.geometry = geometry;
-    this.countdown.position.x = -geometry.boundingBox.max.x / 2;
-    this.countdown.position.y = this.config.boxHeight / 2 - geometry.boundingBox.max.y / 2;
-  }
-
-  hideCountdown() {
-    this.countdown.visible = false;
+    this.scoreDisplay = new ScoreDisplay(this.scene, this.config, this.font);
+    this.countdown = new Countdown(this.scene, this.config, this.font);
   }
 
   cameraRayUpdated(raycaster) {
