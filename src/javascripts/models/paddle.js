@@ -1,14 +1,24 @@
-export default (parent, config) => {
-  let geometry = new THREE.RingGeometry(config.paddleSize - 0.03, config.paddleSize, 4, 1);
-  geometry.rotateZ(Math.PI / 4);
-  geometry.rotateY(0.001);
-  geometry.scale(0.71, 0.71, 0.71);
+export default (parent, config, color) => {
+  const paddleRadius = config.paddleSize * 0.6;
+  let geometry = new THREE.CylinderGeometry(paddleRadius, paddleRadius, config.paddleThickness, 32);
+  //geometry.scale(0.71, 0.71, 0.71);
   let material = new THREE.MeshBasicMaterial({
-    color: config.colors.PONG_PADDLE,
+    color: color,
+    transparent: true,
+    opacity: 0.5,
   });
   let paddle = new THREE.Mesh(geometry, material);
+  paddle.rotation.x = Math.PI / 2;
   paddle.name = 'paddle';
   paddle.castShadow = true;
+
+  const gripLength = config.paddleSize * 0.3;
+  geometry = new THREE.BoxGeometry(gripLength, config.paddleThickness, config.paddleSize * 0.2);
+  geometry.translate(paddleRadius + gripLength / 2, 0, 0);
+  let paddleGrip = new THREE.Mesh(geometry, material);
+  paddleGrip.rotateY(-Math.PI / 4);
+  paddle.add(paddleGrip);
+  
   parent.add(paddle);
   return paddle;
 };

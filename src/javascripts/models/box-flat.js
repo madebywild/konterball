@@ -6,7 +6,7 @@ export default (parent, config) => {
 
   const lineWidth = 0.05;
 
-  material = new THREE.MeshLambertMaterial({
+  material = new THREE.MeshBasicMaterial({
     color: 0xFFFFFF,
   });
   // front frame
@@ -129,6 +129,5 @@ export default (parent, config) => {
   group.add(ballHelperLine);
 
   parent.add(group);
-
   return group;
 };

@@ -5,6 +5,10 @@ import $ from 'jquery';
 import Clipboard from 'clipboard';
 import EventEmitter from 'event-emitter';
 
+import FlatBox from 'models/box-flat';
+import ShadedBox from 'models/box';
+import GridBox from 'models/box-grid';
+
 class PingPong {
   constructor() {
     this.emitter = EventEmitter({});
@@ -59,6 +63,19 @@ class PingPong {
       this.scene.playerRequestedRestart = true;
       this.scene.restartGame();
     });
+
+    $('#flat').click(() => {
+      this.scene.scene.remove(this.scene.box);
+      this.scene.box = FlatBox(this.scene.scene, this.scene.config);
+    });
+    $('#shaded').click(() => {
+      this.scene.scene.remove(this.scene.box);
+      this.scene.box = ShadedBox(this.scene.scene, this.scene.config);
+    });
+    $('#grid').click(() => {
+      this.scene.scene.remove(this.scene.box);
+      this.scene.box = GridBox(this.scene.scene, this.scene.config);
+    });
   }
 
   checkRoom() {
@@ -74,20 +91,23 @@ class PingPong {
       x: -animateDistance,
       ease: Power0.easeNone,
     }, 0);
-    tl.set('.mode-chooser', {
-      display: 'block',
-      autoAlpha: 0,
-    }, '-=1');
-    tl.to('.mode-chooser', 0.5, {
-      autoAlpha: 1,
-      onComplete: () => {
-        if (this.checkRoom()) {
-          $('.room-screen').show();
+    if (!this.checkRoom()) {
+      tl.set('.mode-chooser', {
+        display: 'block',
+        autoAlpha: 0,
+      }, '-=1');
+      tl.to('.mode-chooser', 0.5, {
+        autoAlpha: 1,
+      }, '-=1');
+    } else {
+      tl.to('.intro-wrapper', 0.5, {
+        autoAlpha: 0,
+        onComplete: () => {
           this.scene.startMultiplayer();
           this.scene.startGame();
-        }
-      }
-    }, '-=1');
+        },
+      }, '-=1');
+    }
   }
 
   viewRoomScreenAnimation() {

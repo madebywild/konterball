@@ -90,6 +90,7 @@ export default class Physics {
       {friction: friction, restitution: bounce}
     );
     this.world.addContactMaterial(contact);
+    return contact;
   }
 
   setupBox() {
@@ -198,14 +199,24 @@ export default class Physics {
     this.ball.linearDamping = 0;
     this.world.add(this.ball);
 
-    this.addContactMaterial(this.ball.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(this.ball.material, this.topWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(this.ball.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(this.ball.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(this.ball.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
+    this.leftBounce = this.addContactMaterial(this.ball.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
+    this.topBounce = this.addContactMaterial(this.ball.material, this.topWall.material, this.config.ballBoxBounciness, 0);
+    this.rightBounce = this.addContactMaterial(this.ball.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
+    this.bottomBounce = this.addContactMaterial(this.ball.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
+    this.frontBounce = this.addContactMaterial(this.ball.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
     this.addContactMaterial(this.ball.material, this.paddle.material, 1, 0);
 
-    this.initBallPosition(this.ball);
+    this.ball.position.y = this.config.boxHeight / 2;
+    this.ball.position.z = this.config.boxPositionZ;
+
+  }
+
+  setBallBoxBouncyness(val) {
+    this.leftBounce.restitution = val;
+    this.topBounce.restitution = val;
+    this.rightBounce.restitution = val;
+    this.bottomBounce.restitution = val;
+    this.frontBounce.restitution = val;
   }
 
   paddleCollision(e) {
@@ -230,11 +241,9 @@ export default class Physics {
 
       // adjust velocity
       // these values are heavily tweakable
-      e.body.velocity.x += hitpointX * 4;
-      e.body.velocity.y = hitpointY * 0.7;
-
-      e.body.velocity.y *= 1 * hitpointY * e.body.velocity.z;
-      e.body.velocity.z *= 2;
+      e.body.velocity.z = 3;
+      e.body.velocity.x = hitpointX * 0.7;
+      e.body.velocity.y = 3;
     }
   }
 
@@ -262,10 +271,10 @@ export default class Physics {
         ball.angularVelocity.z = 0;
         break;
       case PRESET.PINGPONG:
-        ball.position.set(0, 1, this.config.boxPositionZ + this.config.boxDepth * -0.4);
+        ball.position.set(0, 1.6, this.config.boxPositionZ + this.config.boxDepth * -0.4);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
-        ball.velocity.y = this.config.ballInitVelocity * 2.5;
-        ball.velocity.z = this.config.ballInitVelocity * 6.0;
+        ball.velocity.y = this.config.ballInitVelocity * 1.0;
+        ball.velocity.z = this.config.ballInitVelocity * 3.0;
         ball.angularVelocity.x = 0;
         ball.angularVelocity.y = 0;
         ball.angularVelocity.z = 0;

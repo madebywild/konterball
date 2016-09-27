@@ -7,11 +7,12 @@ import Communication from './communication';
 import $ from 'jquery';
 
 import Box from './models/box';
+import SquarePaddle from './models/square-paddle';
 import Paddle from './models/paddle';
 import Net from './models/net';
 
 const DEBUG_MODE = false;
-const resetTimeoutDuration = 2000;
+const resetTimeoutDuration = 3000;
 
 export default class Scene {
   constructor(emitter) {
@@ -91,15 +92,18 @@ export default class Scene {
       this.renderer.domElement.requestPointerLock();
     };
 
+
     this.physics.setupWorld();
     this.physics.net.collisionResponse = 0;
 
-    this.paddle = Paddle(this.scene, this.config);
+    this.paddle = SquarePaddle(this.scene, this.config);
     this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
     this.paddleBoundingBox.material.visible = false;
     this.scene.add(this.paddleBoundingBox);
 
-    this.paddleOpponent = Paddle(this.scene, this.config);
+    this.addBall();
+
+    this.paddleOpponent = SquarePaddle(this.scene, this.config);
     this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
     this.paddleOpponent.position.y = 1;
     this.paddleOpponent.visible = false;
@@ -130,27 +134,51 @@ export default class Scene {
       // if the requested preset ifs
       return;
     }
+    this.resetScore();
     if (name === PRESET.INSANE) {
     }
     if (name === PRESET.NORMAL) {
     }
     if (name === PRESET.PINGPONG) {
+      this.scene.getObjectByName('centerLine').visible = false;
+      // change paddle
+      this.scene.remove(this.paddle);
+      this.paddle = Paddle(this.scene, this.config, this.config.colors.PADDLE_COLOR_PINGPONG);
+
+      // change opponent paddle
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        console.log('changing opponent paddle');
+        this.scene.remove(this.paddleOpponent);
+        this.paddleOpponent = Paddle(this.scene, this.config, this.config.colors.OPPONENT_PADDLE_COLOR_PINGPONG);
+        this.paddleOpponent.visible = true;
+      } else {
+        // TODO: also add this for multiplayer, but consider responsibilites:
+        // the last player that hit the ball sets the timeout, and if nothing happens
+        // after 3 seconds, he sends a ball reset
+
+        // enable the ball to be reset after a certain amount of
+        // time passed since the last time the player hit the ball
+        this.resetBallTimeout = setTimeout(() => {
+          this.physics.initBallPosition(this.physics.ball);
+        }, resetTimeoutDuration);
+      }
       // enable net-ball-collisions
       this.physics.net.collisionResponse = 1;
       // show net
       this.net.visible = true;
       // set gravity
       this.physics.world.gravity.set(0, -6, 0);
-      // enable the ball to be reset after a certain amount of
-      // time passed since the last time the player hit the ball
-      this.resetBallTimeout = setTimeout(() => {
-        console.log('reset ball');
-        this.physics.initBallPosition(this.physics.ball);
-      }, resetTimeoutDuration);
+      // tweak bouncinesses
+
+      this.physics.setBallBoxBouncyness(0.8);
     }
 
     // reset values set by presets
     if (this.config.preset === PRESET.PINGPONG) {
+      this.scene.getObjectByName('centerLine').visible = true;
+
+      this.scene.remove(this.paddle);
+      this.paddle = SquarePaddle(this.scene, this.config);
       // was pingpong, remove timeout
       clearTimeout(this.resetBallTimeout);
       // turn off net collisions
@@ -159,6 +187,9 @@ export default class Scene {
       this.net.visible = false;
       // remove gravity
       this.physics.world.gravity.set(0, 0, 0);
+      // reset bouncyness
+      this.physics.setBallBoxBouncyness(this.config.ballBoxBouncyness);
+      this.physics.bottomBounce.restitution = 1;
     }
     if (this.config.preset === PRESET.INSANE) {
       // was insane mode, reset clear color
@@ -223,22 +254,11 @@ export default class Scene {
       upY: 0,
       scaleY: 0.01,
     };
-    let tl = new TimelineMax({paused: this.config.mode === MODE.MULTIPLAYER});
+    let tl = new TimelineMax();
 
     if (this.config.mode === MODE.MULTIPLAYER) {
       this.hud.scoreDisplay.opponentScore.visible = true;
       this.paddleOpponent.visible = true;
-      // play countdown first
-      let counter = 2;
-      $('#multiplayer-waiting-text').text('3');
-      let countdown = setInterval(() => {
-        $('#multiplayer-waiting-text').text(counter === 0 ? 'Go' : counter);
-        counter--;
-        if (counter < 0) {
-          clearInterval(countdown);
-          tl.play();
-        }
-      }, 1000);
     }
 
     tl.to('.intro-wrapper', 0.4, {
@@ -268,28 +288,53 @@ export default class Scene {
       },
       onComplete: () => {
         this.setupVRControls();
-        this.renderer.domElement.requestPointerLock();
-        this.addBall();
+        if (this.config.mode === MODE.MULTIPLAYER) {
+          this.countdown();
+        }
       }
     }, 1);
+  }
+
+  countdown() {
+    let n = 2;
+    let countdown = setInterval(() => {
+      this.hud.setCountdown(n);
+      n--;
+      if (n < 0) {
+        clearInterval(countdown);
+        this.hud.hideCountdown();
+        if (!this.communication.isHost) {
+          this.physics.initBallPosition(this.physics.ball);
+          this.communication.sendHit(
+            this.physics.ball.position,
+            this.physics.ball.velocity
+          );
+        }
+      }
+    }, 1000);
   }
 
   restartGame() {
     if (this.opponentRequestedRestart && this.playerRequestedRestart) {
       this.emitter.emit(EVENT.RESTART_GAME, this.score);
-      this.score.self = 0;
-      this.score.opponent = 0;
-      this.hud.scoreDisplay.setSelfScore(0);
-      this.hud.scoreDisplay.setOpponentScore(0);
       this.physics.initBallPosition(this.physics.ball);
       this.playerRequestedRestart = false;
       this.opponentRequestedRestart = false;
+      this.resetScore();
       this.state = STATE.PLAYING;
     }
   }
 
+  resetScore() {
+    this.score.self = 0;
+    this.score.opponent = 0;
+    this.hud.scoreDisplay.setSelfScore(0);
+    this.hud.scoreDisplay.setOpponentScore(0);
+  }
+
   startMultiplayer() {
     this.config.mode = MODE.MULTIPLAYER;
+    this.hud.setupCountdown();
     this.physics.frontWall.collisionResponse = 0;
     this.communication = new Communication({
       move: this.receivedMove.bind(this),
@@ -383,10 +428,9 @@ export default class Scene {
   }
 
   ballPaddleCollision(point) {
-    if (this.preset === PRESET.PINGPONG) {
+    if (this.config.preset === PRESET.PINGPONG) {
       clearTimeout(this.resetBallTimeout);
       this.resetBallTimeout = setTimeout(() => {
-        console.log('reset ball');
         this.physics.initBallPosition(this.physics.ball);
       }, resetTimeoutDuration);
     }
@@ -607,7 +651,7 @@ export default class Scene {
 
     if (this.state === STATE.PLAYING) {
       this.paddleBoundingBox.update();
-      this.physics.predictCollisions(this.paddleBoundingBox, this.net);
+      this.physics.predictCollisions(this.paddleBoundingBox, this.scene.getObjectByName('net-collider'));
 
       this.physics.step(delta / 1000);
 
@@ -622,7 +666,6 @@ export default class Scene {
 
     if (this.physics.ball && !this.ballIsInBox()) {
       // player has missed the ball, reset position to center
-
       if (this.config.mode === MODE.MULTIPLAYER) {
         // TODO change this to a timeout
         if (this.physics.ball.position.z > this.config.boxPositionZ - this.config.boxDepth / 2 + 0.4) {
@@ -649,6 +692,11 @@ export default class Scene {
           }
         }
       } else {
+        clearTimeout(this.resetBallTimeout);
+        this.resetBallTimeout = setTimeout(() => {
+          this.physics.initBallPosition(this.physics.ball);
+        }, resetTimeoutDuration);
+
         this.physics.initBallPosition(this.physics.ball);
         this.score.self = 0;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
@@ -656,7 +704,7 @@ export default class Scene {
     }
 
     if (this.config.preset === PRESET.INSANE) {
-      this.renderer.setClearColor('hsl(' + Math.floor(Math.random() * 360) + ', 100%, 50%)');
+      this.renderer.setClearColor('hsl(' + this.frameNumber % 360 + ', 100%, 50%)');
     }
 
     // Update VR headset position and apply to camera.

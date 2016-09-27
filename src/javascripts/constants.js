@@ -42,7 +42,7 @@ export const INITIAL_CONFIG = {
   boxWidth: 3,
   boxDepth: 5,
   boxHeight: 2,
-  netHeight: 0.5,
+  netHeight: 0.3,
   boxPositionZ: -3.5,
   paddleThickness: 0.04,
   paddleSize: 0.5,
@@ -63,5 +63,7 @@ export const INITIAL_CONFIG = {
   colors: {
     BLACK: 0x000000,
     WHITE: 0xFFFFFF,
+    PADDLE_COLOR_PINGPONG: 0xE35C27,
+    OPPONENT_PADDLE_COLOR_PINGPONG: 0x786EF2,
   },
 };
