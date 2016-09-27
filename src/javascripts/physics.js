@@ -218,26 +218,23 @@ export default class Physics {
       hitpointX = hitpointX / (this.config.paddleSize / 2);
       hitpointY = hitpointY / (this.config.paddleSize / 2);
       // did we hit the edge of the paddle?
-      if (hitpointX > 1 || hitpointX < -1) return;
-      if (hitpointY > 1 || hitpointY < -1) return;
+      if (hitpointX > 1 || hitpointX < -1 || hitpointY > 1 || hitpointY < -1) {
+        return;
+      }
       e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
       e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
       e.body.velocity.z += 0.05;
-      if (this.config.preset !== PRESET.PINGPONG) return;
+      if (this.config.preset !== PRESET.PINGPONG) {
+        return;
+      }
 
+      // adjust velocity
       // these values are heavily tweakable
       e.body.velocity.x += hitpointX * 4;
       e.body.velocity.y = hitpointY * 0.7;
-      if (this.config.mode === MODE.AGAINST_THE_WALL) {
-        e.body.velocity.y = 5;
-        e.body.velocity.z = 5;
-      } else if (this.config.mode === MODE.HIT_THE_TARGET) {
-        e.body.velocity.y *= 2 * e.body.velocity.z;
-        e.body.velocity.z = (hitpointY + 0.5) * 7;
-      } else {
-        e.body.velocity.y *= 2 * e.body.velocity.z;
-        e.body.velocity.z *= 4;
-      }
+
+      e.body.velocity.y *= 1 * hitpointY * e.body.velocity.z;
+      e.body.velocity.z *= 2;
     }
   }
 
@@ -246,7 +243,9 @@ export default class Physics {
   }
 
   setBallPosition(ball) {
-    if (!this.ball) return;
+    if (!this.ball) {
+      return;
+    }
     ball.position.copy(this.ball.position);
     ball.quaternion.copy(this.ball.quaternion);
   }
@@ -277,7 +276,9 @@ export default class Physics {
   }
 
   predictCollisions(paddle, net) {
-    if (!this.ball) return;
+    if (!this.ball) {
+      return;
+    }
     // predict ball position in the next frame
     this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
     this.raycaster.far = this.ball.velocity.clone().length() / 50;

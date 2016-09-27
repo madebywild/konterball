@@ -11,6 +11,7 @@ import Paddle from './models/paddle';
 import Net from './models/net';
 
 const DEBUG_MODE = false;
+const resetTimeoutDuration = 2000;
 
 export default class Scene {
   constructor(emitter) {
@@ -40,7 +41,9 @@ export default class Scene {
     this.ball = null;
     this.physicsDebugRenderer = null;
     this.ballReference = null;
+    this.resetBallTimeout = null;
     this.state = STATE.PRELOADER;
+
     this.paddleHelpers = {
       top: null,
       left: null,
@@ -62,7 +65,7 @@ export default class Scene {
 
 
     // config
-    this.config = INITIAL_CONFIG;
+    this.config = Object.assign({}, INITIAL_CONFIG);
 
     this.physics = new Physics(this.config, this.ballPaddleCollision.bind(this));
     this.sound = new SoundManager();
@@ -103,6 +106,7 @@ export default class Scene {
 
     this.hud = new Hud(this.scene, this.config, this.emitter);
     this.setupPaddlePlane();
+    this.setupLights();
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
@@ -122,24 +126,45 @@ export default class Scene {
   }
 
   presetChanged(name) {
-    if (this.config.preset === name) return;
+    if (this.config.preset === name) {
+      // if the requested preset ifs
+      return;
+    }
     if (name === PRESET.INSANE) {
     }
     if (name === PRESET.NORMAL) {
     }
     if (name === PRESET.PINGPONG) {
+      // enable net-ball-collisions
       this.physics.net.collisionResponse = 1;
+      // show net
       this.net.visible = true;
+      // set gravity
       this.physics.world.gravity.set(0, -6, 0);
-      //this.physics.
-    } else {
+      // enable the ball to be reset after a certain amount of
+      // time passed since the last time the player hit the ball
+      this.resetBallTimeout = setTimeout(() => {
+        console.log('reset ball');
+        this.physics.initBallPosition(this.physics.ball);
+      }, resetTimeoutDuration);
+    }
+
+    // reset values set by presets
+    if (this.config.preset === PRESET.PINGPONG) {
+      // was pingpong, remove timeout
+      clearTimeout(this.resetBallTimeout);
+      // turn off net collisions
       this.physics.net.collisionResponse = 0;
+      // hide net
       this.net.visible = false;
+      // remove gravity
       this.physics.world.gravity.set(0, 0, 0);
     }
     if (this.config.preset === PRESET.INSANE) {
+      // was insane mode, reset clear color
       this.renderer.setClearColor(0x000000);
     }
+    // set preset
     this.config.preset = name;
     this.physics.config.preset = name;
   }
@@ -297,11 +322,12 @@ export default class Scene {
 
   receivedRestartGame() {
     this.opponentRequestedRestart = true;
+    // try to restart game, only does if player also requested restart
     this.restartGame();
   }
 
   mirrorBallPosition(pos) {
-    let z = pos.z; // undefined
+    let z = pos.z;
     z -= Math.abs(z - this.config.boxPositionZ) * 2;
     return {
       x: -pos.x, 
@@ -357,6 +383,13 @@ export default class Scene {
   }
 
   ballPaddleCollision(point) {
+    if (this.preset === PRESET.PINGPONG) {
+      clearTimeout(this.resetBallTimeout);
+      this.resetBallTimeout = setTimeout(() => {
+        console.log('reset ball');
+        this.physics.initBallPosition(this.physics.ball);
+      }, resetTimeoutDuration);
+    }
     this.sound.hit(point);
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.score.self++;
@@ -374,6 +407,17 @@ export default class Scene {
         z: this.physics.ball.velocity.z,
       });
     }, 10);
+  }
+
+  setupLights() {
+    let light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.z = 1;
+    light.position.y = 2;
+    light.position.x = 1;
+    this.scene.add(light);
+
+    light = new THREE.AmbientLight(0xffffff, 0.3);
+    this.scene.add(light);
   }
 
   setupPaddlePlane() {
