@@ -1,5 +1,5 @@
 import TweenMax from 'gsap';
-import {MODE} from '../constants';
+import {MODE, PRESET} from '../constants';
 
 const scoreSpacing = 0.3;
 
@@ -9,7 +9,6 @@ export default class ScoreDisplay {
     this.font = font;
     this.config = config;
 
-    this.group = new THREE.Group();
     this.setupText();
   }
 
@@ -24,23 +23,65 @@ export default class ScoreDisplay {
       curveSegments: 3,
     });
     geometry.computeBoundingBox();
+
     this.opponentScore = new THREE.Mesh(geometry, material);
-    this.opponentScore.position.x = scoreSpacing;
+    this.opponentScore.rotation.x = -Math.PI / 2;
+    this.opponentScore.rotation.z = Math.PI / 2;
+    this.opponentScore.position.x = -this.config.boxWidth / 2 + geometry.boundingBox.max.y + 0.2;
+    this.opponentScore.position.z = this.config.boxPositionZ - scoreSpacing;
 
-    this.selfScore = new THREE.Mesh(geometry.clone(), material);
-    this.selfScore.position.x = -geometry.boundingBox.max.x - scoreSpacing;
+    this.selfScore = new THREE.Mesh(geometry.clone(), material.clone());
+    this.selfScore.rotation.x = -Math.PI / 2;
+    this.selfScore.rotation.z = Math.PI / 2;
+    this.selfScore.position.x = -this.config.boxWidth / 2 + geometry.boundingBox.max.y + 0.2;
+    this.selfScore.position.z = this.config.boxPositionZ + geometry.boundingBox.max.x + scoreSpacing;
 
-    this.group.position.z = this.config.boxPositionZ;
-    this.group.add(this.selfScore);
-    this.group.add(this.opponentScore);
+    this.parent.add(this.selfScore);
+    this.parent.add(this.opponentScore);
 
     this.opponentScore.visible = this.config.mode === MODE.MULTIPLAYER;
+  }
 
-    this.group.rotation.x = -Math.PI / 2;
-    this.group.rotation.z = Math.PI / 2;
-    this.group.position.x = -this.config.boxWidth / 2 + geometry.boundingBox.max.y + 0.2;
+  resetScorePositions() {
+    this.selfScore.position.set(0, 0, 0);
+    this.selfScore.rotation.set(0, 0, 0);
+    this.opponentScore.position.set(0, 0, 0);
+    this.opponentScore.rotation.set(0, 0, 0);
+  }
+  presetChange(preset) {
+    this.resetScorePositions();
+    if (preset === PRESET.PINGPONG) {
+      this.selfScore.material.color.set(this.config.colors.PADDLE_COLOR_PINGPONG);
+      this.selfScore.rotation.y = Math.PI / 2;
+      this.selfScore.position.x = -this.config.boxWidth / 2;
+      this.selfScore.geometry.computeBoundingBox();
+      this.selfScore.position.y = this.config.boxHeight / 2 - this.selfScore.geometry.boundingBox.max.y / 2;
+      this.selfScore.position.z = this.config.boxPositionZ + this.config.boxDepth / 4 + this.selfScore.geometry.boundingBox.max.x / 2;
 
-    this.parent.add(this.group);
+      this.opponentScore.material.color.set(this.config.colors.OPPONENT_PADDLE_COLOR_PINGPONG);
+      this.opponentScore.rotation.y = -Math.PI / 2;
+      this.opponentScore.position.x = this.config.boxWidth / 2;
+      this.opponentScore.geometry.computeBoundingBox();
+      this.opponentScore.position.y = this.config.boxHeight / 2 - this.opponentScore.geometry.boundingBox.max.y / 2;
+      this.opponentScore.position.z = this.config.boxPositionZ - this.config.boxDepth / 4 - this.opponentScore.geometry.boundingBox.max.x / 2;
+
+    } else if (preset === PRESET.NORMAL) {
+      this.selfScore.material.color.set(this.config.colors.WHITE);
+      this.selfScore.rotation.x = -Math.PI / 2;
+      this.selfScore.rotation.z = Math.PI / 2;
+      this.selfScore.geometry.computeBoundingBox();
+      this.selfScore.position.x = -this.config.boxWidth / 2 + this.selfScore.geometry.boundingBox.max.y + 0.2;
+      this.selfScore.position.z = this.config.boxPositionZ + this.selfScore.geometry.boundingBox.max.x + scoreSpacing;
+      this.selfScore.position.y = 0;
+
+      this.opponentScore.material.color.set(this.config.colors.WHITE);
+      this.opponentScore.rotation.x = -Math.PI / 2;
+      this.opponentScore.rotation.z = Math.PI / 2;
+      this.opponentScore.geometry.computeBoundingBox();
+      this.opponentScore.position.x = -this.config.boxWidth / 2 + this.opponentScore.geometry.boundingBox.max.y + 0.2;
+      this.opponentScore.position.z = this.config.boxPositionZ - this.opponentScore.geometry.boundingBox.max.x - scoreSpacing;
+      this.opponentScore.position.y = 0;
+    }
   }
 
   setSelfScore(value) {
@@ -51,7 +92,13 @@ export default class ScoreDisplay {
       curveSegments: 3,
     });
     this.selfScore.geometry.computeBoundingBox();
-    this.selfScore.position.x = -this.selfScore.geometry.boundingBox.max.x - scoreSpacing;
+    if (this.config.preset === PRESET.PINGPONG) {
+      this.selfScore.position.y = this.config.boxHeight / 2 - this.selfScore.geometry.boundingBox.max.y / 2;
+      this.selfScore.position.z = this.config.boxPositionZ + this.config.boxDepth / 4 + this.selfScore.geometry.boundingBox.max.x / 2;
+    } else {
+      //this.selfScore.position.x = -this.selfScore.geometry.boundingBox.max.x - scoreSpacing;
+      this.selfScore.position.z = this.config.boxPositionZ + this.selfScore.geometry.boundingBox.max.x + scoreSpacing;
+    }
   }
 
   setOpponentScore(value) {

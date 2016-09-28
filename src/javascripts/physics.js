@@ -271,7 +271,7 @@ export default class Physics {
         ball.angularVelocity.z = 0;
         break;
       case PRESET.PINGPONG:
-        ball.position.set(0, 1.6, this.config.boxPositionZ + this.config.boxDepth * -0.4);
+        ball.position.set(0, 1.6, this.config.boxPositionZ - this.config.boxDepth * 0.4);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
         ball.velocity.y = this.config.ballInitVelocity * 1.0;
         ball.velocity.z = this.config.ballInitVelocity * 3.0;

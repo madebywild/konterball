@@ -92,17 +92,16 @@ export default class Scene {
       this.renderer.domElement.requestPointerLock();
     };
 
-
     this.physics.setupWorld();
     this.physics.net.collisionResponse = 0;
 
-    this.paddle = SquarePaddle(this.scene, this.config);
+    this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
     this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
     this.paddleBoundingBox.material.visible = false;
     this.scene.add(this.paddleBoundingBox);
 
 
-    this.paddleOpponent = SquarePaddle(this.scene, this.config);
+    this.paddleOpponent = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
     this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
     this.paddleOpponent.position.y = 1;
     this.paddleOpponent.visible = false;
@@ -122,34 +121,35 @@ export default class Scene {
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.communication.sendPresetChange(e);
       }
-      this.presetChanged(e);
+      this.presetChange(e);
     });
 
     requestAnimationFrame(this.animate.bind(this));
   }
 
-  presetChanged(name) {
+  presetChange(name) {
     if (this.config.preset === name) {
-      // if the requested preset ifs
       return;
     }
     this.resetScore();
+    this.hud.scoreDisplay.presetChange(name);
     if (name === PRESET.INSANE) {
     }
     if (name === PRESET.NORMAL) {
     }
     if (name === PRESET.PINGPONG) {
-      this.scene.getObjectByName('centerLine').visible = false;
       // change paddle
       this.scene.remove(this.paddle);
       this.paddle = Paddle(this.scene, this.config, this.config.colors.PADDLE_COLOR_PINGPONG);
 
       // change opponent paddle
-      if (this.config.mode === MODE.MULTIPLAYER) {
-        console.log('changing opponent paddle');
+      if (true || this.config.mode === MODE.MULTIPLAYER) {
         this.scene.remove(this.paddleOpponent);
         this.paddleOpponent = Paddle(this.scene, this.config, this.config.colors.OPPONENT_PADDLE_COLOR_PINGPONG);
         this.paddleOpponent.visible = true;
+        this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
+        this.paddleOpponent.position.y = 1;
+        this.paddleOpponent.position.x = 0;
       } else {
         // TODO: also add this for multiplayer, but consider responsibilites:
         // the last player that hit the ball sets the timeout, and if nothing happens
@@ -157,9 +157,7 @@ export default class Scene {
 
         // enable the ball to be reset after a certain amount of
         // time passed since the last time the player hit the ball
-        this.resetBallTimeout = setTimeout(() => {
-          this.physics.initBallPosition(this.physics.ball);
-        }, resetTimeoutDuration);
+        this.resetPingpongTimeout();
       }
       // enable net-ball-collisions
       this.physics.net.collisionResponse = 1;
@@ -174,10 +172,19 @@ export default class Scene {
 
     // reset values set by presets
     if (this.config.preset === PRESET.PINGPONG) {
-      this.scene.getObjectByName('centerLine').visible = true;
+      // change paddle
+      this.scene.remove(this.paddle);
+      this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
+
+      // change opponent paddle
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        this.scene.remove(this.paddleOpponent);
+        this.paddleOpponent = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
+        this.paddleOpponent.visible = true;
+      }
 
       this.scene.remove(this.paddle);
-      this.paddle = SquarePaddle(this.scene, this.config);
+      this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
       // was pingpong, remove timeout
       clearTimeout(this.resetBallTimeout);
       // turn off net collisions
@@ -188,7 +195,6 @@ export default class Scene {
       this.physics.world.gravity.set(0, 0, 0);
       // reset bouncyness
       this.physics.setBallBoxBouncyness(this.config.ballBoxBouncyness);
-      this.physics.bottomBounce.restitution = 1;
     }
     if (this.config.preset === PRESET.INSANE) {
       // was insane mode, reset clear color
@@ -300,15 +306,22 @@ export default class Scene {
       if (n < 0) {
         clearInterval(countdown);
         this.hud.countdown.hideCountdown();
-        this.addBall();
         if (this.config.mode === MODE.SINGLEPLAYER) {
+          this.addBall();
           this.physics.initBallPosition(this.physics.ball);
         } else if (this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
+          this.addBall();
           this.physics.initBallPosition(this.physics.ball);
-          this.communication.sendHit(
-            this.physics.ball.position,
-            this.physics.ball.velocity
-          );
+          // if multiplayer, also send the other player a hit so the ball is synced
+          this.communication.sendHit({
+            x: this.physics.ball.position.x,
+            y: this.physics.ball.position.y,
+            z: this.physics.ball.position.z,
+          }, {
+            x: this.physics.ball.velocity.x,
+            y: this.physics.ball.velocity.y,
+            z: this.physics.ball.velocity.z,
+          });
         }
       }
     }, 1000);
@@ -391,6 +404,7 @@ export default class Scene {
   receivedHit(data) {
     // receved vectors are in the other users space
     // so invert x and z velocity and mirror the point across the center of the box
+    this.addBall();
     this.physics.ball.position.copy(this.mirrorBallPosition(data.point));
     this.physics.ball.velocity.copy(this.mirrorBallVelocity(data.velocity));
   }
@@ -409,7 +423,16 @@ export default class Scene {
   }
 
   receivedPresetChange(data) {
-    this.presetChanged(data.name);
+    this.presetChange(data.name);
+  }
+
+  resetPingpongTimeout() {
+    if (this.config.mode !== MODE.MULTIPLAYER) {
+      clearTimeout(this.resetBallTimeout);
+      this.resetBallTimeout = setTimeout(() => {
+        this.physics.initBallPosition(this.physics.ball);
+      }, resetTimeoutDuration);
+    }
   }
 
   ballIsInBox() {
@@ -428,10 +451,7 @@ export default class Scene {
 
   ballPaddleCollision(point) {
     if (this.config.preset === PRESET.PINGPONG) {
-      clearTimeout(this.resetBallTimeout);
-      this.resetBallTimeout = setTimeout(() => {
-        this.physics.initBallPosition(this.physics.ball);
-      }, resetTimeoutDuration);
+      this.resetPingpongTimeout();
     }
     this.sound.hit(point);
     if (this.config.mode === MODE.SINGLEPLAYER) {
@@ -691,10 +711,10 @@ export default class Scene {
           }
         }
       } else {
-        clearTimeout(this.resetBallTimeout);
-        this.resetBallTimeout = setTimeout(() => {
-          this.physics.initBallPosition(this.physics.ball);
-        }, resetTimeoutDuration);
+        // TODO do we need this?
+        if (this.config.preset === PRESET.PINGPONG) {
+          this.resetPingpongTimeout();
+        }
 
         this.physics.initBallPosition(this.physics.ball);
         this.score.self = 0;

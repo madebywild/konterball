@@ -87,7 +87,7 @@ class PingPong {
     let tickerWidth = $('.intro').width();
     let viewportWidth = $(document).width();
     let animateDistance = tickerWidth + viewportWidth / 2;
-    tl.to('.intro', 3.1, {
+    tl.to('.intro', 1.1, {
       x: -animateDistance,
       ease: Power0.easeNone,
     }, 0);
