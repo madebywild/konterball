@@ -96,6 +96,7 @@ export default class Scene {
     this.setupLights();
 
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
+      this.hud.scoreDisplay.opponentScore.visible = true;
       this.paddleOpponent.visible = true;
     });
     this.emitter.on(EVENT.PRESET_CHANGED, e => {
@@ -135,8 +136,6 @@ export default class Scene {
     if (this.config.preset === name) {
       return;
     }
-    this.resetScore();
-    this.hud.scoreDisplay.presetChange(name);
 
     // reset values set by presets
     if (this.config.preset === PRESET.PINGPONG) {
@@ -206,6 +205,9 @@ export default class Scene {
       this.physics.setBallBoxBounciness(0.8);
     }
     // set preset
+    this.resetScore();
+    this.hud.scoreDisplay.presetChange(name);
+
     this.config.preset = name;
     this.physics.config.preset = name;
 
