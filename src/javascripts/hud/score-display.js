@@ -48,9 +48,10 @@ export default class ScoreDisplay {
     this.opponentScore.position.set(0, 0, 0);
     this.opponentScore.rotation.set(0, 0, 0);
   }
+
   presetChange(preset) {
-    this.resetScorePositions();
     if (preset === PRESET.PINGPONG) {
+      this.resetScorePositions();
       this.selfScore.material.color.set(this.config.colors.PADDLE_COLOR_PINGPONG);
       this.selfScore.rotation.y = Math.PI / 2;
       this.selfScore.position.x = -this.config.boxWidth / 2;
@@ -65,7 +66,8 @@ export default class ScoreDisplay {
       this.opponentScore.position.y = this.config.boxHeight / 2 - this.opponentScore.geometry.boundingBox.max.y / 2;
       this.opponentScore.position.z = this.config.boxPositionZ - this.config.boxDepth / 4 - this.opponentScore.geometry.boundingBox.max.x / 2;
 
-    } else if (preset === PRESET.NORMAL) {
+    } else if (preset === PRESET.NORMAL || preset === PRESET.INSANE) {
+      this.resetScorePositions();
       this.selfScore.material.color.set(this.config.colors.WHITE);
       this.selfScore.rotation.x = -Math.PI / 2;
       this.selfScore.rotation.z = Math.PI / 2;

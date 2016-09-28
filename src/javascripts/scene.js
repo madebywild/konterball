@@ -143,7 +143,7 @@ export default class Scene {
       this.paddle = Paddle(this.scene, this.config, this.config.colors.PADDLE_COLOR_PINGPONG);
 
       // change opponent paddle
-      if (true || this.config.mode === MODE.MULTIPLAYER) {
+      if (this.config.mode === MODE.MULTIPLAYER) {
         this.scene.remove(this.paddleOpponent);
         this.paddleOpponent = Paddle(this.scene, this.config, this.config.colors.OPPONENT_PADDLE_COLOR_PINGPONG);
         this.paddleOpponent.visible = true;
