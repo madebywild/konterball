@@ -6,7 +6,6 @@ import $ from 'jquery';
 export default class Communication {
   constructor(callbacks, joinRoom, emitter) {
     this.emitter = emitter;
-    console.log(this.emitter);
     this.callbacks = callbacks;
     this.connectionIsOpen = false;
     this.opponentConnected = false;
@@ -21,7 +20,7 @@ export default class Communication {
 
     this.isHost = !joinRoom;
 
-    this.peer = new Peer(this.id, {host: location.hostname, port: 80, path: '/api'});
+    this.peer = new Peer(this.id, {host: location.hostname, port: 8081, path: '/api'});
 
     // connect to the peer server
     this.peer.on('open', () => {

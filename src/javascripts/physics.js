@@ -28,7 +28,6 @@ export default class Physics {
     this.setupBox();
     this.setupPaddle();
     this.setupNet();
-    //this.net.collisionResponse = 0;
   }
 
   setupGround() {
@@ -232,18 +231,19 @@ export default class Physics {
       if (hitpointX > 1 || hitpointX < -1 || hitpointY > 1 || hitpointY < -1) {
         return;
       }
-      e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
-      e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
-      e.body.velocity.z += 0.05;
       if (this.config.preset !== PRESET.PINGPONG) {
-        return;
+        // insane mode and normal mode
+        e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
+        e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
+        e.body.velocity.z += 0.05;
+      } else {
+        // pingpong mode
+        // adjust velocity
+        // these values are heavily tweakable
+        e.body.velocity.z = 3;
+        e.body.velocity.x = hitpointX * 0.7;
+        e.body.velocity.y = 3;
       }
-
-      // adjust velocity
-      // these values are heavily tweakable
-      e.body.velocity.z = 3;
-      e.body.velocity.x = hitpointX * 0.7;
-      e.body.velocity.y = 3;
     }
   }
 
@@ -307,8 +307,5 @@ export default class Physics {
 
   step(delta) {
     this.world.step(delta);
-  }
-
-  getBallPosition() {
   }
 }

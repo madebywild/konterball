@@ -18,13 +18,17 @@ class PingPong {
     this.scene = new Scene(this.emitter);
     this.scene.setup();
     this.setupHandlers();
+    this.setupListeners();
     this.introTicker();
 
     if (this.checkRoom()) {
+      // dont display the mode chooser if the user wants to join a room
       $('.player-mode-chooser').hide();
       $('#room-url, #join-waiting-room').hide();
     }
+  }
 
+  setupListeners() {
     this.emitter.on(EVENT.RESTART_GAME, () => {
       $('.game-over-screen-wrapper').hide();
       $('#play-again').text('Play again');
@@ -34,7 +38,6 @@ class PingPong {
       $('.game-over-screen-wrapper').show();
       document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
       document.exitPointerLock();
-      console.log(score);
       if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
         $('#result').text('You won!');
       } else {
@@ -84,8 +87,6 @@ class PingPong {
     });
 
     $('#cardboard').click(() => {
-      let e = new Event('vrdisplaypresentchange');
-      //window.dispatchEvent(e);
       this.scene.manager.enterVRMode_();
       this.scene.startGame();
     });
@@ -96,6 +97,7 @@ class PingPong {
   }
 
   checkRoom() {
+    // is the user trying to join a room?
     return window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1;
   }
 
