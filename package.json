@@ -100,6 +100,6 @@
     "peerjs": "^0.3.14",
     "randomstring": "^1.1.5",
     "three": "^0.80.1",
-    "webvr-polyfill": "^0.9.18"
+    "webvr-polyfill": "^0.9.20"
   }
 }

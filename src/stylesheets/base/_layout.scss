@@ -33,7 +33,7 @@ button {
   width: 100%;
   color: #fff;
 }
-.mode-chooser {
+.player-mode-chooser {
   display: none;
   @extend .absolute-center;
   max-width: 300px;
@@ -105,5 +105,33 @@ button {
     display: inline;
     border: 1px solid #fff;
     margin-right: 5px;
+  }
+}
+.vr-mode-chooser {
+  @extend .absolute-center;
+  background-color: #000;
+  z-index: 50;
+  display: none;
+  align-items: stretch;
+  & > div {
+    cursor: pointer;
+    flex-direction: row;
+    flex: 50%;
+    flex-shrink: 1;
+    position: relative;
+  }
+  .tilt img {
+    margin-top: 15%;
+  }
+  p {
+    position: absolute;
+    bottom: -100px;
+    width: 100%;
+    text-align: center;
+  }
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
   }
 }

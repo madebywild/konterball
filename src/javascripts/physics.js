@@ -31,7 +31,7 @@ export default class Physics {
     //this.net.collisionResponse = 0;
   }
 
-  setupGround(){
+  setupGround() {
     // ground
     this.ground = new CANNON.Body({
       mass: 0,
@@ -211,7 +211,7 @@ export default class Physics {
 
   }
 
-  setBallBoxBouncyness(val) {
+  setBallBoxBounciness(val) {
     this.leftBounce.restitution = val;
     this.topBounce.restitution = val;
     this.rightBounce.restitution = val;
@@ -260,6 +260,7 @@ export default class Physics {
   }
 
   initBallPosition(ball) {
+    console.log(ball);
     switch (this.config.preset) {
       case PRESET.NORMAL:
         ball.position.set(0, this.config.boxHeight / 2, this.config.boxPositionZ);

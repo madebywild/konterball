@@ -3,7 +3,7 @@ export default (parent, config, color) => {
   let geometry = new THREE.CylinderGeometry(paddleRadius, paddleRadius, config.paddleThickness, 32);
   //geometry.scale(0.71, 0.71, 0.71);
   let material = new THREE.MeshBasicMaterial({
-    color: color,
+    color: color || config.color.WHITE,
     transparent: true,
     opacity: 0.5,
   });

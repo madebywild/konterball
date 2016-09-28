@@ -6,6 +6,8 @@
   "fonts/AtariClassicChunky.woff2": "fonts/AtariClassicChunky-13a8ac16bd.woff2",
   "fonts/AtariSmall.ttf": "fonts/AtariSmall-4f0ec11368.ttf",
   "images/box.png": "images/box-61305a6df2.png",
-  "javascripts/app.js": "javascripts/app-aceef09bc8a5a3987e73.js",
-  "stylesheets/app.css": "stylesheets/app-49b7dd1b9f.css"
+  "images/cardboard-animation.gif": "images/cardboard-animation-4520cbab94.gif",
+  "images/tilt-phone.gif": "images/tilt-phone-b94c753962.gif",
+  "javascripts/app.js": "javascripts/app-dcca114126754bd8ae9c.js",
+  "stylesheets/app.css": "stylesheets/app-e15e2139be.css"
 }

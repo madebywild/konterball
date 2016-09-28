@@ -2,7 +2,7 @@ export default (parent, config) => {
   let group = new THREE.Group();
   let geometry, material, mesh;
   material = new THREE.MeshLambertMaterial({
-    color: config.colors.PONG_PADDLE,
+    color: config.colors.WHITE,
   });
 
   // top
@@ -31,7 +31,7 @@ export default (parent, config) => {
 
   geometry = new THREE.BoxGeometry(config.paddleSize - config.paddleThickness, config.paddleSize - config.paddleThickness, config.paddleThickness);
   material = new THREE.MeshLambertMaterial({
-    color: config.colors.PONG_PADDLE,
+    color: config.colors.WHITE,
     opacity: 0,
     transparent: true,
   });

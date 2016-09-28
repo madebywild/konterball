@@ -5,6 +5,7 @@ import Hud from './hud';
 import SoundManager from './sound-manager';
 import Communication from './communication';
 import $ from 'jquery';
+import WebVRManager from './webvr-manager';
 
 import Box from './models/box';
 import SquarePaddle from './models/square-paddle';
@@ -36,8 +37,6 @@ export default class Scene {
     this.controlMode = 'pan';
     this.controllerRay = null;
     this.net = null;
-    this.canvasDOM = document.querySelector('canvas');
-    this.seconds = 0;
     this.tabActive = true;
     this.ball = null;
     this.physicsDebugRenderer = null;
@@ -64,15 +63,9 @@ export default class Scene {
       opponent: 0,
     };
 
-
-    // config
     this.config = Object.assign({}, INITIAL_CONFIG);
-
     this.physics = new Physics(this.config, this.ballPaddleCollision.bind(this));
     this.sound = new SoundManager();
-
-    // boxZBounds: -(this.boxSize.depth - 1),
-    this.boxZBounds = 0;
 
     this.frameNumber = 0;
     this.totaltime = 0;
@@ -94,25 +87,13 @@ export default class Scene {
 
     this.physics.setupWorld();
     this.physics.net.collisionResponse = 0;
-
-    this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
-    this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
-    this.paddleBoundingBox.material.visible = false;
-    this.scene.add(this.paddleBoundingBox);
-
-
-    this.paddleOpponent = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
-    this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
-    this.paddleOpponent.position.y = 1;
-    this.paddleOpponent.visible = false;
-
-    this.hud = new Hud(this.scene, this.config, this.emitter);
-    this.setupPaddlePlane();
-    this.setupLights();
-
     if (DEBUG_MODE) {
       this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
     }
+
+    this.setupPaddles();
+    this.setupPaddlePlane();
+    this.setupLights();
 
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
       this.paddleOpponent.visible = true;
@@ -124,6 +105,29 @@ export default class Scene {
       this.presetChange(e);
     });
 
+    this.hud = new Hud(this.scene, this.config, this.emitter, this.hudInitialized.bind(this));
+  }
+
+  setupPaddles() {
+    this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
+    this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
+    this.paddleBoundingBox.material.visible = false;
+    this.scene.add(this.paddleBoundingBox);
+
+
+    this.paddleOpponent = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
+    this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
+    this.paddleOpponent.position.y = 1;
+    this.paddleOpponent.visible = false;
+  }
+
+  hudInitialized() {
+    // TODO move to right place
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      this.hud.scoreDisplay.opponentScore.visible = true;
+      this.paddleOpponent.visible = true;
+    }
+
     requestAnimationFrame(this.animate.bind(this));
   }
 
@@ -133,6 +137,38 @@ export default class Scene {
     }
     this.resetScore();
     this.hud.scoreDisplay.presetChange(name);
+
+    // reset values set by presets
+    if (this.config.preset === PRESET.PINGPONG) {
+      // change paddle
+      this.scene.remove(this.paddle);
+      this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
+
+      // change opponent paddle
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        this.scene.remove(this.paddleOpponent);
+        this.paddleOpponent = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
+        this.paddleOpponent.visible = true;
+      }
+
+      // was pingpong, remove timeout
+      clearTimeout(this.resetBallTimeout);
+
+      // turn off net collisions
+      this.physics.net.collisionResponse = 0;
+      // hide net
+      this.net.visible = false;
+      // remove gravity
+      this.physics.world.gravity.set(0, 0, 0);
+      // reset bounciness
+      this.physics.setBallBoxBounciness(this.config.ballBoxBounciness);
+    }
+    if (this.config.preset === PRESET.INSANE) {
+      // was insane mode, reset clear color
+      this.renderer.setClearColor(0x000000);
+    }
+
+    // set new values
     if (name === PRESET.INSANE) {
     }
     if (name === PRESET.NORMAL) {
@@ -167,42 +203,16 @@ export default class Scene {
       this.physics.world.gravity.set(0, -6, 0);
       // tweak bouncinesses
 
-      this.physics.setBallBoxBouncyness(0.8);
-    }
-
-    // reset values set by presets
-    if (this.config.preset === PRESET.PINGPONG) {
-      // change paddle
-      this.scene.remove(this.paddle);
-      this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
-
-      // change opponent paddle
-      if (this.config.mode === MODE.MULTIPLAYER) {
-        this.scene.remove(this.paddleOpponent);
-        this.paddleOpponent = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
-        this.paddleOpponent.visible = true;
-      }
-
-      this.scene.remove(this.paddle);
-      this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
-      // was pingpong, remove timeout
-      clearTimeout(this.resetBallTimeout);
-      // turn off net collisions
-      this.physics.net.collisionResponse = 0;
-      // hide net
-      this.net.visible = false;
-      // remove gravity
-      this.physics.world.gravity.set(0, 0, 0);
-      // reset bouncyness
-      this.physics.setBallBoxBouncyness(this.config.ballBoxBouncyness);
-    }
-    if (this.config.preset === PRESET.INSANE) {
-      // was insane mode, reset clear color
-      this.renderer.setClearColor(0x000000);
+      this.physics.setBallBoxBounciness(0.8);
     }
     // set preset
     this.config.preset = name;
     this.physics.config.preset = name;
+
+    // reset ball
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.physics.initBallPosition(this.physics.ball);
+    }
   }
 
   setupVRControls() {
@@ -260,11 +270,6 @@ export default class Scene {
       scaleY: 0.01,
     };
     let tl = new TimelineMax();
-
-    if (this.config.mode === MODE.MULTIPLAYER) {
-      this.hud.scoreDisplay.opponentScore.visible = true;
-      this.paddleOpponent.visible = true;
-    }
 
     tl.to('.intro-wrapper', 0.4, {
       autoAlpha: 0,
@@ -345,7 +350,7 @@ export default class Scene {
     this.hud.scoreDisplay.setOpponentScore(0);
   }
 
-  startMultiplayer() {
+  setMultiplayer() {
     this.config.mode = MODE.MULTIPLAYER;
     this.physics.frontWall.collisionResponse = 0;
     this.communication = new Communication({
@@ -357,9 +362,8 @@ export default class Scene {
     }, window.location.pathname.substr(1), this.emitter);
   }
 
-  startSingleplayer() {
+  setSingleplayer() {
     this.config.mode = MODE.SINGLEPLAYER;
-    this.startGame();
   }
 
   receivedMove(move) {
@@ -615,9 +619,6 @@ export default class Scene {
             let posX =  intersectionPoint.x * 4;
             let posY = this.config.cameraHeight + (this.config.cameraHeight - intersectionPoint.y) * -4;
             this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.03);
-            if (this.pan) {
-              this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.08);
-            }
           }
         } else if (this.controlMode === 'move' && controller) {
           let direction = new THREE.Vector3(0, 0, -1);
@@ -643,14 +644,10 @@ export default class Scene {
     let line = this.scene.getObjectByName('ballHelperLine');
     line.position.z = Math.min(
       Math.max(
-        this.ball.position.z, this.config.boxPositionZ - this.config.boxDepth / 2
+        this.physics.ball.position.z, this.config.boxPositionZ - this.config.boxDepth / 2
       ), this.config.boxPositionZ + this.config.boxDepth / 2
     );
     return;
-    this.paddleHelpers.top.position.x = this.paddle.position.x;
-    this.paddleHelpers.bottom.position.x = this.paddle.position.x;
-    this.paddleHelpers.left.position.y = this.paddle.position.y;
-    this.paddleHelpers.right.position.y = this.paddle.position.y;
   }
 
   animate(timestamp) {
@@ -663,19 +660,17 @@ export default class Scene {
     }
 
     this.updateControls();
+
+    // for multiplayer testing
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      // for multiplayer testing
       //this.setPaddlePosition(this.ball.position.x, this.ball.position.y);
     }
+
     // raycaster position and direction is now either camera
     // or controller on vive
     this.hud.cameraRayUpdated(this.raycaster);
 
     this.updateHelpers();
-
-    if (this.pan) {
-      this.pan.rotateY(delta * 0.0003);
-    }
 
     if (this.config.mode === MODE.MULTIPLAYER) {
       this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
@@ -724,7 +719,6 @@ export default class Scene {
           }
         }
       } else {
-        // TODO do we need this?
         if (this.config.preset === PRESET.PINGPONG) {
           this.resetPingpongTimeout();
         }

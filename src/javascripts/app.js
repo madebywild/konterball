@@ -1,9 +1,10 @@
 import Scene from './scene';
 import TweenMax from 'gsap';
-import {EVENT, MODE, INITIAL_CONFIG} from './constants';
+import {PRESET, EVENT, MODE, INITIAL_CONFIG} from './constants';
 import $ from 'jquery';
 import Clipboard from 'clipboard';
 import EventEmitter from 'event-emitter';
+import Util from 'webvr-manager/util';
 
 import FlatBox from 'models/box-flat';
 import ShadedBox from 'models/box';
@@ -14,17 +15,13 @@ import FlatPaddle from 'models/square-paddle-flat';
 class PingPong {
   constructor() {
     this.emitter = EventEmitter({});
-    this.emitter.on('test', e => {
-      console.log(e);
-    });
-    this.introTicker();
-    console.log(this.emitter);
     this.scene = new Scene(this.emitter);
     this.scene.setup();
     this.setupHandlers();
+    this.introTicker();
 
     if (this.checkRoom()) {
-      $('.mode-chooser').hide();
+      $('.player-mode-chooser').hide();
       $('#room-url, #join-waiting-room').hide();
     }
 
@@ -48,15 +45,12 @@ class PingPong {
 
   setupHandlers() {
     $('#start-singleplayer').click(e => {
-      this.scene.startSingleplayer();
+      this.scene.setSingleplayer();
+      this.viewVRChooserScreen();
     });
 
     $('#start-multiplayer').click(e => {
       this.viewRoomScreenAnimation();
-    });
-
-    $('#join-waiting-room').click(e => {
-      this.scene.startGame();
     });
 
     $('#play-again').click(() => {
@@ -74,6 +68,7 @@ class PingPong {
         this.scene.paddle = FlatPaddle(this.scene.scene, this.scene.config);
       }
     });
+
     $('#shaded').click(() => {
       this.scene.scene.remove(this.scene.box);
       this.scene.box = ShadedBox(this.scene.scene, this.scene.config);
@@ -82,9 +77,21 @@ class PingPong {
         this.scene.paddle = ShadedPaddle(this.scene.scene, this.scene.config);
       }
     });
+
     $('#grid').click(() => {
       this.scene.scene.remove(this.scene.box);
       this.scene.box = GridBox(this.scene.scene, this.scene.config);
+    });
+
+    $('#cardboard').click(() => {
+      let e = new Event('vrdisplaypresentchange');
+      //window.dispatchEvent(e);
+      this.scene.manager.enterVRMode_();
+      this.scene.startGame();
+    });
+
+    $('#tilt').click(() => {
+      this.scene.startGame();
     });
   }
 
@@ -102,33 +109,52 @@ class PingPong {
       ease: Power0.easeNone,
     }, 0);
     if (!this.checkRoom()) {
-      tl.set('.mode-chooser', {
+      tl.set('.player-mode-chooser', {
         display: 'block',
         autoAlpha: 0,
       }, '-=1');
-      tl.to('.mode-chooser', 0.5, {
+      tl.to('.player-mode-chooser', 0.5, {
         autoAlpha: 1,
       }, '-=1');
     } else {
-      tl.to('.intro-wrapper', 0.5, {
-        autoAlpha: 0,
-        onComplete: () => {
-          this.scene.startMultiplayer();
-          this.scene.startGame();
-        },
-      }, '-=1');
+      this.scene.setMultiplayer();
+      this.viewVRChooserScreen();
     }
   }
 
+  viewVRChooserScreen() {
+    if (!this.scene.manager.isVRCompatible) {
+      this.scene.startGame();
+      return;
+    }
+    if (!Util.isMobile()) {
+      $("#cardboard p").text("Vive");
+      $("#tilt p").text("Mouse");
+    }
+    let tl = new TimelineMax();
+    tl.set('.vr-mode-chooser', {
+      display: 'flex',
+      opacity: 0,
+    });
+
+    tl.to('.intro, .player-mode-chooser', 0.5, {
+      autoAlpha: 0,
+    });
+
+    tl.to('.vr-mode-chooser', 0.5, {
+      opacity: 1,
+    });
+  }
+
   viewRoomScreenAnimation() {
-    this.scene.startMultiplayer();
+    this.scene.setMultiplayer();
 
     $('#room-url').val('http://' + location.hostname + '/' + this.scene.communication.id);
 
     // TODO annoying during development
     // history.pushState(null, null, this.scene.communication.id);
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
-      this.scene.startGame();
+      this.viewVRChooserScreen();
       $('#multiplayer-waiting-text').text('Player 2 has joined the room');
       $('#join-waiting-room').hide();
     });
@@ -138,7 +164,7 @@ class PingPong {
     tl.to('.button-frame', 0.3, {
       y: '+100%',
     });
-    tl.to('.mode-chooser', 0.3, {
+    tl.to('.player-mode-chooser', 0.3, {
       autoAlpha: 0,
     });
     tl.set('.room-screen', {

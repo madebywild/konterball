@@ -5,7 +5,7 @@ import Countdown from './countdown';
 import {PRESET_NAMES, MODE, EVENT} from '../constants';
 
 export default class Hud {
-  constructor(scene, config, emitter) {
+  constructor(scene, config, emitter, callback) {
     this.config = config;
     this.emitter = emitter;
     this.scene = scene;
@@ -20,9 +20,11 @@ export default class Hud {
     this.activeButton = null;
     this.focusedButton = null;
 
+    this.initializedCallback = callback;
+
     this.font = null;
     this.container = null;
-    this.initalized = false;
+    this.initialized = false;
     this.modeWasSelected = false;
 
     this.loadFont();
@@ -52,6 +54,7 @@ export default class Hud {
 
     this.scoreDisplay = new ScoreDisplay(this.scene, this.config, this.font);
     this.countdown = new Countdown(this.scene, this.config, this.font);
+    this.initializedCallback();
   }
 
   cameraRayUpdated(raycaster) {
