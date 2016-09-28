@@ -474,6 +474,9 @@ export default class Scene {
   }
 
   paddleCollisionAnimation() {
+    if (!this.paddle.getObjectByName('paddleHitHighlight')) {
+      return;
+    }
     this.paddle.getObjectByName('paddleHitHighlight').material.opacity = 1;
     TweenMax.to(this.paddle.getObjectByName('paddleHitHighlight').material, 0.54, {
       opacity: 0,
