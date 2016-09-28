@@ -11,7 +11,7 @@ import SquarePaddle from './models/square-paddle';
 import Paddle from './models/paddle';
 import Net from './models/net';
 
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 const resetTimeoutDuration = 3000;
 
 export default class Scene {

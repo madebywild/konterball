@@ -8,6 +8,8 @@ import EventEmitter from 'event-emitter';
 import FlatBox from 'models/box-flat';
 import ShadedBox from 'models/box';
 import GridBox from 'models/box-grid';
+import ShadedPaddle from 'models/square-paddle';
+import FlatPaddle from 'models/square-paddle-flat';
 
 class PingPong {
   constructor() {
@@ -67,10 +69,14 @@ class PingPong {
     $('#flat').click(() => {
       this.scene.scene.remove(this.scene.box);
       this.scene.box = FlatBox(this.scene.scene, this.scene.config);
+      this.scene.scene.remove(this.scene.paddle);
+      this.scene.paddle = FlatPaddle(this.scene.scene, this.scene.config);
     });
     $('#shaded').click(() => {
       this.scene.scene.remove(this.scene.box);
       this.scene.box = ShadedBox(this.scene.scene, this.scene.config);
+      this.scene.scene.remove(this.scene.paddle);
+      this.scene.paddle = ShadedPaddle(this.scene.scene, this.scene.config);
     });
     $('#grid').click(() => {
       this.scene.scene.remove(this.scene.box);

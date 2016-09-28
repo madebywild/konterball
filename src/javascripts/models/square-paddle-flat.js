@@ -1,7 +1,7 @@
 export default (parent, config) => {
   let group = new THREE.Group();
   let geometry, material, mesh;
-  material = new THREE.MeshLambertMaterial({
+  material = new THREE.MeshBasicMaterial({
     color: config.colors.PONG_PADDLE,
   });
 
