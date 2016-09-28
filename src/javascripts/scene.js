@@ -11,7 +11,7 @@ import SquarePaddle from './models/square-paddle';
 import Paddle from './models/paddle';
 import Net from './models/net';
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 const resetTimeoutDuration = 3000;
 
 export default class Scene {
@@ -453,6 +453,7 @@ export default class Scene {
     if (this.config.preset === PRESET.PINGPONG) {
       this.resetPingpongTimeout();
     }
+    this.paddleCollisionAnimation();
     this.sound.hit(point);
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.score.self++;
@@ -470,6 +471,15 @@ export default class Scene {
         z: this.physics.ball.velocity.z,
       });
     }, 10);
+  }
+
+  paddleCollisionAnimation() {
+    this.paddle.getObjectByName('paddleHitHighlight').material.opacity = 1;
+    TweenMax.to(this.paddle.getObjectByName('paddleHitHighlight').material, 0.54, {
+      opacity: 0,
+      ease: Power2.easeOut,
+    });
+
   }
 
   setupLights() {

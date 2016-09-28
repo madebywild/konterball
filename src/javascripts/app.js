@@ -69,14 +69,18 @@ class PingPong {
     $('#flat').click(() => {
       this.scene.scene.remove(this.scene.box);
       this.scene.box = FlatBox(this.scene.scene, this.scene.config);
-      this.scene.scene.remove(this.scene.paddle);
-      this.scene.paddle = FlatPaddle(this.scene.scene, this.scene.config);
+      if (this.scene.config.preset === PRESET.NORMAL) {
+        this.scene.scene.remove(this.scene.paddle);
+        this.scene.paddle = FlatPaddle(this.scene.scene, this.scene.config);
+      }
     });
     $('#shaded').click(() => {
       this.scene.scene.remove(this.scene.box);
       this.scene.box = ShadedBox(this.scene.scene, this.scene.config);
-      this.scene.scene.remove(this.scene.paddle);
-      this.scene.paddle = ShadedPaddle(this.scene.scene, this.scene.config);
+      if (this.scene.config.preset === PRESET.NORMAL) {
+        this.scene.scene.remove(this.scene.paddle);
+        this.scene.paddle = ShadedPaddle(this.scene.scene, this.scene.config);
+      }
     });
     $('#grid').click(() => {
       this.scene.scene.remove(this.scene.box);
