@@ -1,7 +1,6 @@
 export default (parent, config, color) => {
   const paddleRadius = config.paddleSize * 0.6;
   let geometry = new THREE.CylinderGeometry(paddleRadius, paddleRadius, config.paddleThickness, 32);
-  //geometry.scale(0.71, 0.71, 0.71);
   let material = new THREE.MeshBasicMaterial({
     color: color || config.color.WHITE,
     transparent: true,

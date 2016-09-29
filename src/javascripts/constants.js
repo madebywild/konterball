@@ -44,9 +44,16 @@ export const INITIAL_CONFIG = {
   boxHeight: 2,
   netHeight: 0.3,
   boxPositionZ: -3.5,
+  boxWallThickness: 0.05,
   paddleThickness: 0.04,
   paddleSize: 0.5,
-  paddlePositionZ: -1,
+  //paddlePositionZ: -1,
+  get paddlePositionZ() {
+    return this.boxPositionZ
+      + this.boxDepth / 2
+      + this.boxWallThickness / 2
+      + this.paddleThickness / 2;
+  },
   ballRadius: 0.03,
   ballMass: 0.001,
   ballPaddleFriction: 0.8,
@@ -56,6 +63,7 @@ export const INITIAL_CONFIG = {
   paddleModel: 'box',
   cameraHeight: 1,
   preset: PRESET.NORMAL,
+  insaneBallAmount: 4,
 
   POINTS_FOR_WIN: 11,
   ROOM_CODE_LENGTH: 6,

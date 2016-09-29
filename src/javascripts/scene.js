@@ -10,7 +10,9 @@ import WebVRManager from './webvr-manager';
 import Box from './models/box';
 import SquarePaddle from './models/square-paddle';
 import Paddle from './models/paddle';
+import TrianglePaddle from './models/triangle-paddle';
 import Net from './models/net';
+import Ball from './models/ball';
 
 const DEBUG_MODE = false;
 const resetTimeoutDuration = 3000;
@@ -39,8 +41,8 @@ export default class Scene {
     this.net = null;
     this.tabActive = true;
     this.ball = null;
+    this.insaneBalls = [];
     this.physicsDebugRenderer = null;
-    this.ballReference = null;
     this.resetBallTimeout = null;
     this.state = STATE.PRELOADER;
 
@@ -157,13 +159,13 @@ export default class Scene {
   }
 
   setupLights() {
-    let light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.z = 1;
+    let light = new THREE.DirectionalLight(0xffffff, 0.5);
+    light.position.z = 3;
     light.position.y = 2;
     light.position.x = 1;
     this.scene.add(light);
 
-    light = new THREE.AmbientLight(0xffffff, 0.3);
+    light = new THREE.AmbientLight(0xffffff, 0.7);
     this.scene.add(light);
   }
 
@@ -259,17 +261,6 @@ export default class Scene {
 
     // reset values set by presets
     if (this.config.preset === PRESET.PINGPONG) {
-      // change paddle
-      this.scene.remove(this.paddle);
-      this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
-
-      // change opponent paddle
-      if (this.config.mode === MODE.MULTIPLAYER) {
-        this.scene.remove(this.paddleOpponent);
-        this.paddleOpponent = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
-        this.paddleOpponent.visible = true;
-      }
-
       // was pingpong, remove timeout
       clearTimeout(this.resetBallTimeout);
 
@@ -289,8 +280,26 @@ export default class Scene {
 
     // set new values
     if (name === PRESET.INSANE) {
+      this.scene.remove(this.paddle);
+      this.paddle = new TrianglePaddle(this.scene, this.config);
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        this.scene.remove(this.paddleOpponent);
+        this.paddleOpponent = new TrianglePaddle(this.scene, this.config);
+        this.paddleOpponent.visible = true;
+      }
     }
+
     if (name === PRESET.NORMAL) {
+      // change paddle
+      this.scene.remove(this.paddle);
+      this.paddle = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
+
+      // change opponent paddle
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        this.scene.remove(this.paddleOpponent);
+        this.paddleOpponent = SquarePaddle(this.scene, this.config, this.config.colors.WHITE);
+        this.paddleOpponent.visible = true;
+      }
     }
     if (name === PRESET.PINGPONG) {
       // change paddle
@@ -591,17 +600,17 @@ export default class Scene {
     if (this.ball) return;
     this.physics.addBall();
 
-    // ball
-    let geometry = new THREE.SphereGeometry(this.config.ballRadius, 16, 16);
-    let material = new THREE.MeshBasicMaterial({
-      color: this.config.colors.WHITE,
-    });
-
-    this.ball = new THREE.Mesh(geometry, material);
+    this.ball = new Ball(this.config);
     this.scene.add(this.ball);
   }
 
   setPaddlePosition(x, y, z) {
+    this.paddle.position.x = x;
+    this.paddle.position.y = y;
+    console.log(this.config.paddlePositionZ);
+    this.paddle.position.z = this.config.paddlePositionZ;
+    this.physics.setPaddlePosition(x, y, this.config.paddlePositionZ);
+    return;
     let newX = Math.min(
       this.config.boxWidth / 2 - this.config.paddleSize / 2,
       Math.max(
