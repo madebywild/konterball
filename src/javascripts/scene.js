@@ -296,9 +296,11 @@ export default class Scene {
       this.scene.remove(this.paddle);
       this.paddle = new TrianglePaddle(this.scene, this.config);
       if (this.config.mode === MODE.MULTIPLAYER) {
+        console.log('ayyy');
         this.scene.remove(this.paddleOpponent);
         this.paddleOpponent = new TrianglePaddle(this.scene, this.config);
         this.paddleOpponent.visible = true;
+        this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
       }
       this.removeBalls();
       if (this.config.mode === MODE.SINGLEPLAYER || this.communication.isHost) {
@@ -630,7 +632,7 @@ export default class Scene {
         x: physicsBody.velocity.x,
         y: physicsBody.velocity.y,
         z: physicsBody.velocity.z,
-      });
+      }, physicsBody._name);
     }, 10);
   }
 
@@ -647,7 +649,8 @@ export default class Scene {
   }
 
   addBall() {
-    if (this.config.preset !== PRESET.INSANE && this.balls.length > 0) {
+    if (this.config.preset !== PRESET.INSANE && this.balls.length > 0
+      || this.config.preset === PRESET.INSANE && this.balls.length >= this.config.insaneBallAmount) {
       return;
     }
     let color;

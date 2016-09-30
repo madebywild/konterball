@@ -25,19 +25,10 @@ export default class ScoreDisplay {
     geometry.computeBoundingBox();
 
     this.opponentScore = new THREE.Mesh(geometry, material);
-    this.opponentScore.rotation.x = -Math.PI / 2;
-    this.opponentScore.rotation.z = Math.PI / 2;
-    this.opponentScore.position.x = -this.config.boxWidth / 2
-      + geometry.boundingBox.max.y + 0.2;
-    this.opponentScore.position.z = this.config.boxPositionZ - scoreSpacing;
-
     this.selfScore = new THREE.Mesh(geometry.clone(), material.clone());
-    this.selfScore.rotation.x = -Math.PI / 2;
-    this.selfScore.rotation.z = Math.PI / 2;
-    this.selfScore.position.x = -this.config.boxWidth / 2
-      + geometry.boundingBox.max.y + 0.2;
-    this.selfScore.position.z = this.config.boxPositionZ
-      + geometry.boundingBox.max.x + scoreSpacing;
+
+    // send preset change to set position
+    this.presetChange(this.config.preset);
 
     this.parent.add(this.selfScore);
     this.parent.add(this.opponentScore);
@@ -54,7 +45,7 @@ export default class ScoreDisplay {
 
   presetChange(preset) {
     if (preset === PRESET.PINGPONG) {
-      // position at floor center to the left
+      // position at left and right walls
       this.resetScorePositions();
       this.selfScore.material.color.set(this.config.colors.PADDLE_COLOR_PINGPONG);
       this.selfScore.rotation.y = Math.PI / 2;
@@ -77,9 +68,8 @@ export default class ScoreDisplay {
       this.opponentScore.position.z = this.config.boxPositionZ
         - this.config.boxDepth / 4
         - this.opponentScore.geometry.boundingBox.max.x / 2;
-
     } else if (preset === PRESET.NORMAL || preset === PRESET.INSANE) {
-      // position at left and right walls
+      // position at floor center to the left
       this.resetScorePositions();
       this.selfScore.material.color.set(this.config.colors.WHITE);
       this.selfScore.rotation.x = -Math.PI / 2;
@@ -97,8 +87,7 @@ export default class ScoreDisplay {
       this.opponentScore.geometry.computeBoundingBox();
       this.opponentScore.position.x = -this.config.boxWidth / 2
         + this.opponentScore.geometry.boundingBox.max.y + 0.2;
-      this.opponentScore.position.z = this.config.boxPositionZ
-        - this.opponentScore.geometry.boundingBox.max.x - scoreSpacing;
+      this.opponentScore.position.z = this.config.boxPositionZ - scoreSpacing;
       this.opponentScore.position.y = 0;
     }
   }
