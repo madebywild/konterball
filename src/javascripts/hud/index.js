@@ -2,6 +2,7 @@ import Button from './button';
 import TweenMax from 'gsap';
 import ScoreDisplay from './score-display';
 import Countdown from './countdown';
+import Message from './message';
 import {PRESET_NAMES, MODE, EVENT} from '../constants';
 
 export default class Hud {
@@ -52,8 +53,12 @@ export default class Hud {
     this.initialized = true;
     this.activeButton = this.buttons[0].hitbox;
 
+    this.message = new Message(this.scene, this.config, this.font);
+    this.message.hideMessage();
+
     this.scoreDisplay = new ScoreDisplay(this.scene, this.config, this.font);
     this.countdown = new Countdown(this.scene, this.config, this.font);
+    this.countdown.hideCountdown();
     this.initializedCallback();
   }
 

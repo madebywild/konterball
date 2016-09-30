@@ -44,6 +44,10 @@ class PingPong {
         $('#result').text('Your opponent won!');
       }
     });
+    this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
+      // TODO
+      alert('Your opponent has disconnected');
+    });
   }
 
   setupHandlers() {

@@ -89,14 +89,20 @@ export default class Scene {
 
     this.physics.setupWorld();
     this.physics.net.collisionResponse = 0;
+
     if (DEBUG_MODE) {
       this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
     }
 
+    this.setupEventListeners();
     this.setupPaddles();
     this.setupPaddlePlane();
     this.setupLights();
 
+    this.hud = new Hud(this.scene, this.config, this.emitter, this.hudInitialized.bind(this));
+  }
+
+  setupEventListeners() {
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
       this.hud.scoreDisplay.opponentScore.visible = true;
       this.paddleOpponent.visible = true;
@@ -107,8 +113,6 @@ export default class Scene {
       }
       this.presetChange(e);
     });
-
-    this.hud = new Hud(this.scene, this.config, this.emitter, this.hudInitialized.bind(this));
   }
 
   setupVRControls() {
@@ -427,9 +431,13 @@ export default class Scene {
       },
       onComplete: () => {
         this.setupVRControls();
-        this.countdown();
+        this.hud.message.showMessage();
       }
     }, 1);
+    tl.call(() => {
+      this.hud.message.hideMessage();
+      this.countdown();
+    }, [], null, '+=1');
   }
 
   countdown() {

@@ -11,6 +11,7 @@ export default class Communication {
     this.opponentConnected = false;
     this.latency = null;
     this.conn = null;
+    this.reliableConn = null;
     this.lastPings = [];
 
     this.id = randomstring.generate({
@@ -42,17 +43,27 @@ export default class Communication {
         this.connectionIsOpen = true;
         this.opponentConnected = true;
         this.startListening();
+        this.conn.on('close', () => {
+          this.connectionClosed();
+        });
       });
     } else {
       // use code (from url) to connect to room host
       this.peer.on('open', () => {
-        this.conn = this.peer.connect(joinRoom, {reliable: true});
+        this.conn = this.peer.connect(joinRoom);
         this.conn.on('open', () => {
           this.opponentConnected = true;
           this.startListening();
         });
+        this.conn.on('close', () => {
+          this.connectionClosed();
+        });
       });
     }
+  }
+
+  connectionClosed() {
+    this.emitter.emit(EVENT.OPPONENT_DISCONNECTED);
   }
 
   sendPings() {
@@ -77,7 +88,7 @@ export default class Communication {
   }
 
   startListening() {
-    // this.sendPings();
+    this.sendPings();
     this.conn.on('data', data => {
       switch (data.action) {
         case ACTION.MOVE:
