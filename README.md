@@ -1,7 +1,14 @@
 # Development
 
-* Run `gulp production` to move static libraries to public folder
-* Run `npm start`
+* Run `gulp`
+* ???
+* Profit
+
+# Production
+
+* Run `gulp production`
+* Run `node server.js`
+* Server should now be available at port 8081, or whatever port you set in the PORT environment var.
 
 ## TODO
 

@@ -10,6 +10,16 @@ export default (parent, config) => {
   mesh = new THREE.Mesh(geometry, material);
   group.add(mesh);
 
+  geometry = new THREE.RingGeometry(0.001, config.paddleSize, 1, 1);
+  material = new THREE.MeshLambertMaterial({
+    color: config.colors.WHITE,
+    opacity: 0,
+    transparent: true,
+  });
+  mesh = new THREE.Mesh(geometry, material);
+  mesh.name = 'paddleHitHighlight';
+  group.add(mesh);
+
   group.name = 'paddle';
   parent.add(group);
   return group;

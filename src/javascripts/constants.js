@@ -9,6 +9,8 @@ export const STATE = {
   ROOM_URL_DISPLAY: 'ROOM_URL_DISPLAY',
   PLAYING: 'PLAYING',
   GAME_OVER: 'GAME_OVER',
+  COUNTDOWN: 'COUNTDOWN',
+  PAUSED: 'PAUSED',
 };
 
 export const EVENT = {
@@ -47,7 +49,6 @@ export const INITIAL_CONFIG = {
   boxWallThickness: 0.05,
   paddleThickness: 0.04,
   paddleSize: 0.5,
-  //paddlePositionZ: -1,
   get paddlePositionZ() {
     return this.boxPositionZ
       + this.boxDepth / 2
@@ -63,7 +64,7 @@ export const INITIAL_CONFIG = {
   paddleModel: 'box',
   cameraHeight: 1,
   preset: PRESET.NORMAL,
-  insaneBallAmount: 4,
+  insaneBallAmount: 3,
 
   POINTS_FOR_WIN: 11,
   ROOM_CODE_LENGTH: 6,

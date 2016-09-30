@@ -114,21 +114,23 @@ export default class Communication {
     });
   }
 
-  sendHit(point, velocity) {
+  sendHit(point, velocity, name='ball-0') {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.HIT,
       point: point,
       velocity: velocity,
+      name: name,
     });
   }
 
-  sendMiss(point, velocity) {
+  sendMiss(point, velocity, name='ball-0') {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.MISS,
       point: point,
       velocity: velocity,
+      name: name,
     });
   }
 

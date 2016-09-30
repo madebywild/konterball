@@ -38,6 +38,11 @@ export default class Countdown {
     this.countdown.position.y = this.config.boxHeight / 2 - geometry.boundingBox.max.y / 2;
   }
 
+  showCountdown() {
+    this.setCountdown(3);
+    this.countdown.visible = true;
+  }
+
   hideCountdown() {
     this.countdown.visible = false;
   }

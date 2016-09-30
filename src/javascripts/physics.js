@@ -7,7 +7,7 @@ export default class Physics {
     this.config = config;
 
     this.world = null;
-    this.ball = null;
+    this.balls = [];
     this.net = null;
     this.ground = null;
     this.paddle = null;
@@ -185,29 +185,31 @@ export default class Physics {
     this.world.add(this.frontWall);
   }
 
-  addBall() {
-    this.ball = new CANNON.Body({
+  addBall(threeReference) {
+    let ball = new CANNON.Body({
       mass: this.config.ballMass,
       shape: new CANNON.Sphere(this.config.ballRadius),
       material: new CANNON.Material(),
     });
 
-    this.ball.name = 'BALL';
+    ball.threeReference = threeReference;
+    ball._name = `ball-${this.balls.length}`;
     // TODO
     // newBall.linearDamping = 0.4;
-    this.ball.linearDamping = 0;
-    this.world.add(this.ball);
+    ball.linearDamping = 0;
 
-    this.leftBounce = this.addContactMaterial(this.ball.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
-    this.topBounce = this.addContactMaterial(this.ball.material, this.topWall.material, this.config.ballBoxBounciness, 0);
-    this.rightBounce = this.addContactMaterial(this.ball.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
-    this.bottomBounce = this.addContactMaterial(this.ball.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
-    this.frontBounce = this.addContactMaterial(this.ball.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(this.ball.material, this.paddle.material, 1, 0);
+    this.leftBounce = this.addContactMaterial(ball.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
+    this.topBounce = this.addContactMaterial(ball.material, this.topWall.material, this.config.ballBoxBounciness, 0);
+    this.rightBounce = this.addContactMaterial(ball.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
+    this.bottomBounce = this.addContactMaterial(ball.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
+    this.frontBounce = this.addContactMaterial(ball.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
+    this.addContactMaterial(ball.material, this.paddle.material, 1, 0);
 
-    this.ball.position.y = this.config.boxHeight / 2;
-    this.ball.position.z = this.config.boxPositionZ;
-
+    ball.position.y = this.config.boxHeight / 2;
+    ball.position.z = this.config.boxPositionZ;
+    this.balls.push(ball);
+    this.world.add(ball);
+    this.initBallPosition(ball);
   }
 
   setBallBoxBounciness(val) {
@@ -219,8 +221,9 @@ export default class Physics {
   }
 
   paddleCollision(e) {
-    if (e.body.name === 'BALL') {
-      this.ballPaddleCollisionCallback(e.body.position);
+    console.log(e.body);
+    if (e.body._name.startsWith('ball')) {
+      this.ballPaddleCollisionCallback(e.body.position, e.body);
 
       let hitpointX = e.body.position.x - e.target.position.x;
       let hitpointY = e.body.position.y - e.target.position.y;
@@ -251,18 +254,10 @@ export default class Physics {
     this.paddle.position.set(x, y, z);
   }
 
-  setBallPosition(ball) {
-    if (!this.ball) {
-      return;
-    }
-    ball.position.copy(this.ball.position);
-    ball.quaternion.copy(this.ball.quaternion);
-  }
-
   initBallPosition(ball) {
-    console.log(ball);
     switch (this.config.preset) {
       case PRESET.NORMAL:
+      case PRESET.INSANE:
         ball.position.set(0, this.config.boxHeight / 2, this.config.boxPositionZ);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
         ball.velocity.y = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
@@ -285,19 +280,17 @@ export default class Physics {
     }
   }
 
-  predictCollisions(paddle, net) {
-    if (!this.ball) {
-      return;
-    }
+  predictCollisions(ball, paddle, net) {
+
     // predict ball position in the next frame
-    this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
-    this.raycaster.far = this.ball.velocity.clone().length() / 50;
+    this.raycaster.set(ball.position.clone(), ball.velocity.clone().unit());
+    this.raycaster.far = ball.velocity.clone().length() / 50;
 
     // the raycaster only intersects visible objects, so if the net is invisible
     // in non-pingpong-mode, it wont get an intersection
     let arr = this.raycaster.intersectObjects([paddle, net]);
     if (arr.length) {
-      this.ball.position.copy(arr[0].point);
+      ball.position.copy(arr[0].point);
     }
   }
 
