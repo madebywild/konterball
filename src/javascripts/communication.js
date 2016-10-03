@@ -88,7 +88,7 @@ export default class Communication {
   }
 
   startListening() {
-    this.sendPings();
+    // this.sendPings();
     this.conn.on('data', data => {
       switch (data.action) {
         case ACTION.MOVE:
@@ -125,17 +125,19 @@ export default class Communication {
     });
   }
 
-  sendHit(point, velocity, name='ball-0') {
+  sendHit(point, velocity, name, addBall=false) {
+    console.log('send hit');
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.HIT,
       point: point,
       velocity: velocity,
       name: name,
+      addBall: addBall,
     });
   }
 
-  sendMiss(point, velocity, name='ball-0') {
+  sendMiss(point, velocity, name) {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.MISS,

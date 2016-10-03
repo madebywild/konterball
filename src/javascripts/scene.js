@@ -13,6 +13,8 @@ import Paddle from './models/paddle';
 import TrianglePaddle from './models/triangle-paddle';
 import Net from './models/net';
 import Ball from './models/ball';
+import BiggerBalls from './powerup/bigger-balls';
+import Time from './util/time';
 
 const DEBUG_MODE = false;
 const resetTimeoutDuration = 5000;
@@ -20,6 +22,7 @@ const resetTimeoutDuration = 5000;
 export default class Scene {
   constructor(emitter) {
     this.emitter = emitter;
+    this.time = new Time();
 
     this.renderer = null;
     this.scene = null;
@@ -45,6 +48,7 @@ export default class Scene {
     this.resetBallTimeout = null;
     this.state = STATE.PRELOADER;
     this.insaneInterval = null;
+    this.insaneBallNumber = 0;
 
     this.paddleHelpers = {
       top: null,
@@ -112,6 +116,11 @@ export default class Scene {
         this.communication.sendPresetChange(e);
       }
       this.presetChange(e);
+    });
+    this.emitter.on(EVENT.GAME_OVER, e => {
+      this.time.clearInterval(this.insaneInterval);
+      this.removeBalls();
+      this.config.state = STATE.GAME_OVER;
     });
   }
 
@@ -267,6 +276,18 @@ export default class Scene {
     this.physics.balls = [];
   }
 
+  removeBall(ballToRemove) {
+    console.log(this.balls.map(ball => ball.name));
+    this.scene.remove(ballToRemove);
+    this.balls = this.balls.filter(ball => {
+      return ball.name !== ballToRemove.name;
+    });
+    this.physics.world.removeBody(ballToRemove.physicsReference);
+    this.physics.balls = this.physics.balls.filter(ball => {
+      return ball._name !== ballToRemove.name;
+    });
+  }
+
   presetChange(name) {
     this.config.state = STATE.PAUSED;
     if (this.config.preset === name) {
@@ -277,7 +298,7 @@ export default class Scene {
     if (this.config.preset === PRESET.PINGPONG) {
       // was pingpong, remove timeout
       this.balls.forEach(ball => {
-        clearTimeout(ball.resetBallTimeout);
+        this.time.clearTimeout(ball.resetBallTimeout);
       });
 
       // turn off net collisions
@@ -290,7 +311,7 @@ export default class Scene {
       this.physics.setBallBoxBounciness(this.config.ballBoxBounciness);
     }
     if (this.config.preset === PRESET.INSANE) {
-      clearInterval(this.insaneInterval);
+      this.time.clearInterval(this.insaneInterval);
       this.scene.getObjectByName('ballHelperLine').visible = true;
     }
 
@@ -300,32 +321,10 @@ export default class Scene {
       this.scene.remove(this.paddle);
       this.paddle = new TrianglePaddle(this.scene, this.config);
       if (this.config.mode === MODE.MULTIPLAYER) {
-        console.log('ayyy');
         this.scene.remove(this.paddleOpponent);
         this.paddleOpponent = new TrianglePaddle(this.scene, this.config);
         this.paddleOpponent.visible = true;
         this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
-      }
-      this.removeBalls();
-      if (this.config.mode === MODE.SINGLEPLAYER || this.communication.isHost) {
-        this.insaneInterval = setInterval(() => {
-          if (this.balls.length < this.config.insaneBallAmount) {
-            let physicsReference = this.addBall();
-            if (this.config.mode === MODE.MULTIPLAYER && this.communication.isHost) {
-              this.communication.sendHit({
-                x: physicsReference.position.x,
-                y: physicsReference.position.y,
-                z: physicsReference.position.z,
-              }, {
-                x: physicsReference.velocity.x,
-                y: physicsReference.velocity.y,
-                z: physicsReference.velocity.z,
-              }, physicsReference._name);
-            }
-          } else {
-            clearInterval(this.insaneInterval);
-          }
-        }, 3000);
       }
     }
 
@@ -382,15 +381,47 @@ export default class Scene {
     this.config.preset = name;
     this.physics.config.preset = name;
 
-    // reset ball, but only in singleplayer
-    // TODO why?
-    if (name !== PRESET.INSANE) {
-      this.removeBalls();
-      this.countdown();
+    this.removeBalls();
+    this.countdown();
+  }
+
+  startInsaneInterval() {
+    if (this.config.mode === MODE.MULTIPLAYER && this.communication.isHost) {
+      // other player is in charge of the interval
+      return;
     }
-    // if (this.config.mode === MODE.SINGLEPLAYER) {
-    //   this.physics.initBallPosition(this.physics.balls[0]);
-    // }
+    // also add a ball so we dont have to wait 1 sec
+    let physicsBody = this.addBall();
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      this.communication.sendHit({
+        x: physicsBody.position.x,
+        y: physicsBody.position.y,
+        z: physicsBody.position.z,
+      }, {
+        x: physicsBody.velocity.x,
+        y: physicsBody.velocity.y,
+        z: physicsBody.velocity.z,
+      }, physicsBody._name, true);
+    }
+    this.insaneInterval = this.time.setInterval(() => {
+      this.insaneBallNumber++;
+      let physicsBody = this.addBall();
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        if (this.insaneBallNumber % 2 === 0) {
+          // reverse ball z direction every other ball
+          physicsBody.velocity.z *= -1;
+        }
+        this.communication.sendHit({
+          x: physicsBody.position.x,
+          y: physicsBody.position.y,
+          z: physicsBody.position.z,
+        }, {
+          x: physicsBody.velocity.x,
+          y: physicsBody.velocity.y,
+          z: physicsBody.velocity.z,
+        }, physicsBody._name, true);
+      }
+    }, this.config.insaneBallInterval);
   }
 
   startGame() {
@@ -445,18 +476,18 @@ export default class Scene {
     // countdown from 3, start game afterwards
     this.hud.countdown.showCountdown();
     let n = 2;
-    let countdown = setInterval(() => {
+    let countdown = this.time.setInterval(() => {
       this.hud.countdown.setCountdown(n);
       n--;
       if (n < 0) {
-        clearInterval(countdown);
+        this.time.clearInterval(countdown);
         this.hud.countdown.hideCountdown();
         if (this.config.mode === MODE.SINGLEPLAYER) {
           this.addBall();
-          //this.physics.initBallPosition(this.physics.ball);
-        } else if (this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-          this.addBall();
-          //this.physics.initBallPosition(this.physics.ball);
+        } else if (this.config.mode === MODE.MULTIPLAYER
+            && !this.communication.isHost
+            && this.config.preset !== PRESET.INSANE) {
+          let physicsBody = this.addBall();
           // if multiplayer, also send the other player a hit so the ball is synced
           this.communication.sendHit({
             x: this.physics.balls[0].position.x,
@@ -466,7 +497,10 @@ export default class Scene {
             x: this.physics.balls[0].velocity.x,
             y: this.physics.balls[0].velocity.y,
             z: this.physics.balls[0].velocity.z,
-          });
+          }, physicsBody._name, true);
+        }
+        if (this.config.preset === PRESET.INSANE) {
+          this.startInsaneInterval();
         }
       }
     }, 1000);
@@ -477,15 +511,12 @@ export default class Scene {
     if (this.opponentRequestedRestart && this.playerRequestedRestart) {
       this.emitter.emit(EVENT.RESTART_GAME, this.score);
       // TODO reset mode?
-      this.balls = [];
-      this.physics.balls = [];
-      this.addBall();
 
       // reset
       this.playerRequestedRestart = false;
       this.opponentRequestedRestart = false;
       this.resetScore();
-      this.config.state = STATE.PLAYING;
+      this.countdown();
     }
   }
 
@@ -541,24 +572,26 @@ export default class Scene {
   }
 
   receivedHit(data) {
-    if (this.config.preset !== PRESET.INSANE) {
-      // we might not have a ball yet
+    // we might not have a ball yet
+    if (data.addBall) {
       // this doesnt add a ball if it already exists so were safe to call it
-      // in insane mode balls are added with an interval so we dont care about that
+      // (except in insane mode, then we keep adding balls
+      if (this.addBall()) {
+        this.balls[this.balls.length - 1].name = data.name;
+        this.physics.balls[this.physics.balls.length - 1]._name = data.name;
+      }
     }
-    this.addBall();
     // received vectors are in the other users space
     // invert x and z velocity and mirror the point across the center of the box
-    // TODO do this for all balls, index them
     let ball = this.scene.getObjectByName(data.name);
-    console.log(ball);
     ball.physicsReference.position.copy(this.mirrorBallPosition(data.point));
     ball.physicsReference.velocity.copy(this.mirrorBallVelocity(data.velocity));
+    console.log('miss: ' + ball.physicsReference.velocity.z);
   }
 
   mirrorBallPosition(pos) {
     let z = pos.z;
-    z -= Math.abs(z - this.config.boxPositionZ) * 2;
+    z = z - Math.sign(z - this.config.boxPositionZ) * Math.abs(z - this.config.boxPositionZ) * 2;
     return {
       x: -pos.x, 
       y: pos.y,
@@ -581,11 +614,12 @@ export default class Scene {
     let ball = this.scene.getObjectByName(data.name);
     this.score.self++;
     this.hud.scoreDisplay.setSelfScore(this.score.self);
-    if (this.score.self >= this.config.POINTS_FOR_WIN && this.config.mode !== MODE.INSANE) {
+    if (this.config.preset === PRESET.INSANE) {
+      // TODO maybe remove the ball
+      return;
+    }
+    if (this.score.self >= this.config.POINTS_FOR_WIN) {
       this.emitter.emit(EVENT.GAME_OVER, this.score);
-      ball.physicsReference.velocity.x = 0;
-      ball.physicsReference.velocity.y = 0;
-      ball.physicsReference.velocity.z = 0;
     } else {
       // otherwise, the opponent that missed also resets the ball
       // and sends along its new position
@@ -598,12 +632,11 @@ export default class Scene {
   }
 
   resetPingpongTimeout() {
-    console.log('reset timeout');
     // reset the ball position in case the ball is stuck at the net
     // (can happen in pingpong mode)
     if (this.config.mode !== MODE.MULTIPLAYER && this.config.preset === PRESET.PINGPONG) {
-      clearTimeout(this.resetBallTimeout);
-      this.resetBallTimeout = setTimeout(() => {
+      this.time.clearTimeout(this.resetBallTimeout);
+      this.resetBallTimeout = this.time.setTimeout(() => {
         this.physics.initBallPosition(this.physics.balls[0]);
       }, resetTimeoutDuration);
     }
@@ -657,9 +690,8 @@ export default class Scene {
   }
 
   addBall() {
-    if (this.config.preset !== PRESET.INSANE && this.balls.length > 0
-      || this.config.preset === PRESET.INSANE && this.balls.length >= this.config.insaneBallAmount) {
-      return;
+    if (this.config.preset !== PRESET.INSANE && this.balls.length > 0) {
+      return false;
     }
     let color;
     if (this.config.preset === PRESET.INSANE) {
@@ -668,10 +700,10 @@ export default class Scene {
       color = 0xFFFFFF;
     }
     let ball = new Ball(this.scene, this.config, color);
-    ball.name = `ball-${this.balls.length}`;
-    this.physics.addBall(ball);
+    ball.name = ball.uuid;
+    let physicsBall = this.physics.addBall(ball);
     this.balls.push(ball);
-    ball.physicsReference = this.physics.balls[this.physics.balls.length - 1];
+    ball.physicsReference = physicsBall;
     this.resetPingpongTimeout();
     this.config.state = STATE.PLAYING;
     return ball.physicsReference;
@@ -727,7 +759,7 @@ export default class Scene {
   }
 
   updateHelpers() {
-    if (!this.balls || this.config.preset === PRESET.INSANE) return;
+    if (!this.physics.balls[0] || this.config.preset === PRESET.INSANE) return;
     // set helper line to be at ball Z position, but inside the box
     let line = this.scene.getObjectByName('ballHelperLine');
     line.position.z = Math.min(
@@ -748,37 +780,47 @@ export default class Scene {
           // opponent scored, send a miss
           this.score.opponent++;
           this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
-          if (this.score.opponent < this.config.POINTS_FOR_WIN) {
-            // the game goes on
-            this.physics.initBallPosition(ball.physicsReference);
-          } else {
-            // game is over
-            // TODO maybe wait a little with this so players can enjoy their 11 points
-            this.emitter.emit(EVENT.GAME_OVER, this.score);
-            this.state = STATE.GAME_OVER;
-            this.physics.initBallPosition(ball.physicsReference);
-            ball.physicsReference.velocity.x = 0;
-            ball.physicsReference.velocity.y = 0;
-            ball.physicsReference.velocity.z = 0;
+          if (this.config.preset !== PRESET.INSANE) {
+            if (this.score.opponent < this.config.POINTS_FOR_WIN) {
+              // the game goes on
+              this.physics.initBallPosition(ball.physicsReference);
+              console.log('init position: ' + ball.physicsReference.velocity.z);
+            } else {
+              // game is over
+              // TODO maybe wait a little with this so players can enjoy their 11 points
+              this.emitter.emit(EVENT.GAME_OVER, this.score);
+            }
+            // tell the opponent
+            this.communication.sendMiss({
+              x: ball.physicsReference.position.x,
+              y: ball.physicsReference.position.y,
+              z: ball.physicsReference.position.z,
+            }, {
+              x: ball.physicsReference.velocity.x,
+              y: ball.physicsReference.velocity.y,
+              z: ball.physicsReference.velocity.z,
+            }, ball.name);
+          } else {
+            // in insane mode, remove this ball, balls are added automatically
+            this.removeBall(ball);
+            // when a game is over is only regulated by a timer
+            return;
           }
-          // tell the opponent
-          this.communication.sendMiss({
-            x: ball.physicsReference.position.x,
-            y: ball.physicsReference.position.y,
-            z: ball.physicsReference.position.z,
-          }, {
-            x: ball.physicsReference.velocity.x,
-            y: ball.physicsReference.velocity.y,
-            z: ball.physicsReference.velocity.z,
-          }, ball.name);
+        }
+        if (this.config.preset === PRESET.INSANE && ball.position.z < -10) {
+          this.removeBall(ball);
         }
       } else {
         this.resetPingpongTimeout();
-
-        // TODO pingpong scoring
-        this.physics.initBallPosition(ball.physicsReference);
-        this.score.self = 0;
-        this.hud.scoreDisplay.setSelfScore(this.score.self);
+        if (this.config.preset === PRESET.INSANE) {
+          // delete ball
+          this.removeBall(ball);
+        } else {
+          // TODO pingpong scoring
+          this.physics.initBallPosition(ball.physicsReference);
+          this.score.self = 0;
+          this.hud.scoreDisplay.setSelfScore(this.score.self);
+        }
       }
     }
   }
@@ -821,15 +863,14 @@ export default class Scene {
       this.physics.step(delta / 1000);
 
       if (this.balls) {
-        if (this.config.preset !== PRESET.INSANE) {
-          this.updateHelpers();
-        }
         this.balls.forEach(ball => {
           this.updateBall(ball);
           this.physics.predictCollisions(ball.physicsReference, this.paddleBoundingBox, this.scene.getObjectByName('net-collider'));
         });
       }
+      this.updateHelpers();
     }
+
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer.update();
@@ -838,6 +879,13 @@ export default class Scene {
     // Update VR headset position and apply to camera.
     if (this.controls) {
       this.controls.update();
+    }
+
+    this.time.step();
+
+    // TODO remove this, only testing assertion
+    if (this.physics.balls.length !== this.balls.length) {
+      console.log('PROBLEM!');
     }
 
     // Render the scene through the manager.

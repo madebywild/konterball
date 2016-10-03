@@ -2,6 +2,10 @@
 
 $font-size: 22px;
 
+button:focus, textarea:focus, input:focus{
+  outline: none;
+}
+
 body {
   font-family: AtariClassic;
   overflow: hidden;

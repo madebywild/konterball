@@ -193,7 +193,7 @@ export default class Physics {
     });
 
     ball.threeReference = threeReference;
-    ball._name = `ball-${this.balls.length}`;
+    ball._name = threeReference.name;
     // TODO
     // newBall.linearDamping = 0.4;
     ball.linearDamping = 0;
@@ -210,6 +210,7 @@ export default class Physics {
     this.balls.push(ball);
     this.world.add(ball);
     this.initBallPosition(ball);
+    return ball;
   }
 
   setBallBoxBounciness(val) {
@@ -221,32 +222,29 @@ export default class Physics {
   }
 
   paddleCollision(e) {
-    console.log(e.body);
-    if (e.body._name.startsWith('ball')) {
-      this.ballPaddleCollisionCallback(e.body.position, e.body);
+    this.ballPaddleCollisionCallback(e.body.position, e.body);
 
-      let hitpointX = e.body.position.x - e.target.position.x;
-      let hitpointY = e.body.position.y - e.target.position.y;
-      // normalize to -1 to 1
-      hitpointX = hitpointX / (this.config.paddleSize / 2);
-      hitpointY = hitpointY / (this.config.paddleSize / 2);
-      // did we hit the edge of the paddle?
-      if (hitpointX > 1 || hitpointX < -1 || hitpointY > 1 || hitpointY < -1) {
-        return;
-      }
-      if (this.config.preset !== PRESET.PINGPONG) {
-        // insane mode and normal mode
-        e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
-        e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
-        e.body.velocity.z += 0.05;
-      } else {
-        // pingpong mode
-        // adjust velocity
-        // these values are heavily tweakable
-        e.body.velocity.z = 3;
-        e.body.velocity.x = hitpointX * 0.7;
-        e.body.velocity.y = 3;
-      }
+    let hitpointX = e.body.position.x - e.target.position.x;
+    let hitpointY = e.body.position.y - e.target.position.y;
+    // normalize to -1 to 1
+    hitpointX = hitpointX / (this.config.paddleSize / 2);
+    hitpointY = hitpointY / (this.config.paddleSize / 2);
+    // did we hit the edge of the paddle?
+    if (hitpointX > 1 || hitpointX < -1 || hitpointY > 1 || hitpointY < -1) {
+      return;
+    }
+    if (this.config.preset !== PRESET.PINGPONG) {
+      // insane mode and normal mode
+      e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
+      e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
+      e.body.velocity.z += 0.05;
+    } else {
+      // pingpong mode
+      // adjust velocity
+      // these values are heavily tweakable
+      e.body.velocity.z = 3;
+      e.body.velocity.x = hitpointX * 0.7;
+      e.body.velocity.y = 3;
     }
   }
 
@@ -267,7 +265,7 @@ export default class Physics {
         ball.angularVelocity.z = 0;
         break;
       case PRESET.PINGPONG:
-        ball.position.set(0, 1.6, this.config.boxPositionZ - this.config.boxDepth * 0.4);
+        ball.position.set(0, 1.6, this.config.boxPositionZ - this.config.boxDepth * 0.3);
         ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
         ball.velocity.y = this.config.ballInitVelocity * 1.0;
         ball.velocity.z = this.config.ballInitVelocity * 3.0;
@@ -281,7 +279,6 @@ export default class Physics {
   }
 
   predictCollisions(ball, paddle, net) {
-
     // predict ball position in the next frame
     this.raycaster.set(ball.position.clone(), ball.velocity.clone().unit());
     this.raycaster.far = ball.velocity.clone().length() / 50;

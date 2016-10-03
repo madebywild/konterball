@@ -65,7 +65,7 @@ export const INITIAL_CONFIG = {
   paddleModel: 'box',
   cameraHeight: 1,
   preset: PRESET.NORMAL,
-  insaneBallAmount: 3,
+  insaneBallInterval: 3000,
 
   POINTS_FOR_WIN: 11,
   ROOM_CODE_LENGTH: 6,
