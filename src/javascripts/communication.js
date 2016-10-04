@@ -4,22 +4,21 @@ import {ACTION, INITIAL_CONFIG, EVENT} from './constants';
 import $ from 'jquery';
 
 export default class Communication {
-  constructor(callbacks, joinRoom, emitter) {
+  constructor(emitter) {
     this.emitter = emitter;
-    this.callbacks = callbacks;
+    this.callbacks = {};
     this.connectionIsOpen = false;
     this.opponentConnected = false;
     this.latency = null;
     this.conn = null;
     this.reliableConn = null;
+    this.isHost = undefined;
     this.lastPings = [];
 
     this.id = randomstring.generate({
       length: INITIAL_CONFIG.ROOM_CODE_LENGTH,
-      readable: true,
+      capitalization: 'uppercase',
     });
-
-    this.isHost = !joinRoom;
 
     this.peer = new Peer(this.id, {host: location.hostname, port: 8081, path: '/api'});
 
@@ -28,38 +27,58 @@ export default class Communication {
       if (this.connectionIsOpen) return;
       this.connectionIsOpen = true;
     });
+  }
 
-    if (this.isHost) {
-      // use my id as a room code and listen for incoming connections
-      this.peer.on('connection', c => {
-        if (this.conn) {
-          c.close();
-          return;
-        }
-        console.log('opponent connected!');
-        this.emitter.emit(EVENT.OPPONENT_CONNECTED);
+  setCallbacks(callbacks) {
+    this.callbacks = callbacks;
+  }
 
-        this.conn = c;
-        this.connectionIsOpen = true;
-        this.opponentConnected = true;
-        this.startListening();
-        this.conn.on('close', () => {
-          this.connectionClosed();
+  tryConnecting(id) {
+    console.log(id);
+    return new Promise((resolve, reject) => {
+      if (this.connectionIsOpen) {
+        this.peer.on('error', e => {
+          reject(e);
         });
-      });
-    } else {
-      // use code (from url) to connect to room host
-      this.peer.on('open', () => {
-        this.conn = this.peer.connect(joinRoom);
+        this.conn = this.peer.connect(id);
         this.conn.on('open', () => {
+          this.isHost = false;
           this.opponentConnected = true;
           this.startListening();
+          resolve('connected');
+        });
+        this.conn.on('error', e => {
+          reject(e);
         });
         this.conn.on('close', () => {
           this.connectionClosed();
         });
+      } else {
+        // TODO
+        alert('not connected to signaling server');
+      }
+    });
+  }
+
+  openRoom() {
+    this.isHost = true;
+    // use my id as a room code and listen for incoming connections
+    this.peer.on('connection', c => {
+      if (this.conn) {
+        c.close();
+        return;
+      }
+      this.emitter.emit(EVENT.OPPONENT_CONNECTED);
+
+      this.conn = c;
+      this.connectionIsOpen = true;
+      this.opponentConnected = true;
+      this.startListening();
+      this.conn.on('close', () => {
+        this.connectionClosed();
       });
-    }
+    });
+    return this.id;
   }
 
   connectionClosed() {

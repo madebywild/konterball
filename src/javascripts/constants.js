@@ -68,12 +68,22 @@ export const INITIAL_CONFIG = {
   insaneBallInterval: 3000,
 
   POINTS_FOR_WIN: 11,
-  ROOM_CODE_LENGTH: 6,
+  ROOM_CODE_LENGTH: 4,
 
   colors: {
     BLACK: 0x000000,
     WHITE: 0xFFFFFF,
     PADDLE_COLOR_PINGPONG: 0xE35C27,
     OPPONENT_PADDLE_COLOR_PINGPONG: 0x786EF2,
+    PADDLE_COLOR_INSANE: 0xfff834,
+    OPPONNENT_PADDLE_COLOR_INSANE: 0x96ffbc,
+    INSANE: [
+      0x22538f,
+      0xff9ba3,
+      0x00ceda,
+      0xc56e62,
+      0x2c7b58,
+      0xe25c27,
+    ]
   },
 };

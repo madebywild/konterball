@@ -1,18 +1,18 @@
-export default (parent, config) => {
+export default (parent, config, color) => {
   let group = new THREE.Group();
   let geometry, material, mesh;
 
   geometry = new THREE.RingGeometry(config.paddleSize, config.paddleSize + 0.05, 1, 1);
   material = new THREE.MeshBasicMaterial({
-    color: config.colors.WHITE,
+    color: color,
   });
 
   mesh = new THREE.Mesh(geometry, material);
   group.add(mesh);
 
   geometry = new THREE.RingGeometry(0.001, config.paddleSize, 1, 1);
-  material = new THREE.MeshLambertMaterial({
-    color: config.colors.WHITE,
+  material = new THREE.MeshBasicMaterial({
+    color: color,
     opacity: 0,
     transparent: true,
   });

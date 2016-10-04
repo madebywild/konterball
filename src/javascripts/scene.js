@@ -3,7 +3,6 @@ import {STATE, MODE, INITIAL_CONFIG, PRESET, EVENT} from './constants';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
-import Communication from './communication';
 import $ from 'jquery';
 import WebVRManager from './webvr-manager';
 
@@ -20,10 +19,11 @@ const DEBUG_MODE = false;
 const resetTimeoutDuration = 5000;
 
 export default class Scene {
-  constructor(emitter) {
+  constructor(emitter, communication) {
     this.emitter = emitter;
     this.time = new Time();
 
+    this.communication = communication;
     this.renderer = null;
     this.scene = null;
     this.camera = null;
@@ -79,38 +79,42 @@ export default class Scene {
   }
 
   setup() {
-    this.setupThree();
-    this.box = Box(this.scene, this.config);
-    this.setupVR();
-    this.net = Net(this.scene, this.config);
-    this.net.visible = false;
+    return new Promise((resolve, reject) => {
+      this.setupThree();
+      this.box = Box(this.scene, this.config);
+      this.setupVR();
+      this.net = Net(this.scene, this.config);
+      this.net.visible = false;
 
-    this.renderer.domElement.requestPointerLock = this.renderer.domElement.requestPointerLock
-      || this.renderer.domElement.mozRequestPointerLock;
-    this.renderer.domElement.onclick = () => {
-      this.renderer.domElement.requestPointerLock();
-    };
+      this.renderer.domElement.requestPointerLock = this.renderer.domElement.requestPointerLock
+        || this.renderer.domElement.mozRequestPointerLock;
+      this.renderer.domElement.onclick = () => {
+        this.renderer.domElement.requestPointerLock();
+      };
 
-    this.physics.setupWorld();
-    this.physics.net.collisionResponse = 0;
+      this.physics.setupWorld();
+      this.physics.net.collisionResponse = 0;
 
-    if (DEBUG_MODE) {
-      this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
-    }
+      if (DEBUG_MODE) {
+        this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
+      }
 
-    this.setupEventListeners();
-    this.setupPaddles();
-    this.setupPaddlePlane();
-    this.setupLights();
+      this.setupEventListeners();
+      this.setupPaddles();
+      this.setupPaddlePlane();
+      this.setupLights();
 
-    this.hud = new Hud(this.scene, this.config, this.emitter, this.hudInitialized.bind(this));
+      this.hud = new Hud(this.scene, this.config, this.emitter, this.hudInitialized.bind(this));
+
+      resolve('loaded');
+    });
   }
 
   setupEventListeners() {
-    this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
-      this.hud.scoreDisplay.opponentScore.visible = true;
-      this.paddleOpponent.visible = true;
-    });
+    //this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
+    //  this.hud.scoreDisplay.opponentScore.visible = true;
+    //  this.paddleOpponent.visible = true;
+    //});
     this.emitter.on(EVENT.PRESET_CHANGED, e => {
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.communication.sendPresetChange(e);
@@ -313,16 +317,17 @@ export default class Scene {
     if (this.config.preset === PRESET.INSANE) {
       this.time.clearInterval(this.insaneInterval);
       this.scene.getObjectByName('ballHelperLine').visible = true;
+      this.insaneBallNumber = 0;
     }
 
     // set new values
     if (name === PRESET.INSANE) {
       this.scene.getObjectByName('ballHelperLine').visible = false;
       this.scene.remove(this.paddle);
-      this.paddle = new TrianglePaddle(this.scene, this.config);
+      this.paddle = new TrianglePaddle(this.scene, this.config, this.config.colors.PADDLE_COLOR_INSANE);
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.scene.remove(this.paddleOpponent);
-        this.paddleOpponent = new TrianglePaddle(this.scene, this.config);
+        this.paddleOpponent = new TrianglePaddle(this.scene, this.config, this.config.colors.OPPONENT_PADDLE_COLOR_INSANE);
         this.paddleOpponent.visible = true;
         this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
       }
@@ -390,21 +395,7 @@ export default class Scene {
       // other player is in charge of the interval
       return;
     }
-    // also add a ball so we dont have to wait 1 sec
-    let physicsBody = this.addBall();
-    if (this.config.mode === MODE.MULTIPLAYER) {
-      this.communication.sendHit({
-        x: physicsBody.position.x,
-        y: physicsBody.position.y,
-        z: physicsBody.position.z,
-      }, {
-        x: physicsBody.velocity.x,
-        y: physicsBody.velocity.y,
-        z: physicsBody.velocity.z,
-      }, physicsBody._name, true);
-    }
     this.insaneInterval = this.time.setInterval(() => {
-      this.insaneBallNumber++;
       let physicsBody = this.addBall();
       if (this.config.mode === MODE.MULTIPLAYER) {
         if (this.insaneBallNumber % 2 === 0) {
@@ -432,6 +423,10 @@ export default class Scene {
       upY: 0,
       scaleY: 0.01,
     };
+
+    this.paddle.visible = false;
+    this.hud.container.visible = false;
+    this.scene.getObjectByName('ballHelperLine').visible = false;
 
     let tl = new TimelineMax();
     tl.to('.intro-wrapper', 0.4, {
@@ -461,6 +456,10 @@ export default class Scene {
         this.camera.lookAt(new THREE.Vector3(0, 1, this.config.boxPositionZ));
       },
       onComplete: () => {
+        this.paddle.visible = true;
+        this.hud.container.visible = true;
+        this.scene.getObjectByName('ballHelperLine').visible = true;
+
         this.setupVRControls();
         this.hud.message.showMessage();
       }
@@ -532,16 +531,19 @@ export default class Scene {
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
     this.physics.frontWall.collisionResponse = 0;
+
+    this.hud.scoreDisplay.opponentScore.visible = true;
+    this.paddleOpponent.visible = true;
     // setup communication channels,
     // add callbacks for received actions
     // TODO throw exception on connection failure
-    this.communication = new Communication({
+    this.communication.setCallbacks({
       move: this.receivedMove.bind(this),
       hit: this.receivedHit.bind(this),
       miss: this.receivedMiss.bind(this),
       presetChange: this.receivedPresetChange.bind(this),
       restartGame: this.receivedRestartGame.bind(this),
-    }, window.location.pathname.substr(1), this.emitter);
+    });
   }
 
   setSingleplayer() {
@@ -586,7 +588,6 @@ export default class Scene {
     let ball = this.scene.getObjectByName(data.name);
     ball.physicsReference.position.copy(this.mirrorBallPosition(data.point));
     ball.physicsReference.velocity.copy(this.mirrorBallVelocity(data.velocity));
-    console.log('miss: ' + ball.physicsReference.velocity.z);
   }
 
   mirrorBallPosition(pos) {
@@ -695,7 +696,8 @@ export default class Scene {
     }
     let color;
     if (this.config.preset === PRESET.INSANE) {
-      color = `hsl(${Math.floor(Math.random() * 360)}, 100%, 50%)`;
+      this.insaneBallNumber++;
+      color = this.config.colors.INSANE[this.insaneBallNumber % this.config.colors.INSANE.length];
     } else {
       color = 0xFFFFFF;
     }
@@ -784,7 +786,6 @@ export default class Scene {
             if (this.score.opponent < this.config.POINTS_FOR_WIN) {
               // the game goes on
               this.physics.initBallPosition(ball.physicsReference);
-              console.log('init position: ' + ball.physicsReference.velocity.z);
             } else {
               // game is over
               // TODO maybe wait a little with this so players can enjoy their 11 points

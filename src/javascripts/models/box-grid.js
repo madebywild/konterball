@@ -46,6 +46,7 @@ export default (parent, config) => {
   });
   let ballHelperLine = new THREE.Line(geometry.clone(), material);
   ballHelperLine.name = 'ballHelperLine';
+  ballHelperLine.position.z = config.boxPositionZ;
   group.add(ballHelperLine);
 
   let gridHelper = new THREE.GridHelper(config.boxWidth / 2, 4);
