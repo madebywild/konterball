@@ -109,6 +109,7 @@ export default class Communication {
   startListening() {
     // this.sendPings();
     this.conn.on('data', data => {
+      console.log('received: ' + data.action);
       switch (data.action) {
         case ACTION.MOVE:
           this.callbacks.move(data);
@@ -124,6 +125,9 @@ export default class Communication {
           break;
         case ACTION.RESTART_GAME:
           this.callbacks.restartGame(data);
+          break;
+        case ACTION.REQUEST_COUNTDOWN:
+          this.callbacks.requestCountdown(data);
           break;
         case 'PING':
           this.receivedPing(data);
@@ -170,6 +174,13 @@ export default class Communication {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.RESTART_GAME,
+    });
+  }
+
+  sendRequestCountdown() {
+    if (!this.conn) return;
+    this.conn.send({
+      action: ACTION.REQUEST_COUNTDOWN,
     });
   }
 

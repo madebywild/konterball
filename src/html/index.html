@@ -27,7 +27,7 @@
     <button id='start-singleplayer'>Singleplayer
       <div class='button-frame'></div>
     </button><br>
-    <button id='open-room'>Open Room</button>
+    <button id='open-room'>Open Room</button><br>
     <button id='join-room'>Join Room</button>
   </div>
 
@@ -36,7 +36,7 @@
       <img src='images/icon-person.svg'>
       <img class='opponent-icon' src='images/icon-person.svg'>
     </div>
-    <input type='text' id='room-url' value='Generating URL...' size='6' readonly data-clipboard-target="#room-url"><br>
+    <input type='text' id='room-url' value='Generating Code...' readonly data-clipboard-target="#room-url"><br>
     <p class='grey-text'>Send Code to your Opponent</p><br>
     <p class='opponent-joined'>Waiting for opponent</p><br>
   </div>
@@ -46,19 +46,22 @@
       <img src='images/icon-person.svg'>
       <img class='opponent-icon' src='images/icon-person.svg'>
     </div>
-    <input type='text' id='room-code' placeholder='____' size='6' maxlength='4'><br>
+    <input type='text' id='room-code' placeholder='____' maxlength='4'><br>
     <p class='grey-text'>Type in your Code</p><br>
     <button id='join-room-button' class='inactive'>Join Game</button>
   </div>
 
   <div class='vr-mode-chooser'>
-    <div class='cardboard' id='cardboard'>
-      <img src='/images/cardboard-animation.gif'>
-      <p>Phone + Cardboard</p>
-    </div>
-    <div class='tilt' id='tilt'>
-      <img src='/images/tilt-phone.gif'>
-      <p>Tilt Phone</p>
+    <h2>Choose Game Mode</h2>
+    <div class='options-wrapper'>
+      <div class='cardboard' id='cardboard'>
+        <img src='/images/cardboard-animation.gif'>
+        <p>Phone + Cardboard</p>
+      </div>
+      <div class='tilt' id='tilt'>
+        <img src='/images/tilt-phone.gif'>
+        <p>Tilt Phone</p>
+      </div>
     </div>
   </div>
   <div class='about-screen'>

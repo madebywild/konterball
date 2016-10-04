@@ -12,7 +12,7 @@ export default class Message {
     this.wrap = wrap(CHAR_LIMIT);
     this.messageGroup = new THREE.Group();
     this.messageGroup.position.z = this.config.boxPositionZ;
-    this.setMessage('turn around to change settings');
+    this.setMessage('waiting for opponent to start...');
     this.scene.add(this.messageGroup);
   }
 

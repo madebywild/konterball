@@ -203,7 +203,7 @@ class PingPong {
 
     let tl = new TimelineMax();
     tl.set('.vr-mode-chooser', {
-      display: 'flex',
+      display: 'block',
       opacity: 0,
     });
 
@@ -237,6 +237,9 @@ class PingPong {
     });
 
     let tl = new TimelineMax();
+    tl.to('.button-frame', 0.3, {
+      y: '+200%',
+    });
     tl.to('.player-mode-chooser', 0.3, {
       autoAlpha: 0,
     });

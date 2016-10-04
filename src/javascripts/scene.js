@@ -59,6 +59,9 @@ export default class Scene {
     this.playerRequestedRestart = false;
     this.opponentRequestedRestart = false;
 
+    this.playerRequestedCountdown = false;
+    this.opponentRequestedCountdown = false;
+
     this.viewport = {
       width: $(document).width(),
       height: $(document).height(),
@@ -416,6 +419,7 @@ export default class Scene {
   }
 
   startGame() {
+    console.log('start game');
     // null object for tweening
     let no = {
       fov: this.camera.fov,
@@ -465,12 +469,31 @@ export default class Scene {
       }
     }, 1);
     tl.call(() => {
-      this.hud.message.hideMessage();
-      this.countdown();
+      if (this.config.mode === MODE.SINGLEPLAYER) {
+        this.countdown();
+      } else {
+        this.communication.sendRequestCountdown();
+        this.playerRequestedCountdown = true;
+        this.requestCountdown();
+      }
     }, [], null, '+=1');
   }
 
+  receivedRequestCountdown() {
+    this.hud.scoreDisplay.opponentScore.visible = true;
+    this.paddleOpponent.visible = true;
+    this.opponentRequestedCountdown = true;
+    this.requestCountdown();
+  }
+
+  requestCountdown() {
+    if (this.playerRequestedCountdown && this.opponentRequestedCountdown) {
+      this.countdown();
+    }
+  }
+
   countdown() {
+    this.hud.message.hideMessage();
     this.config.state = STATE.COUNTDOWN;
     // countdown from 3, start game afterwards
     this.hud.countdown.showCountdown();
@@ -531,9 +554,6 @@ export default class Scene {
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
     this.physics.frontWall.collisionResponse = 0;
-
-    this.hud.scoreDisplay.opponentScore.visible = true;
-    this.paddleOpponent.visible = true;
     // setup communication channels,
     // add callbacks for received actions
     // TODO throw exception on connection failure
@@ -543,6 +563,7 @@ export default class Scene {
       miss: this.receivedMiss.bind(this),
       presetChange: this.receivedPresetChange.bind(this),
       restartGame: this.receivedRestartGame.bind(this),
+      requestCountdown: this.receivedRequestCountdown.bind(this),
     });
   }
 

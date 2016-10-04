@@ -1,8 +1,9 @@
 @include font-face('AtariClassic', '/fonts/AtariClassicChunky');
 
 $font-size: 16px;
+$font-size-large: 24px;
 $dark-grey: #262626;
-$medium-grey: #4d4d4d;
+$medium-grey: #565656;
 
 button:focus, textarea:focus, input:focus{
   outline: none;
@@ -17,7 +18,11 @@ body {
   overflow: hidden;
   background-color: #000;
   color: #fff;
-  font-size: 1rem;
+}
+h2 {
+  text-transform: uppercase;
+  font-size: $font-size-large;
+  margin-bottom: 40px;
 }
 button {
   text-transform: uppercase;
@@ -27,6 +32,7 @@ button {
   border: 0;
   padding: 15px;
   color: #fff;
+  font-size: $font-size-large;
 }
 .absolute-center {
   position: absolute;
@@ -56,9 +62,6 @@ $border-width: 2px;
     display: block;
     width: calc(100% - 2 * $border-width);
     border: 2px solid #fff;
-  }
-  button {
-    font-size: 22px;
   }
 }
 .about-button {
@@ -131,6 +134,9 @@ $border-width: 2px;
     color: #fff;
     padding: 20px;
     margin-bottom: 15px;
+    font-size: $font-size-large;
+    width: 100%;
+    max-width: 400px;
   }
   #room-code {
     text-transform: uppercase;
@@ -147,7 +153,7 @@ button.inactive {
   margin: 30px 0px;
 }
 .opponent-icon {
-  opacity: 0.5;
+  opacity: 0.3;
 }
 
 .game-over-screen-wrapper {
@@ -176,29 +182,35 @@ button.inactive {
 
 .vr-mode-chooser {
   @extend .absolute-center;
+  width: 100%;
   background-color: #000;
   z-index: 50;
   display: none;
-  align-items: stretch;
-  & > div {
-    cursor: pointer;
-    flex-direction: row;
-    flex: 50%;
-    flex-shrink: 1;
-    position: relative;
+  padding-left: 15px;
+  padding-right: 15px;
+  .options-wrapper {
+    display: flex;
+    align-items: stretch;
+    & > div {
+      cursor: pointer;
+      flex-direction: row;
+      flex: 50%;
+      flex-shrink: 1;
+      position: relative;
+    }
   }
   .tilt img {
-    margin-top: 15%;
+    display: block;
+    width: 78%;
   }
   p {
-    position: absolute;
-    bottom: -100px;
     width: 100%;
     text-align: center;
   }
   img {
-    width: 100%;
     height: auto;
     display: block;
+    width: 50%;
+    margin: auto;
   }
 }
