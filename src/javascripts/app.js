@@ -28,7 +28,7 @@ class PingPong {
     // wait at least 3 seconds before hiding load screen
     Promise.all([
       this.scene.setup(), 
-      new Promise((resolve, reject) => {setTimeout(() => {resolve();}, minimumLoadingTime);})
+      // new Promise((resolve, reject) => {setTimeout(() => {resolve();}, minimumLoadingTime);})
     ]).then(() => {
       this.loaded();
     });
@@ -141,7 +141,8 @@ class PingPong {
   }
 
   introTicker() {
-    // TODO change this to a css animation so it actually loads first?
+    return;
+    // NOTE: changed this to a css animation so it actually loads first
     let tickerWidth = $('.intro').width();
     let viewportWidth = $(document).width();
     let animateDistance = tickerWidth + viewportWidth / 2;
@@ -262,10 +263,12 @@ class PingPong {
     // TODO annoying during development
     // history.pushState(null, null, this.scene.communication.id);
     this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
-      this.viewVRChooserScreen();
       $('.opponent-joined').text('Opponent joined');
       TweenMax.set('.opponent-icon', {opacity: 1});
       $('#join-waiting-room').hide();
+      setTimeout(() => {
+        this.viewVRChooserScreen();
+      }, 1000);
     });
 
     new Clipboard('#room-url');

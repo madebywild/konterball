@@ -114,10 +114,6 @@ export default class Scene {
   }
 
   setupEventListeners() {
-    //this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
-    //  this.hud.scoreDisplay.opponentScore.visible = true;
-    //  this.paddleOpponent.visible = true;
-    //});
     this.emitter.on(EVENT.PRESET_CHANGED, e => {
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.communication.sendPresetChange(e);

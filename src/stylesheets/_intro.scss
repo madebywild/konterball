@@ -1,0 +1,7 @@
+@keyframes ticker {
+  from {transform: translateX(50vh) translateX(50%)}
+  to {transform: translateX(-50vh) translateX(-80%)}
+}
+.intro-ribbon {
+  animation: ticker 2s linear infinite;
+}
