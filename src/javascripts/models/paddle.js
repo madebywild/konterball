@@ -2,7 +2,7 @@ export default (parent, config, color) => {
   const paddleRadius = config.paddleSize * 0.6;
   let geometry = new THREE.CylinderGeometry(paddleRadius, paddleRadius, config.paddleThickness, 32);
   let material = new THREE.MeshBasicMaterial({
-    color: color || config.colors.WHITE,
+    color: color || config.colors.PADDLE_COLOR,
     transparent: true,
     opacity: 0.5,
   });

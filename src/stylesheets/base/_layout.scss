@@ -1,9 +1,16 @@
-@include font-face('AtariClassic', '/fonts/AtariClassicChunky');
+@include font-face('AntiqueOlive', '/fonts/AntiqueOlive');
+@include font-face('Futura', '/fonts/Futura');
+@include font-face('FuturaItalic', '/fonts/FuturaItalic');
 
 $font-size: 16px;
 $font-size-large: 24px;
 $dark-grey: #262626;
 $medium-grey: #565656;
+$BLUE_BACKGROUND: #1b5692;
+$BLUE_TABLE: #124787;
+$BLUE_HUD: #3376c7;
+$PADDLE_COLOR: #d21515;
+$BALL: #f9fc56;
 
 button:focus, textarea:focus, input:focus{
   outline: none;
@@ -14,9 +21,9 @@ html {
 }
 
 body {
-  font-family: AtariClassic;
+  font-family: Futura;
   overflow: hidden;
-  background-color: #000;
+  background-color: $BLUE_BACKGROUND;
   color: #fff;
 }
 h2 {
@@ -28,7 +35,7 @@ button {
   text-transform: uppercase;
   font-size: 1rem;
   cursor: pointer;
-  background-color: #000;
+  background-color: $BLUE_BACKGROUND;
   border: 0;
   padding: 15px;
   color: #fff;
@@ -47,7 +54,7 @@ button {
   width: 100%;
   top: 0;
   left: 0;
-  background-color: #000;
+  background-color: $BLUE_BACKGROUND;
 }
 $border-width: 2px;
 .player-mode-chooser {
@@ -81,7 +88,7 @@ $border-width: 2px;
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #000;
+  background-color: $BLUE_BACKGROUND;
   overflow: scroll;
 }
 .about-inner {
@@ -122,7 +129,7 @@ $border-width: 2px;
     display: inline;
   }
   display: none;
-  background-color: #000;
+  background-color: $BLUE_BACKGROUND;
   @extend .absolute-center;
   width: 100%;
   input {
@@ -183,7 +190,7 @@ button.inactive {
 .vr-mode-chooser {
   @extend .absolute-center;
   width: 100%;
-  background-color: #000;
+  background-color: $BLUE_BACKGROUND;
   z-index: 50;
   display: none;
   padding-left: 15px;

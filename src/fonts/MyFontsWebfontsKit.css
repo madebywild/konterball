@@ -1,0 +1,34 @@
+/**
+ * @license
+ * MyFonts Webfont Build ID 3292843, 2016-10-07T07:05:29-0400
+ * 
+ * The fonts listed in this notice are subject to the End User License
+ * Agreement(s) entered into by the website owner. All other parties are 
+ * explicitly restricted from using the Licensed Webfonts(s).
+ * 
+ * You may obtain a valid license at the URLs below.
+ * 
+ * Webfont: FuturaBT-BookItalic by Bitstream
+ * URL: http://www.myfonts.com/fonts/bitstream/futura/book-italic/
+ * 
+ * Webfont: FuturaBT-Book by Bitstream
+ * URL: http://www.myfonts.com/fonts/bitstream/futura/book/
+ * 
+ * 
+ * License: http://www.myfonts.com/viewlicense?type=web&buildid=3292843
+ * Licensed pageviews: 20,000
+ * Webfonts copyright: Copyright &#x00A9; 2015 Monotype Imaging Inc. All rights reserved.
+ * 
+ * © 2016 MyFonts Inc
+*/
+
+
+/* @import must be at top of file, otherwise CSS will not work */
+@import url("//hello.myfonts.net/count/323eab");
+
+  
+@font-face {font-family: 'FuturaBT-BookItalic';src: url('webfonts/323EAB_0_0.eot');src: url('webfonts/323EAB_0_0.eot?#iefix') format('embedded-opentype'),url('webfonts/323EAB_0_0.woff2') format('woff2'),url('webfonts/323EAB_0_0.woff') format('woff'),url('webfonts/323EAB_0_0.ttf') format('truetype');}
+ 
+  
+@font-face {font-family: 'FuturaBT-Book';src: url('webfonts/323EAB_1_0.eot');src: url('webfonts/323EAB_1_0.eot?#iefix') format('embedded-opentype'),url('webfonts/323EAB_1_0.woff2') format('woff2'),url('webfonts/323EAB_1_0.woff') format('woff'),url('webfonts/323EAB_1_0.ttf') format('truetype');}
+ 

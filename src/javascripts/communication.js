@@ -119,9 +119,6 @@ export default class Communication {
         case ACTION.MISS:
           this.callbacks.miss(data);
           break;
-        case ACTION.PRESETCHANGE:
-          this.callbacks.presetChange(data);
-          break;
         case ACTION.RESTART_GAME:
           this.callbacks.restartGame(data);
           break;
@@ -180,14 +177,6 @@ export default class Communication {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.REQUEST_COUNTDOWN,
-    });
-  }
-
-  sendPresetChange(name) {
-    if (!this.conn) return;
-    this.conn.send({
-      action: ACTION.PRESETCHANGE,
-      name: name,
     });
   }
 }

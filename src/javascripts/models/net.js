@@ -3,12 +3,12 @@ export default (parent, config) => {
 
   // dis only for intersecting when predicting collisions
   let geometry = new THREE.BoxGeometry(
-    config.boxWidth,
+    config.tableWidth,
     config.netHeight,
     config.netThickness
   );
   let material = new THREE.MeshBasicMaterial({
-    color: config.colors.WHITE,
+    color: 0xFFFFFF,
     transparent: true,
     opacity: 0.1,
   });
@@ -22,12 +22,12 @@ export default (parent, config) => {
   for (let i = 0; i < griddivisions; i++) {
     let grid = new THREE.GridHelper(config.netHeight / 2, 8);
     grid.rotation.x = Math.PI / 2;
-    grid.scale.x = (config.boxWidth / griddivisions) / config.netHeight;
-    grid.position.x = (((i/griddivisions) * config.boxWidth) + (config.netHeight / 2) * grid.scale.x) - config.boxWidth / 2;
+    grid.scale.x = (config.tableWidth / griddivisions) / config.netHeight;
+    grid.position.x = (((i/griddivisions) * config.tableWidth) + (config.netHeight / 2) * grid.scale.x) - config.tableWidth / 2;
     group.add(grid);
   }
-  group.position.z = config.boxPositionZ;
-  group.position.y = config.netHeight / 2;
+  group.position.z = config.tablePositionZ;
+  group.position.y = config.tableHeight + config.netHeight / 2;
   parent.add(group);
 
   return group;

@@ -1,4 +1,4 @@
-import {PRESET, MODE} from './constants';
+import {MODE} from './constants';
 
 export default class Physics {
   constructor(config, ballPaddleCollisionCallback) {
@@ -7,7 +7,7 @@ export default class Physics {
     this.config = config;
 
     this.world = null;
-    this.balls = [];
+    this.ball = null;
     this.net = null;
     this.ground = null;
     this.paddle = null;
@@ -20,18 +20,17 @@ export default class Physics {
   }
 
   setupWorld() {
-    // world
     this.world = new CANNON.World();
     this.world.gravity.set(0, -this.config.gravity, 0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
     this.world.solver.iterations = 20;
-    this.setupBox();
+    this.setupTable();
     this.setupPaddle();
     this.setupNet();
+    this.setupGround();
   }
 
   setupGround() {
-    // ground
     this.ground = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Plane(),
@@ -42,12 +41,11 @@ export default class Physics {
   }
 
   setupNet() {
-    // net
     this.net = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          this.config.boxWidth / 2,
+          this.config.tableWidth / 2,
           this.config.netHeight / 2,
           this.config.netThickness / 2
         )
@@ -58,13 +56,12 @@ export default class Physics {
     this.net.position.set(
       0,
       this.config.netHeight / 2,
-      this.config.boxPositionZ
+      this.config.tablePositionZ
     );
     this.world.add(this.net);
   }
 
   setupPaddle() {
-    // paddle
     this.paddle = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Box(
@@ -92,97 +89,21 @@ export default class Physics {
     return contact;
   }
 
-  setupBox() {
-    let wallWidth = 10;
-    this.leftWall = new CANNON.Body({
+  setupTable() {
+    this.table = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          wallWidth / 2,
-          this.config.boxHeight / 2,
-          this.config.boxDepth / 2
+          this.config.tableWidth / 2,
+          this.config.tableHeight / 2,
+          this.config.tableDepth / 2
         )
       ),
       material: new CANNON.Material(),
     });
-    this.leftWall.position.set(
-      -this.config.boxWidth / 2 - wallWidth / 2,
-      this.config.boxHeight / 2,
-      this.config.boxPositionZ
-    );
-    this.world.add(this.leftWall);
-
-    this.rightWall = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          wallWidth / 2,
-          this.config.boxHeight / 2,
-          this.config.boxDepth / 2
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.rightWall.position.set(
-      this.config.boxWidth / 2 + wallWidth / 2,
-      this.config.boxHeight / 2,
-      this.config.boxPositionZ
-    );
-    this.world.add(this.rightWall);
-
-    this.bottomWall = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.boxWidth * 2,
-          wallWidth / 2,
-          this.config.boxDepth / 2
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.bottomWall.position.set(
-      0,
-      -wallWidth / 2,
-      this.config.boxPositionZ
-    );
-    this.world.add(this.bottomWall);
-
-    this.topWall = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.boxWidth * 2,
-          wallWidth / 2,
-          this.config.boxDepth / 2
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.topWall.position.set(
-      0,
-      this.config.boxHeight + wallWidth / 2,
-      this.config.boxPositionZ
-    );
-    this.world.add(this.topWall);
-
-    this.frontWall = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.boxWidth * 2,
-          this.config.boxHeight * 2,
-          wallWidth / 2
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.frontWall.position.set(
-      0,
-      this.config.boxHeight / 2,
-      this.config.boxPositionZ - this.config.boxDepth / 2 - wallWidth / 2
-    );
-    this.world.add(this.frontWall);
+    this.table.position.y = this.config.tableHeight / 2;
+    this.table.position.z = this.config.tablePositionZ;
+    this.world.add(this.table);
   }
 
   addBall(threeReference) {
@@ -198,16 +119,11 @@ export default class Physics {
     // newBall.linearDamping = 0.4;
     ball.linearDamping = 0;
 
-    this.leftBounce = this.addContactMaterial(ball.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
-    this.topBounce = this.addContactMaterial(ball.material, this.topWall.material, this.config.ballBoxBounciness, 0);
-    this.rightBounce = this.addContactMaterial(ball.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
-    this.bottomBounce = this.addContactMaterial(ball.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
-    this.frontBounce = this.addContactMaterial(ball.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
     this.addContactMaterial(ball.material, this.paddle.material, 1, 0);
 
-    ball.position.y = this.config.boxHeight / 2;
-    ball.position.z = this.config.boxPositionZ;
-    this.balls.push(ball);
+    ball.position.y = this.config.tableHeight / 2;
+    ball.position.z = this.config.tablePositionZ;
+    this.ball = ball;
     this.world.add(ball);
     this.initBallPosition(ball);
     return ball;
@@ -233,49 +149,24 @@ export default class Physics {
     if (hitpointX > 1 || hitpointX < -1 || hitpointY > 1 || hitpointY < -1) {
       return;
     }
-    if (this.config.preset !== PRESET.PINGPONG) {
-      // insane mode and normal mode
-      e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
-      e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
-      e.body.velocity.z += 0.05;
-    } else {
-      // pingpong mode
-      // adjust velocity
-      // these values are heavily tweakable
-      e.body.velocity.z = 3;
-      e.body.velocity.x = hitpointX * 0.7;
-      e.body.velocity.y = 3;
-    }
+    // insane mode and normal mode
+    e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
+    e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
+    e.body.velocity.z += 0.05;
   }
 
   setPaddlePosition(x, y, z) {
     this.paddle.position.set(x, y, z);
   }
 
-  initBallPosition(ball) {
-    switch (this.config.preset) {
-      case PRESET.NORMAL:
-      case PRESET.INSANE:
-        ball.position.set(0, this.config.boxHeight / 2, this.config.boxPositionZ);
-        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
-        ball.velocity.y = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
-        ball.velocity.z = this.config.ballInitVelocity * 2.0;
-        ball.angularVelocity.x = 0;
-        ball.angularVelocity.y = 0;
-        ball.angularVelocity.z = 0;
-        break;
-      case PRESET.PINGPONG:
-        ball.position.set(0, 1.6, this.config.boxPositionZ - this.config.boxDepth * 0.3);
-        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
-        ball.velocity.y = this.config.ballInitVelocity * 1.0;
-        ball.velocity.z = this.config.ballInitVelocity * 3.0;
-        ball.angularVelocity.x = 0;
-        ball.angularVelocity.y = 0;
-        ball.angularVelocity.z = 0;
-        break;
-      default:
-        break;
-    }
+  initBallPosition() {
+    this.ball.position.set(0, 1.6, this.config.tablePositionZ - this.config.tableDepth * 0.3);
+    this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
+    this.ball.velocity.y = this.config.ballInitVelocity * 1.0;
+    this.ball.velocity.z = this.config.ballInitVelocity * 3.0;
+    this.ball.angularVelocity.x = 0;
+    this.ball.angularVelocity.y = 0;
+    this.ball.angularVelocity.z = 0;
   }
 
   predictCollisions(ball, paddle, net) {
@@ -283,8 +174,6 @@ export default class Physics {
     this.raycaster.set(ball.position.clone(), ball.velocity.clone().unit());
     this.raycaster.far = ball.velocity.clone().length() / 50;
 
-    // the raycaster only intersects visible objects, so if the net is invisible
-    // in non-pingpong-mode, it wont get an intersection
     let arr = this.raycaster.intersectObjects([paddle, net]);
     if (arr.length) {
       ball.position.copy(arr[0].point);

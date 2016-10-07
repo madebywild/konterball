@@ -16,7 +16,6 @@ export const STATE = {
 export const EVENT = {
   OPPONENT_CONNECTED: 'OPPONENT_CONNECTED',
   OPPONENT_DISCONNECTED: 'OPPONENT_DISCONNECTED',
-  PRESET_CHANGED: 'PRESET_CHANGED',
   GAME_OVER: 'GAME_OVER',
   RESTART_GAME: 'RESTART_GAME',
 };
@@ -25,36 +24,26 @@ export const ACTION = {
   MOVE: 'M',
   HIT: 'HIT',
   MISS: 'MISS',
-  PRESETCHANGE: 'PRESETCHANGE',
   PING: 'PING',
   PONG: 'PONG',
   RESTART_GAME: 'RESTART_GAME',
   REQUEST_COUNTDOWN: 'REQUEST_COUNTDOWN',
 };
 
-export const PRESET = {
-  INSANE: 'Insane Mode',
-  NORMAL: 'Normal Mode',
-  PINGPONG: 'Ping Pong',
-};
-
 export const INITIAL_CONFIG = {
   mode: MODE.SINGLEPLAYER,
-  preset: PRESET.NORMAL,
-  gravity: 0,
+  gravity: 6,
   netThickness: 0.02,
-  boxWidth: 3,
-  boxDepth: 5,
-  boxHeight: 2,
-  netHeight: 0.3,
-  boxPositionZ: -3.5,
-  boxWallThickness: 0.05,
+  tableWidth: 1.52,
+  tableDepth: 2.74,
+  tableHeight: 0.762,
+  netHeight: 0.15,
+  tablePositionZ: -2,
   paddleThickness: 0.04,
   paddleSize: 0.5,
   get paddlePositionZ() {
-    return this.boxPositionZ
-      + this.boxDepth / 2
-      + this.boxWallThickness / 2
+    return this.tablePositionZ
+      + this.tableDepth / 2
       + this.paddleThickness / 2;
   },
   ballRadius: 0.03,
@@ -64,27 +53,17 @@ export const INITIAL_CONFIG = {
   ballBoxBounciness: 0.95,
   ballInitVelocity: 1,
   paddleModel: 'box',
-  cameraHeight: 1,
-  preset: PRESET.NORMAL,
+  cameraHeight: 1.6,
   insaneBallInterval: 3000,
 
   POINTS_FOR_WIN: 11,
   ROOM_CODE_LENGTH: 4,
 
   colors: {
-    BLACK: 0x000000,
-    WHITE: 0xFFFFFF,
-    PADDLE_COLOR_PINGPONG: 0xE35C27,
-    OPPONENT_PADDLE_COLOR_PINGPONG: 0x786EF2,
-    PADDLE_COLOR_INSANE: 0xfff834,
-    OPPONENT_PADDLE_COLOR_INSANE: 0x96ffbc,
-    INSANE: [
-      0x22538f,
-      0xff9ba3,
-      0x00ceda,
-      0xc56e62,
-      0x2c7b58,
-      0xe25c27,
-    ]
+    BLUE_BACKGROUND: 0x1b5692,
+    BLUE_TABLE: 0x124787,
+    BLUE_HUD: 0x3376c7,
+    PADDLE_COLOR: 0xd21515,
+    BALL: 0xf9fc56,
   },
 };

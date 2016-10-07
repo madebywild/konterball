@@ -5,15 +5,23 @@ import $ from 'jquery';
 import Clipboard from 'clipboard';
 import EventEmitter from 'event-emitter';
 import Util from 'webvr-manager/util';
-
+import NoSleep from 'nosleep';
 import Communication from './communication';
-import FlatBox from 'models/box-flat';
-import ShadedBox from 'models/box';
-import GridBox from 'models/box-grid';
-import ShadedPaddle from 'models/square-paddle';
-import FlatPaddle from 'models/square-paddle-flat';
 
 const minimumLoadingTime = 3000;
+
+/*
+// disable sleep mode on mobile devices
+let noSleep = new NoSleep();
+
+function fullscreenNoSleep() {
+  console.log('äueaaaaaaa');
+  noSleep.enable();
+  document.documentElement.requestFullscreen();
+  document.removeEventListener('click', fullscreenNoSleep, false);
+}
+document.documentElement.addEventListener('click', fullscreenNoSleep, false);
+*/
 
 class PingPong {
   constructor() {
@@ -83,23 +91,6 @@ class PingPong {
       this.scene.restartGame();
     });
 
-    $('#flat').click(() => {
-      this.scene.scene.remove(this.scene.box);
-      this.scene.box = FlatBox(this.scene.scene, this.scene.config);
-      if (this.scene.config.preset === PRESET.NORMAL) {
-        this.scene.scene.remove(this.scene.paddle);
-        this.scene.paddle = FlatPaddle(this.scene.scene, this.scene.config);
-      }
-    });
-
-    $('#shaded').click(() => {
-      this.scene.scene.remove(this.scene.box);
-      this.scene.box = ShadedBox(this.scene.scene, this.scene.config);
-      if (this.scene.config.preset === PRESET.NORMAL) {
-        this.scene.scene.remove(this.scene.paddle);
-        this.scene.paddle = ShadedPaddle(this.scene.scene, this.scene.config);
-      }
-    });
     $('.about-button').click(() => {
       if (this.aboutScreenOpen) {
         TweenMax.to('.about-screen', 0.5, {
@@ -117,11 +108,6 @@ class PingPong {
         $('.about-button').text('Close');
       }
       this.aboutScreenOpen = !this.aboutScreenOpen;
-    });
-
-    $('#grid').click(() => {
-      this.scene.scene.remove(this.scene.box);
-      this.scene.box = GridBox(this.scene.scene, this.scene.config);
     });
 
     $('#cardboard').click(() => {
@@ -257,7 +243,7 @@ class PingPong {
     let id = this.communication.openRoom();
     this.scene.setMultiplayer();
 
-    //$('#room-url').val('http://' + location.hostname + '/' + this.scene.communication.id);
+    // $('#room-url').val('http://' + location.hostname + '/' + this.scene.communication.id);
     $('#room-url').val(id);
 
     // TODO annoying during development
