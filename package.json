@@ -86,6 +86,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "bodymovin": "^4.4.14",
     "cannon": "^0.6.2",
     "clipboard": "^1.5.12",
     "dat-gui": "^0.5.0",

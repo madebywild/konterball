@@ -16,40 +16,54 @@
 <div class='intro-wrapper'>
   <div class='about-button'>About</div>
   <div class='intro'>
-    <div class='intro-ribbon'>Pong Pong is loading</div>
-    <div class='loading-dots'>
-      <span class='dot-1'>.</span>
-      <span class='dot-2'>.</span>
-      <span class='dot-3'>.</span>
-    </div>
+    <h1>Webpong</h1>
+    <p>A simple 2-player virtual reality game for anyone to play together on the web.</p>
   </div>
 
   <div class='player-mode-chooser'>
-    <button id='start-singleplayer'>Singleplayer
-      <div class='button-frame'></div>
-    </button><br>
-    <button id='open-room'>Open Room</button><br>
-    <button id='join-room'>Join Room</button>
+    <div id='start-singleplayer'>
+      <div>
+        <div id='singleplayer-animation'></div>
+        <h3>Singleplayer</h3>
+        1 Player
+      </div>
+    </div>
+    <div id='open-room'>
+      <div>
+        <h3>Open Game</h3>
+        2 Player
+      </div>
+    </div>
+    <div id='join-room'>
+      <div>
+        <h3>Join Game</h3>
+        2 Player
+      </div>
+    </div>
   </div>
 
   <div class='open-room-screen'>
-    <div class='present-players'>
-      <img src='images/icon-person.svg'>
-      <img class='opponent-icon' src='images/icon-person.svg'>
+    <div>
+      <div class='present-players'>
+        <img src='images/icon-person.svg'>
+        <img class='opponent-icon' src='images/icon-person.svg'>
+      </div>
+      <input type='text' id='room-url' value='Generating Code...' readonly data-clipboard-target="#room-url"><br>
+      <p class='grey-text'>Send Code to your Opponent</p><br>
+      <p class='opponent-joined'>Waiting for opponent</p><br>
     </div>
-    <input type='text' id='room-url' value='Generating Code...' readonly data-clipboard-target="#room-url"><br>
-    <p class='grey-text'>Send Code to your Opponent</p><br>
-    <p class='opponent-joined'>Waiting for opponent</p><br>
   </div>
 
   <div class='join-room-screen'>
-    <div class='present-players'>
-      <img src='images/icon-person.svg'>
-      <img class='opponent-icon' src='images/icon-person.svg'>
+    <div>
+      <div class='present-players'>
+        <img src='images/icon-person.svg'>
+        <img class='opponent-icon' src='images/icon-person.svg'>
+      </div>
+      <input type='text' id='room-code' placeholder='____' maxlength='4'><br>
+      <p class='grey-text'>Type in your Code</p><br>
+      <button id='join-room-button' class='inactive'>Join Game</button>
     </div>
-    <input type='text' id='room-code' placeholder='____' maxlength='4'><br>
-    <p class='grey-text'>Type in your Code</p><br>
-    <button id='join-room-button' class='inactive'>Join Game</button>
   </div>
 
   <div class='vr-mode-chooser'>

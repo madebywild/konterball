@@ -3,7 +3,9 @@ export default (scene, config, color) => {
   let material = new THREE.MeshBasicMaterial({
     color: config.colors.BALL,
   });
+
   let mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
+  mesh.castShadow = true;
   return mesh;
 };

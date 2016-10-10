@@ -1,17 +1,16 @@
 import Scene from './scene';
 import TweenMax from 'gsap';
-import {PRESET, EVENT, MODE, INITIAL_CONFIG} from './constants';
+import {EVENT, MODE, INITIAL_CONFIG} from './constants';
 import $ from 'jquery';
 import Clipboard from 'clipboard';
+import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
 import Util from 'webvr-manager/util';
 import NoSleep from 'nosleep';
 import Communication from './communication';
 
-const minimumLoadingTime = 3000;
-
 /*
-// disable sleep mode on mobile devices
+// TODO disable sleep mode on mobile devices
 let noSleep = new NoSleep();
 
 function fullscreenNoSleep() {
@@ -23,6 +22,8 @@ function fullscreenNoSleep() {
 document.documentElement.addEventListener('click', fullscreenNoSleep, false);
 */
 
+const minimumLoadingTime = 1000000;
+
 class PingPong {
   constructor() {
     this.emitter = EventEmitter({});
@@ -30,13 +31,11 @@ class PingPong {
     this.scene = new Scene(this.emitter, this.communication);
     this.setupHandlers();
     this.setupListeners();
-    this.introTicker();
     this.aboutScreenOpen = false;
 
-    // wait at least 3 seconds before hiding load screen
     Promise.all([
       this.scene.setup(), 
-      // new Promise((resolve, reject) => {setTimeout(() => {resolve();}, minimumLoadingTime);})
+      this.intro()
     ]).then(() => {
       this.loaded();
     });
@@ -67,6 +66,33 @@ class PingPong {
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
       // TODO
       alert('Your opponent has disconnected');
+    });
+  }
+
+  intro() {
+    return new Promise((resolve, reject) => {
+      let tl = new TimelineMax();
+      tl.timeScale(100);
+      tl.to('.intro h1', 0.5, {
+        opacity: 0,
+      }, '+=1.5');
+      tl.to('.intro p', 0.5, {
+        opacity: 1,
+      }, '-=0.3');
+      tl.call(this.modeChooserAnimation);
+      tl.call(resolve, null, null, '+=3');
+    });
+  }
+  
+  modeChooserAnimation() {
+    $.getJSON('/animations/intro.json', data => {
+      bodymovin.loadAnimation({
+        container: document.getElementById('singleplayer-animation'), // the dom element
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: data // the animation data
+      });
     });
   }
 
@@ -124,35 +150,6 @@ class PingPong {
     return false;
     // is the user trying to join a room?
     return window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1;
-  }
-
-  introTicker() {
-    return;
-    // NOTE: changed this to a css animation so it actually loads first
-    let tickerWidth = $('.intro').width();
-    let viewportWidth = $(document).width();
-    let animateDistance = tickerWidth + viewportWidth / 2;
-    TweenMax.to('.intro-ribbon', 3, {
-      x: -animateDistance,
-      ease: Power0.easeNone,
-      repeat: -1,
-    }, 0);
-    TweenMax.set('.webvr-button', {
-      autoAlpha: 0,
-    });
-    let tl = new TimelineMax({repeat: -1, repeatDelay: 1});
-    tl.set('.dot-1, .dot-2, .dot-3', {
-      color: '#999',
-    });
-    tl.set('.dot-1', {
-      color: '#fff',
-    }, 1);
-    tl.set('.dot-2', {
-      color: '#fff',
-    }, 2);
-    tl.set('.dot-3', {
-      color: '#fff',
-    }, 3);
   }
 
   loaded() {
@@ -224,18 +221,18 @@ class PingPong {
     });
 
     let tl = new TimelineMax();
-    tl.to('.button-frame', 0.3, {
-      y: '+200%',
-    });
-    tl.to('.player-mode-chooser', 0.3, {
-      autoAlpha: 0,
-    });
     tl.set('.join-room-screen', {
       display: 'block',
       autoAlpha: 0,
     });
     tl.to('.join-room-screen', 0.3, {
       autoAlpha: 1,
+    });
+    tl.to('.button-frame', 0.3, {
+      y: '+200%',
+    });
+    tl.to('.player-mode-chooser', 0.3, {
+      autoAlpha: 0,
     });
   }
 

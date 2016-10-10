@@ -3,7 +3,7 @@ import TweenMax from 'gsap';
 import ScoreDisplay from './score-display';
 import Countdown from './countdown';
 import Message from './message';
-import {PRESET_NAMES, MODE, EVENT} from '../constants';
+import {MODE, EVENT} from '../constants';
 
 export default class Hud {
   constructor(scene, config, emitter, callback) {
@@ -92,7 +92,6 @@ export default class Hud {
             }
             this.activeButton = button;
             this.modeWasSelected = true;
-            this.emitter.emit(EVENT.PRESET_CHANGED, button.parent._name);
           },
         });
       }

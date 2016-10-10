@@ -15,12 +15,13 @@ export default (parent, config) => {
 
   let net = new THREE.Mesh(geometry, material);
   net.name = 'net-collider';
+  net.castShadow = true;
   group.add(net);
 
   // dis actual net
   const griddivisions = 6;
   for (let i = 0; i < griddivisions; i++) {
-    let grid = new THREE.GridHelper(config.netHeight / 2, 8);
+    let grid = new THREE.GridHelper(config.netHeight / 2, 8, 0x000000, 0x000000);
     grid.rotation.x = Math.PI / 2;
     grid.scale.x = (config.tableWidth / griddivisions) / config.netHeight;
     grid.position.x = (((i/griddivisions) * config.tableWidth) + (config.netHeight / 2) * grid.scale.x) - config.tableWidth / 2;

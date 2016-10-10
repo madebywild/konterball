@@ -40,13 +40,13 @@ export const INITIAL_CONFIG = {
   netHeight: 0.15,
   tablePositionZ: -2,
   paddleThickness: 0.04,
-  paddleSize: 0.5,
+  paddleSize: 0.16,
   get paddlePositionZ() {
     return this.tablePositionZ
       + this.tableDepth / 2
       + this.paddleThickness / 2;
   },
-  ballRadius: 0.03,
+  ballRadius: 0.02,
   ballMass: 0.001,
   ballPaddleFriction: 0.8,
   ballPaddleBounciness: 1,
@@ -55,15 +55,18 @@ export const INITIAL_CONFIG = {
   paddleModel: 'box',
   cameraHeight: 1.6,
   insaneBallInterval: 3000,
-
   POINTS_FOR_WIN: 11,
   ROOM_CODE_LENGTH: 4,
-
   colors: {
-    BLUE_BACKGROUND: 0x1b5692,
-    BLUE_TABLE: 0x124787,
-    BLUE_HUD: 0x3376c7,
-    PADDLE_COLOR: 0xd21515,
-    BALL: 0xf9fc56,
+    BLUE_BACKGROUND: 0X1B5692,
+    BLUE_TABLE: 0X124787,
+    BLUE_HUD: 0X3376C7,
+    PINK_BACKGROUND: 0XF78F9C,
+    PINK_TABLE: 0XFF9BA3,
+    GREEN_BACKGROUND: 0X34C177,
+    GREEN_TABLE: 0X22B76C,
+    PADDLE_COLOR: 0XD21515,
+    BALL: 0XF9FC56,
+
   },
 };

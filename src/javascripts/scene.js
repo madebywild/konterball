@@ -13,8 +13,8 @@ import Ball from './models/ball';
 import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
-const DEBUG_MODE = true;
-const resetTimeoutDuration = 5000;
+const DEBUG_MODE = false;
+const resetTimeoutDuration = 2000;
 
 export default class Scene {
   constructor(emitter, communication) {
@@ -139,6 +139,9 @@ export default class Scene {
     this.renderer = new THREE.WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(this.config.colors.BLUE_BACKGROUND, 1);
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+
     document.body.appendChild(this.renderer.domElement);
 
     // THREE js basics
@@ -158,13 +161,22 @@ export default class Scene {
   }
 
   setupLights() {
-    let light = new THREE.DirectionalLight(0xffffff, 0.5);
-    light.position.z = 3;
-    light.position.y = 2;
-    light.position.x = 1;
+    let light = new THREE.DirectionalLight(0xffffff, 0.3, 0);
+    light.position.z = this.config.tablePositionZ;
+    light.position.y = 4;
+    light.position.x = 0;
+    light.shadow.camera.near = 0.5;
+    light.shadow.camera.far = 4.2;
+    light.shadow.camera.left = -1;
+    light.shadow.camera.right = 1;
+    light.shadow.camera.top = 0;
+    light.shadow.camera.bottom = -4;
+    light.castShadow = true;
+    light.shadow.mapSize.width = 4 * 1024;
+    light.shadow.mapSize.height = 4 * 1024;
     this.scene.add(light);
 
-    light = new THREE.AmbientLight(0xffffff, 0.7);
+    light = new THREE.AmbientLight(0xFFFFFF, 0.9);
     this.scene.add(light);
   }
 
@@ -239,7 +251,7 @@ export default class Scene {
 
     // opponent, set to invisible for now
     this.paddleOpponent = Paddle(this.scene, this.config, this.config.colors.WHITE);
-    this.paddleOpponent.position.z = this.config.boxPositionZ - this.config.boxDepth / 2;
+    this.paddleOpponent.position.z = this.config.tablePositionZ - this.config.tableDepth / 2;
     this.paddleOpponent.position.y = 1;
     this.paddleOpponent.visible = false;
   }
@@ -254,6 +266,24 @@ export default class Scene {
   }
 
   startGame() {
+    // prepare the scene
+    this.paddle.visible = false;
+    this.hud.container.visible = false;
+    let table = this.scene.getObjectByName('table');
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      if (this.communication.isHost) {
+        this.renderer.setClearColor(this.config.colors.BLUE_BACKGROUND, 1);
+        table.material.color.set(this.config.colors.BLUE_TABLE);
+      } else {
+        this.renderer.setClearColor(this.config.colors.GREEN_BACKGROUND, 1);
+        table.material.color.set(this.config.colors.GREEN_TABLE);
+      }
+    } else {
+      this.renderer.setClearColor(this.config.colors.PINK_BACKGROUND, 1);
+      table.material.color.set(this.config.colors.PINK_TABLE);
+    }
+
+    // set colors
     // null object for tweening
     let no = {
       fov: this.camera.fov,
@@ -261,9 +291,6 @@ export default class Scene {
       upY: 0,
       scaleY: 0.01,
     };
-
-    this.paddle.visible = false;
-    this.hud.container.visible = false;
 
     let tl = new TimelineMax();
     tl.to('.intro-wrapper', 0.4, {
@@ -319,6 +346,7 @@ export default class Scene {
   }
 
   requestCountdown() {
+    console.log('reqeust countdown');
     if (this.playerRequestedCountdown && this.opponentRequestedCountdown) {
       this.countdown();
     }
@@ -381,7 +409,6 @@ export default class Scene {
   setMultiplayer() {
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
-    this.physics.frontWall.collisionResponse = 0;
     // setup communication channels,
     // add callbacks for received actions
     // TODO throw exception on connection failure
@@ -568,8 +595,8 @@ export default class Scene {
           let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
           if (intersects.length > 0) {
             let intersectionPoint = intersects[0].point;
-            let posX =  intersectionPoint.x * 4;
-            let posY = this.config.cameraHeight + (this.config.cameraHeight - intersectionPoint.y) * -4;
+            let posX =  intersectionPoint.x * 2;
+            let posY = this.config.cameraHeight + (this.config.cameraHeight - intersectionPoint.y) * -2;
             this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.03);
           }
         } else if (this.controlMode === 'move' && controller) {
@@ -646,7 +673,7 @@ export default class Scene {
     // for multiplayer testing, set one player to always hit the ball,
     // easier to test for latency related issues that way
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      //this.setPaddlePosition(this.ball.position.x, this.ball.position.y);
+      this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
     }
 
     // raycaster position and direction is now either camera
@@ -660,11 +687,9 @@ export default class Scene {
       }
 
       this.paddleBoundingBox.update();
-
       this.physics.step(delta / 1000);
-
       this.updateBall(this.ball);
-      this.physics.predictCollisions(this.ball.physicsReference, this.paddleBoundingBox, this.scene.getObjectByName('net-collider'));
+      this.physics.predictCollisions(this.physics.ball, this.paddle, this.scene.getObjectByName('net-collider'));
     }
 
     if (DEBUG_MODE) {

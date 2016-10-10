@@ -2,29 +2,39 @@
 @include font-face('Futura', '/fonts/Futura');
 @include font-face('FuturaItalic', '/fonts/FuturaItalic');
 
-$font-size: 16px;
+
+$font-size: 20px;
 $font-size-large: 24px;
+$font-size-olive: calc(30px + 10vw);
 $dark-grey: #262626;
-$medium-grey: #565656;
-$BLUE_BACKGROUND: #1b5692;
-$BLUE_TABLE: #124787;
-$BLUE_HUD: #3376c7;
-$PADDLE_COLOR: #d21515;
-$BALL: #f9fc56;
+$medium-grey: rgba(255, 255, 255, 0.5);
+$blue-background: #1b5692;
+$blue-table: #124787;
+$blue-hud: #3376c7;
+$paddle-color: #d21515;
+$ball: #f9fc56;
+$pink-background: #f78f9c;
+$pink-table: #ff9ba3;
+$green-background: #34c177;
+$green-table: #22b76c;
 
 button:focus, textarea:focus, input:focus{
   outline: none;
 }
-
 html {
   font-size: $font-size;
 }
-
 body {
   font-family: Futura;
   overflow: hidden;
-  background-color: $BLUE_BACKGROUND;
+  background-color: $blue-background;
   color: #fff;
+}
+h1 {
+  text-transform: uppercase;
+  font-size: $font-size-olive;
+  font-family: AntiqueOlive;
+  letter-spacing: 0.05em;
 }
 h2 {
   text-transform: uppercase;
@@ -33,13 +43,12 @@ h2 {
 }
 button {
   text-transform: uppercase;
-  font-size: 1rem;
+  font-size: 0.8em;
   cursor: pointer;
-  background-color: $BLUE_BACKGROUND;
-  border: 0;
-  padding: 15px;
+  padding: 20px 30px;
+  background: transparent;
+  border: 3px solid #fff;
   color: #fff;
-  font-size: $font-size-large;
 }
 .absolute-center {
   position: absolute;
@@ -48,27 +57,56 @@ button {
   transform: translate(-50%, -50%);
   text-align: center;
 }
-.intro-wrapper, .game-over-screen-wrapper {
+.screen {
   position: absolute;
-  height: 100vh;
   width: 100%;
+  height: 100vh;
   top: 0;
   left: 0;
-  background-color: $BLUE_BACKGROUND;
+}
+.intro-wrapper, .game-over-screen-wrapper {
+  @extend .screen;
+  background-color: $blue-background;
 }
 $border-width: 2px;
 .player-mode-chooser {
   display: none;
-  @extend .absolute-center;
-  .button-frame {
+  font-family: FuturaItalic;
+  color: $medium-grey;
+  font-size: 25px;
+  letter-spacing: 2px;
+  & > div {
+    width: 50%;
     position: absolute;
-    top: 0;
+    cursor: pointer;
+    & > div {
+      @extend .absolute-center;
+    }
+  }
+  h3 {
+    text-transform: uppercase;
+    font-size: 40px;
+    margin-bottom: 20px;
+    color: #fff;
+    letter-spacing: 4px;
+  }
+  #start-singleplayer {
+    background-color: $pink-background;
     left: 0;
+    top: 0;
+    height: 100%;
+  }
+  #open-room {
+    background-color: $blue-background;
     right: 0;
-    height: 55px - 2 * $border-width;
-    display: block;
-    width: calc(100% - 2 * $border-width);
-    border: 2px solid #fff;
+    top: 0;
+    height: 50%;
+  }
+  #join-room {
+    background-color: $green-background;
+    bottom: 0;
+    right: 0;
+    height: 50%;
   }
 }
 .about-button {
@@ -83,12 +121,8 @@ $border-width: 2px;
 .about-screen {
   display: none;
   z-index: 80;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: $BLUE_BACKGROUND;
+  @extend .screen;
+  background-color: $blue-background;
   overflow: scroll;
 }
 .about-inner {
@@ -100,54 +134,52 @@ $border-width: 2px;
 }
 
 .intro {
-  @extend .absolute-center;
-  white-space: nowrap;
-  .intro-ribbon {
-    transform: translateX(50vw) translateX(50%);
+  h1, p {
+    @extend .absolute-center;
+    margin: 0;
   }
-  .loading-dots {
-    margin-top: 30px;
-    color: #999;
-  }
-}
-.open-room-screen {
-  .opponent-joined {
-    text-transform: uppercase;
+  font-family: FuturaItalic;
+  p {
+    font-size: calc(20px + 1vw);
+    opacity: 0,
   }
 }
-
 .grey-text {
   margin-top: -5px;
   color: $medium-grey;
+  font-family: FuturaItalic;
 }
-
 .open-room-screen,
 .join-room-screen {
-  button {
-    border: 2px solid #fff;
-    width: auto;
-    display: inline;
-  }
   display: none;
-  background-color: $BLUE_BACKGROUND;
-  @extend .absolute-center;
+  background-color: $blue-background;
+  @extend .screen;
+  & > div {
+    @extend .absolute-center;
+    width: 100%;
+  }
   width: 100%;
+  font-size: $font-size-large;
   input {
+    display: block;
     text-align: center;
     margin: auto;
-    width: auto;
-    background-color: $dark-grey;
+    background-color: transparent;
+    font-family: AntiqueOlive;
     border: 0;
     color: #fff;
-    padding: 20px;
+    padding: 0;
     margin-bottom: 15px;
-    font-size: $font-size-large;
+    font-size: $font-size-olive;
+    letter-spacing: 0.05em;
     width: 100%;
-    max-width: 400px;
   }
   #room-code {
     text-transform: uppercase;
   }
+}
+.join-room-screen {
+  background-color: $green-background;
 }
 button.inactive {
   color: $medium-grey;
@@ -173,24 +205,10 @@ button.inactive {
 .game-over-screen {
   @extend .absolute-center;
 }
-.controls {
-  position: absolute;
-  top: 10px;
-  right: 5px;
-  font-family: sans-serif;
-  button {
-    width: auto;
-    font-size: 12px;
-    display: inline;
-    border: 1px solid #fff;
-    margin-right: 5px;
-  }
-}
-
 .vr-mode-chooser {
   @extend .absolute-center;
   width: 100%;
-  background-color: $BLUE_BACKGROUND;
+  background-color: $blue-background;
   z-index: 50;
   display: none;
   padding-left: 15px;

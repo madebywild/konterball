@@ -20,8 +20,8 @@ export default class Countdown {
     geometry.computeBoundingBox();
     this.countdown = new THREE.Mesh(geometry, material);
     this.countdown.position.x = -geometry.boundingBox.max.x / 2;
-    this.countdown.position.y = this.config.boxHeight / 2 - geometry.boundingBox.max.y / 2;
-    this.countdown.position.z = this.config.boxPositionZ;
+    this.countdown.position.y = this.config.tableHeight + geometry.boundingBox.max.y / 2;
+    this.countdown.position.z = this.config.tablePositionZ;
     this.scene.add(this.countdown);
   }
 
@@ -35,7 +35,7 @@ export default class Countdown {
     geometry.computeBoundingBox();
     this.countdown.geometry = geometry;
     this.countdown.position.x = -geometry.boundingBox.max.x / 2;
-    this.countdown.position.y = this.config.boxHeight / 2 - geometry.boundingBox.max.y / 2;
+    this.countdown.position.y = this.config.tableHeight + geometry.boundingBox.max.y / 2;
   }
 
   showCountdown() {
