@@ -13,7 +13,7 @@ import Ball from './models/ball';
 import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 const resetTimeoutDuration = 2000;
 
 export default class Scene {
@@ -37,7 +37,6 @@ export default class Scene {
     this.controller2 = null;
     this.raycaster = null;
     this.paddlePlane = null;
-    this.controlMode = 'pan';
     this.controllerRay = null;
     this.net = null;
     this.tabActive = true;
@@ -200,7 +199,6 @@ export default class Scene {
         // TODO
         this.display = displays[0];
         if (displays[0].capabilities && displays[0].capabilities.hasPosition) {
-          this.controlMode = 'move';
           // also check gamepads
           this.controller1 = new THREE.ViveController(0);
           this.controller1.standingMatrix = this.controls.getStandingMatrix();
@@ -351,7 +349,6 @@ export default class Scene {
   }
 
   requestCountdown() {
-    console.log('reqeust countdown');
     if (this.playerRequestedCountdown && this.opponentRequestedCountdown) {
       this.countdown();
     }
@@ -604,7 +601,8 @@ export default class Scene {
             let posY = this.config.cameraHeight + (this.config.cameraHeight - intersectionPoint.y) * -2;
             this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.03);
           }
-        } else if (this.controlMode === 'move' && controller) {
+        } else {
+          return;
           // if we do have a controller, intersect it with where the controller is looking
           let direction = new THREE.Vector3(0, 0, -1);
           direction.applyQuaternion(controller.getWorldQuaternion());
@@ -633,7 +631,6 @@ export default class Scene {
           this.score.opponent++;
           this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
           if (this.score.opponent < this.config.POINTS_FOR_WIN) {
-            console.log(1);
             // the game goes on
             this.physics.initBallPosition();
           } else {
@@ -653,7 +650,6 @@ export default class Scene {
           });
         }
       } else {
-        console.log(2);
         this.resetPingpongTimeout();
         // TODO pingpong scoring
         this.physics.initBallPosition();

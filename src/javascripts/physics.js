@@ -163,8 +163,10 @@ export default class Physics {
       e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
       e.body.velocity.y = 1 + hitpointY * e.body.velocity.z * 0.5;
     } else {
+      let distFromCenter = this.paddle.position.x / this.config.tableWidth * 0.5;
+      console.log(distFromCenter);
       e.body.velocity.z = 4;
-      e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
+      e.body.velocity.x = (-distFromCenter * 0.8) + (hitpointX * e.body.velocity.z * 0.2);
       e.body.velocity.y = 2;
     }
   }
@@ -209,7 +211,6 @@ export default class Physics {
   }
 
   step(delta) {
-    console.log(this.ball.velocity);
     this.world.step(delta);
   }
 }
