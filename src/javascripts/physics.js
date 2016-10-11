@@ -98,6 +98,23 @@ export default class Physics {
     this.table.position.y = this.config.tableHeight / 2;
     this.table.position.z = this.config.tablePositionZ;
     this.world.add(this.table);
+
+    this.upwardsTable = new CANNON.Body({
+      mass: 0,
+      shape: new CANNON.Box(
+        new CANNON.Vec3(
+          this.config.tableWidth / 2,
+          this.config.tableHeight / 2,
+          this.config.tableDepth / 4
+        )
+      ),
+      material: new CANNON.Material(),
+    });
+    this.upwardsTable.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI / 2);
+    this.upwardsTable.position.z = this.config.tablePositionZ - this.config.tableHeight / 2;
+    this.upwardsTable.position.y = this.config.tableHeight + this.config.tableDepth / 4;
+    this.upwardsTable.collisionResponse = 0;
+    this.world.add(this.upwardsTable);
   }
 
   addBall(threeReference) {
@@ -113,6 +130,7 @@ export default class Physics {
 
     this.addContactMaterial(ball.material, this.paddle.material, 0.99, 0.7);
     this.addContactMaterial(ball.material, this.table.material, 0.7, 0.3);
+    this.addContactMaterial(ball.material, this.upwardsTable.material, 0.7, 0.3);
 
     ball.position.y = this.config.tableHeight / 2;
     ball.position.z = this.config.tablePositionZ;
@@ -140,9 +158,15 @@ export default class Physics {
     hitpointX = hitpointX / (this.config.paddleSize / 2);
     hitpointY = hitpointY / (this.config.paddleSize / 2);
 
-    e.body.velocity.z = 5;
-    e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
-    e.body.velocity.y = 1 + hitpointY * e.body.velocity.z * 0.5;
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      e.body.velocity.z = 5;
+      e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
+      e.body.velocity.y = 1 + hitpointY * e.body.velocity.z * 0.5;
+    } else {
+      e.body.velocity.z = 4;
+      e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
+      e.body.velocity.y = 2;
+    }
   }
 
   setPaddlePosition(x, y, z) {
@@ -150,13 +174,23 @@ export default class Physics {
   }
 
   initBallPosition() {
-    this.ball.position.set(0, 1.6, this.config.tablePositionZ - this.config.tableDepth * 0.3);
-    this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
-    this.ball.velocity.y = this.config.ballInitVelocity * 1.0;
-    this.ball.velocity.z = this.config.ballInitVelocity * 2.5;
-    this.ball.angularVelocity.x = 0;
-    this.ball.angularVelocity.y = 0;
-    this.ball.angularVelocity.z = 0;
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.ball.position.set(0, 1.6, this.config.tablePositionZ + 0.1);
+      this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
+      this.ball.velocity.y = this.config.ballInitVelocity * 0.0;
+      this.ball.velocity.z = this.config.ballInitVelocity * 1.5;
+      this.ball.angularVelocity.x = 0;
+      this.ball.angularVelocity.y = 0;
+      this.ball.angularVelocity.z = 0;
+    } else {
+      this.ball.position.set(0, 1.6, this.config.tablePositionZ - this.config.tableDepth * 0.3);
+      this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
+      this.ball.velocity.y = this.config.ballInitVelocity * 1.0;
+      this.ball.velocity.z = this.config.ballInitVelocity * 2.5;
+      this.ball.angularVelocity.x = 0;
+      this.ball.angularVelocity.y = 0;
+      this.ball.angularVelocity.z = 0;
+    }
   }
 
   predictCollisions(ball, paddle, net) {
@@ -175,6 +209,7 @@ export default class Physics {
   }
 
   step(delta) {
+    console.log(this.ball.velocity);
     this.world.step(delta);
   }
 }

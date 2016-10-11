@@ -1,4 +1,3 @@
-import Button from './button';
 import TweenMax from 'gsap';
 import ScoreDisplay from './score-display';
 import Countdown from './countdown';
@@ -17,9 +16,6 @@ export default class Hud {
     this.ballInitVelocity = 1;
     this.paddleModel = 'box';
     this.activateTween = null;
-    this.buttons = [];
-    this.activeButton = null;
-    this.focusedButton = null;
 
     this.initializedCallback = callback;
 
@@ -42,15 +38,11 @@ export default class Hud {
   setup() {
     this.container = new THREE.Group();
     this.container.position.z = 1;
-    this.container.position.y = 1;
+    this.container.position.y = 1.6;
     this.container.rotation.y = Math.PI;
     this.scene.add(this.container);
 
-    this.buttons.push(new Button(this.container, this.font, 'Normal Mode', -0.7, 0));
-    this.buttons.push(new Button(this.container, this.font, 'Ping Pong', 0, 0));
-    this.buttons.push(new Button(this.container, this.font, 'Insane Mode', +0.7, -0));
     this.initialized = true;
-    this.activeButton = this.buttons[0].hitbox;
 
     this.message = new Message(this.scene, this.config, this.font);
     this.message.hideMessage();
@@ -59,49 +51,5 @@ export default class Hud {
     this.countdown = new Countdown(this.scene, this.config, this.font);
     this.countdown.hideCountdown();
     this.initializedCallback();
-  }
-
-  cameraRayUpdated(raycaster) {
-    if (!this.initialized) return;
-    let intersections = raycaster.intersectObjects(this.buttons.map(b => b.hitbox), false);
-    if (intersections.length) {
-      let button = intersections[0].object;
-      if ((!this.activateTween || !this.activateTween.isActive())
-          && !this.modeWasSelected
-          && (!this.activeButton || this.activeButton.uuid !== button.uuid)
-        ) {
-        this.focusedButton = button;
-        let no = {
-          opacity: 0.5,
-        };
-
-        this.activateTween = TweenMax.to(no, 0.5, {
-          opacity: 1,
-          onUpdate: () => {
-            button.parent.children.forEach(child => {
-              // console.log('setting opacity: ' + no.opacity);
-              child.material.opacity = no.opacity;
-            });
-          },
-          onComplete: () => {
-            console.log(this.activeButton);
-            if (this.activeButton) {
-              this.activeButton.parent.children.forEach(child => {
-                child.material.opacity = 0.5;
-              });
-            }
-            this.activeButton = button;
-            this.modeWasSelected = true;
-          },
-        });
-      }
-    } else {
-      this.modeWasSelected = false;
-      if (this.activateTween && this.activateTween.isActive()) {
-        // kill tween and reset button states
-        this.activateTween.kill();
-        this.focusedButton.material.opacity = 0.3;
-      }
-    }
   }
 }

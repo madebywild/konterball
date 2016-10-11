@@ -85,9 +85,18 @@ class PingPong {
   }
   
   modeChooserAnimation() {
-    $.getJSON('/animations/intro.json', data => {
+    $.getJSON('/animations/1player.json', data => {
       bodymovin.loadAnimation({
         container: document.getElementById('singleplayer-animation'), // the dom element
+        renderer: 'svg',
+        loop: true,
+        autoplay: true,
+        animationData: data // the animation data
+      });
+    });
+    $.getJSON('/animations/2player.json', data => {
+      bodymovin.loadAnimation({
+        container: document.getElementById('multiplayer-animation'), // the dom element
         renderer: 'svg',
         loop: true,
         autoplay: true,

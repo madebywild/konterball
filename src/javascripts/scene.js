@@ -13,7 +13,7 @@ import Ball from './models/ball';
 import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 const resetTimeoutDuration = 2000;
 
 export default class Scene {
@@ -279,6 +279,11 @@ export default class Scene {
         table.material.color.set(this.config.colors.GREEN_TABLE);
       }
     } else {
+      let upwardsTableGroup = this.scene.getObjectByName('upwardsTableGroup');
+      upwardsTableGroup.visible = true;
+      this.net.visible = false;
+      this.physics.net.collisionResponse = 0;
+      this.physics.upwardsTable.collisionResponse = 1;
       this.renderer.setClearColor(this.config.colors.PINK_BACKGROUND, 1);
       table.material.color.set(this.config.colors.PINK_TABLE);
     }
@@ -675,10 +680,6 @@ export default class Scene {
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
       this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
     }
-
-    // raycaster position and direction is now either camera
-    // or controller on vive
-    this.hud.cameraRayUpdated(this.raycaster);
 
     if (this.config.state === STATE.PLAYING) {
       if (this.config.mode === MODE.MULTIPLAYER) {

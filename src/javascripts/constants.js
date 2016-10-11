@@ -39,6 +39,7 @@ export const INITIAL_CONFIG = {
   tableHeight: 0.762,
   netHeight: 0.15,
   tablePositionZ: -2,
+  tableThickness: 0.1,
   paddleThickness: 0.04,
   paddleSize: 0.16,
   get paddlePositionZ() {

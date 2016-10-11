@@ -2,10 +2,11 @@
 @include font-face('Futura', '/fonts/Futura');
 @include font-face('FuturaItalic', '/fonts/FuturaItalic');
 
-
 $font-size: 20px;
 $font-size-large: 24px;
 $font-size-olive: calc(30px + 10vw);
+
+// colors
 $dark-grey: #262626;
 $medium-grey: rgba(255, 255, 255, 0.5);
 $blue-background: #1b5692;
@@ -17,6 +18,8 @@ $pink-background: #f78f9c;
 $pink-table: #ff9ba3;
 $green-background: #34c177;
 $green-table: #22b76c;
+
+$breakpoint-mobile: 768px;
 
 button:focus, textarea:focus, input:focus{
   outline: none;
@@ -69,6 +72,8 @@ button {
   background-color: $blue-background;
 }
 $border-width: 2px;
+$margin: calc(100px - 4vw);
+$margin: 4vh;
 .player-mode-chooser {
   display: none;
   font-family: FuturaItalic;
@@ -79,34 +84,63 @@ $border-width: 2px;
     width: 50%;
     position: absolute;
     cursor: pointer;
+    text-align: center;
     & > div {
-      @extend .absolute-center;
+      position: absolute;
+      left: 0;
+      right: 0;
     }
   }
   h3 {
     text-transform: uppercase;
     font-size: 40px;
     margin-bottom: 20px;
+    margin-top: 0;
     color: #fff;
     letter-spacing: 4px;
+  }
+  @media screen and (max-width: $breakpoint-mobile) {
+    font-size: 15px;
+    h3 {
+      font-size: 20px;
+    }
   }
   #start-singleplayer {
     background-color: $pink-background;
     left: 0;
     top: 0;
     height: 100%;
+    .inner {
+      bottom: $margin;
+    }
   }
   #open-room {
     background-color: $blue-background;
     right: 0;
     top: 0;
     height: 50%;
+    .inner {
+      top: $margin * 1.5;
+    }
   }
   #join-room {
     background-color: $green-background;
     bottom: 0;
     right: 0;
     height: 50%;
+    .inner {
+      bottom: $margin;
+    }
+  }
+  #singleplayer-animation {
+    width: 70%;
+    margin: auto;
+    @extend .absolute-center;
+  }
+  #multiplayer-animation {
+    width: 80%;
+    margin: auto;
+    transform: translateY(-50%);
   }
 }
 .about-button {
