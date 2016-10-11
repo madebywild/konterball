@@ -138,8 +138,8 @@ export default class Scene {
     this.renderer = new THREE.WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(this.config.colors.BLUE_BACKGROUND, 1);
-    this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+    // this.renderer.shadowMap.enabled = true;
+    // this.renderer.shadowMap.type = THREE.BasicShadowMap;
 
     document.body.appendChild(this.renderer.domElement);
 
@@ -194,6 +194,7 @@ export default class Scene {
 
   setupControllers() {
     navigator.getVRDisplays().then(displays => {
+      console.log(navigator.getGamepads());
       if (displays) {
         // if we have more than 1 display: ¯\_(ツ)_/¯
         // TODO
@@ -585,35 +586,38 @@ export default class Scene {
       controller = this.controller2;
     }
 
+    if (controller) {
+      //console.log(controller.getWorldPosition());
+    }
+    if (this.frameNumber === 1000) {
+      console.log(navigator.getGamepads());
+    }
+
     // place paddle according to controller
     if (this.display) {
-      let pose = this.display.getPose();
-      if (pose) {
-        if (!controller) {
-          // if we dont have a controller, intersect the paddlePlane
-          // with where the camera is looking and place the paddle there
-          this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-          this.raycaster.far = 2;
-          let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
-          if (intersects.length > 0) {
-            let intersectionPoint = intersects[0].point;
-            let posX =  intersectionPoint.x * 2;
-            let posY = this.config.cameraHeight + (this.config.cameraHeight - intersectionPoint.y) * -2;
-            this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.03);
-          }
-        } else {
-          return;
-          // if we do have a controller, intersect it with where the controller is looking
-          let direction = new THREE.Vector3(0, 0, -1);
-          direction.applyQuaternion(controller.getWorldQuaternion());
-          direction.normalize();
-          this.raycaster.set(controller.getWorldPosition(), direction);
-          this.raycaster.far = 10;
-          let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
-          if (intersects.length > 0) {
-            let intersectionPoint = intersects[0].point;
-            this.setPaddlePosition(intersectionPoint.x, intersectionPoint.y, this.config.paddlePositionZ + 0.03);
-          }
+      if (!controller) {
+        // if we dont have a controller, intersect the paddlePlane
+        // with where the camera is looking and place the paddle there
+        this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+        this.raycaster.far = 2;
+        let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
+        if (intersects.length > 0) {
+          let intersectionPoint = intersects[0].point;
+          let posX =  intersectionPoint.x * 2;
+          let posY = this.config.cameraHeight + (this.config.cameraHeight - intersectionPoint.y) * -2;
+          this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.03);
+        }
+      } else {
+        // if we do have a controller, intersect it with where the controller is looking
+        let direction = new THREE.Vector3(0, 0, -1);
+        direction.applyQuaternion(controller.getWorldQuaternion());
+        direction.normalize();
+        this.raycaster.set(controller.getWorldPosition(), direction);
+        this.raycaster.far = 10;
+        let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
+        if (intersects.length > 0) {
+          let intersectionPoint = intersects[0].point;
+          this.setPaddlePosition(intersectionPoint.x, intersectionPoint.y, this.config.paddlePositionZ + 0.03);
         }
       }
     }

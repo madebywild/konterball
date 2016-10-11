@@ -11,23 +11,23 @@ THREE.VRControls = function ( object, onError ) {
 
 	var standingMatrix = new THREE.Matrix4();
 
-	var frameData = null;
-
-	if ( 'VRFrameData' in window ) {
-
-		frameData = new VRFrameData();
-
-	}
-
 	function gotVRDisplays( displays ) {
 
 		vrDisplays = displays;
 
-		if ( displays.length > 0 ) {
+		for ( var i = 0; i < displays.length; i ++ ) {
 
-			vrDisplay = displays[ 0 ];
+			if ( ( 'VRDisplay' in window && displays[ i ] instanceof VRDisplay ) ||
+				 ( 'PositionSensorVRDevice' in window && displays[ i ] instanceof PositionSensorVRDevice ) ) {
 
-		} else {
+				vrDisplay = displays[ i ];
+				break;  // We keep the first we encounter
+
+			}
+
+		}
+
+		if ( vrDisplay === undefined ) {
 
 			if ( onError ) onError( 'VR input not available.' );
 
@@ -37,11 +37,12 @@ THREE.VRControls = function ( object, onError ) {
 
 	if ( navigator.getVRDisplays ) {
 
-		navigator.getVRDisplays().then( gotVRDisplays ).catch ( function () {
+		navigator.getVRDisplays().then( gotVRDisplays );
 
-			console.warn( 'THREE.VRControls: Unable to get VR Displays' );
+	} else if ( navigator.getVRDevices ) {
 
-		} );
+		// Deprecated API.
+		navigator.getVRDevices().then( gotVRDisplays );
 
 	}
 
@@ -65,15 +66,8 @@ THREE.VRControls = function ( object, onError ) {
 
 	};
 
-	this.setVRDisplay = function ( value ) {
-
-		vrDisplay = value;
-
-	};
-
 	this.getVRDisplays = function () {
 
-		console.warn( 'THREE.VRControls: getVRDisplays() is being deprecated.' );
 		return vrDisplays;
 
 	};
@@ -88,32 +82,46 @@ THREE.VRControls = function ( object, onError ) {
 
 		if ( vrDisplay ) {
 
-			var pose;
+			if ( vrDisplay.getPose ) {
 
-			if ( vrDisplay.getFrameData ) {
+				var pose = vrDisplay.getPose();
 
-				vrDisplay.getFrameData( frameData );
-				pose = frameData.pose;
+				if ( pose.orientation !== null ) {
 
-			} else if ( vrDisplay.getPose ) {
+					object.quaternion.fromArray( pose.orientation );
 
-				pose = vrDisplay.getPose();
+				}
 
-			}
+				if ( pose.position !== null ) {
 
-			if ( pose.orientation !== null ) {
+					object.position.fromArray( pose.position );
 
-				object.quaternion.fromArray( pose.orientation );
+				} else {
 
-			}
+					object.position.set( 0, 0, 0 );
 
-			if ( pose.position !== null ) {
-
-				object.position.fromArray( pose.position );
+				}
 
 			} else {
 
-				object.position.set( 0, 0, 0 );
+				// Deprecated API.
+				var state = vrDisplay.getState();
+
+				if ( state.orientation !== null ) {
+
+					object.quaternion.copy( state.orientation );
+
+				}
+
+				if ( state.position !== null ) {
+
+					object.position.copy( state.position );
+
+				} else {
+
+					object.position.set( 0, 0, 0 );
+
+				}
 
 			}
 
@@ -144,7 +152,21 @@ THREE.VRControls = function ( object, onError ) {
 
 		if ( vrDisplay ) {
 
-			vrDisplay.resetPose();
+			if ( vrDisplay.resetPose !== undefined ) {
+
+				vrDisplay.resetPose();
+
+			} else if ( vrDisplay.resetSensor !== undefined ) {
+
+				// Deprecated API.
+				vrDisplay.resetSensor();
+
+			} else if ( vrDisplay.zeroSensor !== undefined ) {
+
+				// Really deprecated API.
+				vrDisplay.zeroSensor();
+
+			}
 
 		}
 
