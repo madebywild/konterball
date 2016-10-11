@@ -18,6 +18,7 @@ export default class Communication {
     this.id = randomstring.generate({
       length: INITIAL_CONFIG.ROOM_CODE_LENGTH,
       capitalization: 'uppercase',
+      readable: true,
     });
 
     this.peer = new Peer(this.id, {host: location.hostname, port: 8081, path: '/api'});

@@ -159,9 +159,9 @@ export default class Physics {
     hitpointY = hitpointY / (this.config.paddleSize / 2);
 
     if (this.config.mode === MODE.MULTIPLAYER) {
-      e.body.velocity.z = 5;
+      e.body.velocity.z = 3;
       e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
-      e.body.velocity.y = 1 + hitpointY * e.body.velocity.z * 0.5;
+      e.body.velocity.y = 3; // 1 + hitpointY * e.body.velocity.z * 0.5;
     } else {
       let distFromCenter = this.paddle.position.x / this.config.tableWidth * 0.5;
       console.log(distFromCenter);
