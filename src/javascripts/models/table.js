@@ -25,6 +25,8 @@ export default (parent, config) => {
   upwardsTableGroup.position.z = -config.tableThickness / 2;
   geometry = new THREE.BoxGeometry(config.tableWidth, config.tableThickness, config.tableDepth / 2);
   mesh = new THREE.Mesh(geometry, material);
+  mesh.castShadow = true;
+  mesh.receiveShadow = true;
   upwardsTableGroup.add(mesh);
 
   group.add(upwardsTableGroup);

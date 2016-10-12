@@ -56,7 +56,7 @@ export const INITIAL_CONFIG = {
   paddleModel: 'box',
   cameraHeight: 1.6,
   insaneBallInterval: 3000,
-  POINTS_FOR_WIN: 11,
+  POINTS_FOR_WIN: 2,
   ROOM_CODE_LENGTH: 4,
   colors: {
     BLUE_BACKGROUND: 0X1B5692,

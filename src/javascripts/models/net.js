@@ -28,7 +28,7 @@ export default (parent, config) => {
     group.add(grid);
   }
   group.position.z = config.tablePositionZ;
-  group.position.y = config.tableHeight + config.netHeight / 2;
+  group.position.y = config.tableHeight + config.netHeight / 2 + 0.01;
   parent.add(group);
 
   return group;

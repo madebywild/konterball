@@ -15,6 +15,8 @@ export default class ScoreDisplay {
   setupText() {
     let material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
+      transparent: true,
+      opacity: 0.5,
     });
     let geometry = new THREE.TextGeometry('0', {
       font: this.font,
@@ -27,17 +29,15 @@ export default class ScoreDisplay {
     this.opponentScore = new THREE.Mesh(geometry, material);
     this.selfScore = new THREE.Mesh(geometry.clone(), material.clone());
 
+    this.selfScore.rotation.y = Math.PI / 2;
+    this.opponentScore.rotation.y = -Math.PI / 2;
+
     this.parent.add(this.selfScore);
     this.parent.add(this.opponentScore);
 
+    this.setSelfScore(0);
+    this.setOpponentScore(0);
     this.opponentScore.visible = this.config.mode === MODE.MULTIPLAYER;
-  }
-
-  resetScorePositions() {
-    this.selfScore.position.set(0, 0, 0);
-    this.selfScore.rotation.set(0, 0, 0);
-    this.opponentScore.position.set(0, 0, 0);
-    this.opponentScore.rotation.set(0, 0, 0);
   }
 
   setSelfScore(value) {
@@ -49,10 +49,10 @@ export default class ScoreDisplay {
     });
     this.selfScore.geometry.computeBoundingBox();
 
-    this.selfScore.position.y = this.config.boxHeight / 2
-      - this.selfScore.geometry.boundingBox.max.y / 2;
-    this.selfScore.position.z = this.config.boxPositionZ
-      + this.config.boxDepth / 4
+    this.selfScore.position.x = -this.config.tableWidth / 2;
+    this.selfScore.position.y = this.config.tableHeight + 0.2;
+    this.selfScore.position.z = this.config.tablePositionZ
+      + this.config.tableDepth / 4
       + this.selfScore.geometry.boundingBox.max.x / 2;
   }
 
@@ -63,5 +63,12 @@ export default class ScoreDisplay {
       height: 0.001,
       curveSegments: 3,
     });
+    this.opponentScore.geometry.computeBoundingBox();
+
+    this.opponentScore.position.x = this.config.tableWidth / 2;
+    this.opponentScore.position.y = this.config.tableHeight + 0.2;
+    this.opponentScore.position.z = this.config.tablePositionZ
+      - this.config.tableDepth / 4
+      - this.opponentScore.geometry.boundingBox.max.x / 2;
   }
 }

@@ -5,6 +5,7 @@ import Hud from './hud';
 import SoundManager from './sound-manager';
 import $ from 'jquery';
 import WebVRManager from './webvr-manager';
+import Util from './webvr-manager/util';
 
 import Table from './models/table';
 import Paddle from './models/paddle';
@@ -14,7 +15,6 @@ import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
 const DEBUG_MODE = false;
-const resetTimeoutDuration = 2000;
 
 export default class Scene {
   constructor(emitter, communication) {
@@ -44,8 +44,8 @@ export default class Scene {
     this.physicsDebugRenderer = null;
     this.resetBallTimeout = null;
     this.state = STATE.PRELOADER;
-    this.insaneInterval = null;
-    this.insaneBallNumber = 0;
+    this.ballHasHitEnemyTable = false;
+    this.resetTimeoutDuration = 1500;
 
     this.playerRequestedRestart = false;
     this.opponentRequestedRestart = false;
@@ -64,7 +64,11 @@ export default class Scene {
     };
 
     this.config = Object.assign({}, INITIAL_CONFIG);
-    this.physics = new Physics(this.config, this.ballPaddleCollision.bind(this));
+    this.physics = new Physics(
+      this.config,
+      this.ballPaddleCollision.bind(this),
+      this.ballTableCollision.bind(this)
+    );
     this.sound = new SoundManager();
 
     this.frameNumber = 0;
@@ -104,7 +108,6 @@ export default class Scene {
 
   setupEventListeners() {
     this.emitter.on(EVENT.GAME_OVER, e => {
-      this.time.clearInterval(this.insaneInterval);
       this.config.state = STATE.GAME_OVER;
     });
   }
@@ -138,8 +141,8 @@ export default class Scene {
     this.renderer = new THREE.WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(this.config.colors.BLUE_BACKGROUND, 1);
-    // this.renderer.shadowMap.enabled = true;
-    // this.renderer.shadowMap.type = THREE.BasicShadowMap;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.BasicShadowMap;
 
     document.body.appendChild(this.renderer.domElement);
 
@@ -163,17 +166,18 @@ export default class Scene {
     let light = new THREE.DirectionalLight(0xffffff, 0.3, 0);
     light.position.z = this.config.tablePositionZ;
     light.position.y = 4;
-    light.position.x = 0;
+    light.position.x = 0.5;
     light.shadow.camera.near = 0.5;
     light.shadow.camera.far = 4.2;
     light.shadow.camera.left = -1;
-    light.shadow.camera.right = 1;
+    light.shadow.camera.right = 1.5;
     light.shadow.camera.top = 0;
     light.shadow.camera.bottom = -4;
     light.castShadow = true;
-    light.shadow.mapSize.width = 4 * 1024;
-    light.shadow.mapSize.height = 4 * 1024;
+    light.shadow.mapSize.width = (Util.isMobile() ? 1 : 8) * 512;
+    light.shadow.mapSize.height = (Util.isMobile() ? 1 : 8) * 512;
     this.scene.add(light);
+    // this.scene.add(new THREE.CameraHelper(light.shadow.camera));
 
     light = new THREE.AmbientLight(0xFFFFFF, 0.9);
     this.scene.add(light);
@@ -369,9 +373,12 @@ export default class Scene {
         this.hud.countdown.hideCountdown();
         if (this.config.mode === MODE.SINGLEPLAYER) {
           this.addBall();
+          this.physics.initBallPosition();
         } else if (this.config.mode === MODE.MULTIPLAYER
             && !this.communication.isHost) {
           let physicsBody = this.addBall();
+          console.log('countdow done, initball');
+          this.physics.initBallPosition();
           // if multiplayer, also send the other player a hit so the ball is synced
           this.communication.sendHit({
             x: this.physics.ball.position.x,
@@ -381,7 +388,7 @@ export default class Scene {
             x: this.physics.ball.velocity.x,
             y: this.physics.ball.velocity.y,
             z: this.physics.ball.velocity.z,
-          }, physicsBody._name, true);
+          }, true);
         }
       }
     }, 1000);
@@ -412,6 +419,7 @@ export default class Scene {
   setMultiplayer() {
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
+    this.resetTimeoutDuration = 3000;
     // setup communication channels,
     // add callbacks for received actions
     // TODO throw exception on connection failure
@@ -453,11 +461,12 @@ export default class Scene {
 
   receivedHit(data) {
     // we might not have a ball yet
+    this.time.clearTimeout(this.resetBallTimeout);
     if (data.addBall) {
       // this doesnt add a ball if it already exists so were safe to call it
-      // (except in insane mode, then we keep adding balls
       this.addBall();
     }
+    console.log(data);
     // received vectors are in the other users space
     // invert x and z velocity and mirror the point across the center of the box
     this.physics.ball.position.copy(this.mirrorBallPosition(data.point));
@@ -483,13 +492,20 @@ export default class Scene {
   }
 
   receivedMiss(data) {
+    console.log('received miss');
+    this.time.clearTimeout(this.resetBallTimeout);
     // opponent missed, update player score
     // and set game to be over if the score is high enough
-    let ball = this.scene.getObjectByName(data.name);
-    this.score.self++;
-    this.hud.scoreDisplay.setSelfScore(this.score.self);
-    if (this.score.self >= this.config.POINTS_FOR_WIN) {
-      this.emitter.emit(EVENT.GAME_OVER, this.score);
+    if (data.ballHasHitEnemyTable) {
+      this.score.opponent++;
+      this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
+    } else {
+      this.score.self++;
+      this.hud.scoreDisplay.setSelfScore(this.score.self);
+    }
+    if (this.score.self >= this.config.POINTS_FOR_WIN
+      || this.score.opponent >= this.config.POINTS_FOR_WIN) {
+        this.emitter.emit(EVENT.GAME_OVER, this.score);
     } else {
       // otherwise, the opponent that missed also resets the ball
       // and sends along its new position
@@ -497,14 +513,45 @@ export default class Scene {
     }
   }
 
-  resetPingpongTimeout() {
+  restartPingpongTimeout() {
     // reset the ball position in case the ball is stuck at the net
-    if (this.config.mode !== MODE.MULTIPLAYER) {
-      this.time.clearTimeout(this.resetBallTimeout);
-      this.resetBallTimeout = this.time.setTimeout(() => {
+    // or fallen to the floor
+    this.time.clearTimeout(this.resetBallTimeout);
+    this.resetBallTimeout = this.time.setTimeout(() => {
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        if (this.ballHasHitEnemyTable) {
+          this.score.self++;
+          this.hud.scoreDisplay.setSelfScore(this.score.self);
+        } else {
+          this.score.opponent++;
+          this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
+        }
+        console.log(this.score);
+        if (this.score.opponent >= this.config.POINTS_FOR_WIN
+            || this.score.self >= this.config.POINTS_FOR_WIN) {
+          // game is over
+          // TODO maybe wait a little with this so players can enjoy their 11 points
+          this.emitter.emit(EVENT.GAME_OVER, this.score);
+        } else {
+          // the game goes on
+          this.physics.initBallPosition();
+        }
+        this.communication.sendMiss({
+          x: this.physics.ball.position.x,
+          y: this.physics.ball.position.y,
+          z: this.physics.ball.position.z,
+        }, {
+          x: this.physics.ball.velocity.x,
+          y: this.physics.ball.velocity.y,
+          z: this.physics.ball.velocity.z,
+        }, this.ballHasHitEnemyTable);
+      } else {
+        this.score.self = 0;
+        this.hud.scoreDisplay.setSelfScore(this.score.self);
         this.physics.initBallPosition();
-      }, resetTimeoutDuration);
-    }
+        this.restartPingpongTimeout();
+      }
+    }, this.resetTimeoutDuration);
   }
 
   ballIsInBox(ball) {
@@ -517,8 +564,9 @@ export default class Scene {
 
   ballPaddleCollision(point, physicsBody) {
     // the ball collided with the players paddle
-    this.resetPingpongTimeout();
+    this.restartPingpongTimeout();
     this.paddleCollisionAnimation();
+    this.ballHasHitEnemyTable = false;
     this.sound.hit(point);
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.score.self++;
@@ -538,8 +586,14 @@ export default class Scene {
         x: physicsBody.velocity.x,
         y: physicsBody.velocity.y,
         z: physicsBody.velocity.z,
-      }, physicsBody._name);
+      });
     }, 10);
+  }
+
+  ballTableCollision(point) {
+    if (point.z < this.config.tablePositionZ) {
+      this.ballHasHitEnemyTable = true;
+    }
   }
 
   paddleCollisionAnimation() {
@@ -555,18 +609,16 @@ export default class Scene {
   }
 
   addBall() {
+    this.config.state = STATE.PLAYING;
     if (this.ball) {
-      return false;
+      console.log('ball already here, returning');
+      return;
     }
-    let color;
-    color = 0xFFFFFF;
-    let ball = new Ball(this.scene, this.config, color);
-    ball.name = ball.uuid;
+    let ball = new Ball(this.scene, this.config);
     let physicsBall = this.physics.addBall(ball);
     this.ball = ball;
     this.ball.physicsReference = physicsBall;
-    this.resetPingpongTimeout();
-    this.config.state = STATE.PLAYING;
+    this.restartPingpongTimeout();
     return ball.physicsReference;
   }
 
@@ -626,41 +678,6 @@ export default class Scene {
   updateBall(ball) {
     ball.position.copy(ball.physicsReference.position);
     ball.quaternion.copy(ball.physicsReference.quaternion);
-    if (!this.ballIsInBox(ball)) {
-      // player has missed the ball, reset position to center
-      if (this.config.mode === MODE.MULTIPLAYER) {
-        // TODO change this to a timeout
-        if (ball.position.z > 4 || ball.position.z < -4) {
-          // opponent scored, send a miss
-          this.score.opponent++;
-          this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
-          if (this.score.opponent < this.config.POINTS_FOR_WIN) {
-            // the game goes on
-            this.physics.initBallPosition();
-          } else {
-            // game is over
-            // TODO maybe wait a little with this so players can enjoy their 11 points
-            this.emitter.emit(EVENT.GAME_OVER, this.score);
-          }
-          // tell the opponent
-          this.communication.sendMiss({
-            x: ball.physicsReference.position.x,
-            y: ball.physicsReference.position.y,
-            z: ball.physicsReference.position.z,
-          }, {
-            x: ball.physicsReference.velocity.x,
-            y: ball.physicsReference.velocity.y,
-            z: ball.physicsReference.velocity.z,
-          });
-        }
-      } else {
-        this.resetPingpongTimeout();
-        // TODO pingpong scoring
-        this.physics.initBallPosition();
-        this.score.self = 0;
-        this.hud.scoreDisplay.setSelfScore(this.score.self);
-      }
-    }
   }
 
   animate(timestamp) {

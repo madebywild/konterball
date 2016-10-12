@@ -1,7 +1,7 @@
 import {MODE} from './constants';
 
 export default class Physics {
-  constructor(config, ballPaddleCollisionCallback) {
+  constructor(config, ballPaddleCollisionCallback, ballTableCollisionCallback) {
 
     // config
     this.config = config;
@@ -17,6 +17,7 @@ export default class Physics {
     this.raycaster = new THREE.Raycaster();
 
     this.ballPaddleCollisionCallback = ballPaddleCollisionCallback;
+    this.ballTableCollisionCallback = ballTableCollisionCallback;
   }
 
   setupWorld() {
@@ -97,6 +98,7 @@ export default class Physics {
     });
     this.table.position.y = this.config.tableHeight / 2;
     this.table.position.z = this.config.tablePositionZ;
+    this.table.addEventListener('collide', this.tableCollision.bind(this));
     this.world.add(this.table);
 
     this.upwardsTable = new CANNON.Body({
@@ -150,7 +152,6 @@ export default class Physics {
 
   paddleCollision(e) {
     this.ballPaddleCollisionCallback(e.body.position, e.body);
-    console.log('collision');
 
     let hitpointX = e.body.position.x - e.target.position.x;
     let hitpointY = e.body.position.y - e.target.position.y;
@@ -161,14 +162,17 @@ export default class Physics {
     if (this.config.mode === MODE.MULTIPLAYER) {
       e.body.velocity.z = 3;
       e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
-      e.body.velocity.y = 3; // 1 + hitpointY * e.body.velocity.z * 0.5;
+      e.body.velocity.y = 3;
     } else {
       let distFromCenter = this.paddle.position.x / this.config.tableWidth * 0.5;
-      console.log(distFromCenter);
       e.body.velocity.z = 4;
       e.body.velocity.x = (-distFromCenter * 0.8) + (hitpointX * e.body.velocity.z * 0.2);
-      e.body.velocity.y = 2;
+      e.body.velocity.y = 2 + hitpointY * e.body.velocity.z * 0.1;
     }
+  }
+
+  tableCollision(e) {
+    this.ballTableCollisionCallback(e.body.position);
   }
 
   setPaddlePosition(x, y, z) {

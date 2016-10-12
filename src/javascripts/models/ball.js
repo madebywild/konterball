@@ -1,4 +1,4 @@
-export default (scene, config, color) => {
+export default (scene, config) => {
   let geometry = new THREE.SphereGeometry(config.ballRadius, 16, 16);
   let material = new THREE.MeshBasicMaterial({
     color: config.colors.BALL,

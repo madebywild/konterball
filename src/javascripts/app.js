@@ -65,7 +65,7 @@ class PingPong {
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
       // TODO
-      alert('Your opponent has disconnected');
+      console.log('Your opponent has disconnected');
     });
   }
 
@@ -79,15 +79,15 @@ class PingPong {
       tl.to('.intro p', 0.5, {
         opacity: 1,
       }, '-=0.3');
-      tl.call(this.modeChooserAnimation);
+      tl.call(this.modeChooserAnimation.bind(this));
       tl.call(resolve, null, null, '+=3');
     });
   }
   
   modeChooserAnimation() {
     $.getJSON('/animations/1player.json', data => {
-      bodymovin.loadAnimation({
-        container: document.getElementById('singleplayer-animation'), // the dom element
+      this.singleplayerAnimation = bodymovin.loadAnimation({
+        container: document.getElementById('singleplayer-animation'),
         renderer: 'svg',
         loop: true,
         autoplay: true,
@@ -95,8 +95,8 @@ class PingPong {
       });
     });
     $.getJSON('/animations/2player.json', data => {
-      bodymovin.loadAnimation({
-        container: document.getElementById('multiplayer-animation'), // the dom element
+      this.multiplayerAnimation = bodymovin.loadAnimation({
+        container: document.getElementById('multiplayer-animation'),
         renderer: 'svg',
         loop: true,
         autoplay: true,
@@ -108,15 +108,24 @@ class PingPong {
   setupHandlers() {
     $('#start-singleplayer').click(e => {
       this.scene.setSingleplayer();
-      this.viewVRChooserScreen();
+      this.viewVRChooserScreen().then(() => {
+        bodymovin.stop();
+        bodymovin.destroy();
+      });
     });
 
     $('#open-room').click(e => {
-      this.viewOpenRoomScreenAnimation();
+      this.viewOpenRoomScreenAnimation().then(() => {
+        bodymovin.stop();
+        bodymovin.destroy();
+      });
     });
 
     $('#join-room').click(e => {
-      this.viewJoinRoomScreenAnimation();
+      this.viewJoinRoomScreenAnimation().then(() => {
+        bodymovin.stop();
+        bodymovin.destroy();
+      });
     });
 
     $('#play-again').click(() => {
@@ -184,109 +193,119 @@ class PingPong {
   }
 
   viewVRChooserScreen() {
-    if (!this.scene.manager.isVRCompatible) {
-      this.scene.startGame();
-      return;
-    }
+    return new Promise((resolve, reject) => {
+      if (!this.scene.manager.isVRCompatible) {
+        this.scene.startGame();
+        resolve();
+        return;
+      }
 
-    if (!Util.isMobile()) {
-      $("#cardboard p").text("Vive");
-      $("#tilt p").text("Mouse");
-    }
+      if (!Util.isMobile()) {
+        $("#cardboard p").text("Vive");
+        $("#tilt p").text("Mouse");
+      }
 
-    let tl = new TimelineMax();
-    tl.set('.vr-mode-chooser', {
-      display: 'block',
-      opacity: 0,
-    });
+      let tl = new TimelineMax();
+      tl.set('.vr-mode-chooser', {
+        display: 'block',
+        opacity: 0,
+      });
 
-    tl.to('.intro, .player-mode-chooser', 0.5, {
-      autoAlpha: 0,
-    });
+      tl.to('.intro, .player-mode-chooser', 0.5, {
+        autoAlpha: 0,
+      });
 
-    tl.to('.vr-mode-chooser', 0.5, {
-      opacity: 1,
+      tl.to('.vr-mode-chooser', 0.5, {
+        opacity: 1,
+        onComplete: () => {
+          resolve();
+        },
+      });
     });
   }
 
   viewJoinRoomScreenAnimation() {
-    $('#room-code').bind('input', function() {
-      if ($(this).val().length === 4) {
-        $('#join-room-button').removeClass('inactive');
-        $('#join-room-button').css('pointer-events', 'auto');
-      } else {
-        $('#join-room-button').addClass('inactive');
-        $('#join-room-button').css('pointer-events', 'none');
-      }
-    });
-    $('#join-room-button').click(() => {
-      console.log('trying to connect');
-      this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
-        this.scene.setMultiplayer();
-        this.viewVRChooserScreen();
-      }).catch(e => {
-        alert(e);
+    return new Promise((resolve, reject) => {
+      $('#room-code').bind('input', function() {
+        if ($(this).val().length === 4) {
+          $('#join-room-button').removeClass('inactive');
+          $('#join-room-button').css('pointer-events', 'auto');
+        } else {
+          $('#join-room-button').addClass('inactive');
+          $('#join-room-button').css('pointer-events', 'none');
+        }
       });
-    });
+      $('#join-room-button').click(() => {
+        console.log('trying to connect');
+        this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
+          this.scene.setMultiplayer();
+          this.viewVRChooserScreen();
+        }).catch(e => {
+          alert(e);
+        });
+      });
 
-    let tl = new TimelineMax();
-    tl.set('.join-room-screen', {
-      display: 'block',
-      autoAlpha: 0,
-    });
-    tl.to('.join-room-screen', 0.3, {
-      autoAlpha: 1,
-    });
-    tl.to('.button-frame', 0.3, {
-      y: '+200%',
-    });
-    tl.to('.player-mode-chooser', 0.3, {
-      autoAlpha: 0,
+      let tl = new TimelineMax();
+      tl.set('.join-room-screen', {
+        display: 'block',
+        autoAlpha: 0,
+      });
+      tl.to('.join-room-screen', 0.3, {
+        autoAlpha: 1,
+      });
+      tl.to('.player-mode-chooser', 0.3, {
+        autoAlpha: 0,
+        onComplete: () => {
+          resolve();
+        },
+      });
     });
   }
 
   viewOpenRoomScreenAnimation() {
-    let id = this.communication.openRoom();
-    this.scene.setMultiplayer();
+    return new Promise((resolve, reject) => {
+      let id = this.communication.openRoom();
+      this.scene.setMultiplayer();
 
-    // $('#room-url').val('http://' + location.hostname + '/' + this.scene.communication.id);
-    $('#room-url').val(id);
+      // $('#room-url').val('http://' + location.hostname + '/' + this.scene.communication.id);
+      $('#room-url').val(id);
 
-    // TODO annoying during development
-    // history.pushState(null, null, this.scene.communication.id);
-    this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
-      $('.opponent-joined').text('Opponent joined');
-      TweenMax.set('.opponent-icon', {opacity: 1});
-      $('#join-waiting-room').hide();
-      setTimeout(() => {
-        this.viewVRChooserScreen();
-      }, 1000);
-    });
+      // TODO annoying during development
+      // history.pushState(null, null, this.scene.communication.id);
+      this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
+        $('.opponent-joined').text('Opponent joined');
+        TweenMax.set('.opponent-icon', {opacity: 1});
+        $('#join-waiting-room').hide();
+        setTimeout(() => {
+          this.viewVRChooserScreen();
+        }, 1000);
+      });
 
-    new Clipboard('#room-url');
-    let tl = new TimelineMax();
-    tl.to('.button-frame', 0.3, {
-      y: '+100%',
-    });
-    tl.to('.player-mode-chooser', 0.3, {
-      autoAlpha: 0,
-    });
-    tl.set('.open-room-screen', {
-      display: 'block',
-      autoAlpha: 0,
-    });
-    tl.to('.open-room-screen', 0.3, {
-      autoAlpha: 1,
-    });
+      new Clipboard('#room-url');
+      let tl = new TimelineMax();
+      tl.to('.player-mode-chooser', 0.3, {
+        autoAlpha: 0,
+      });
+      tl.set('.open-room-screen', {
+        display: 'block',
+        autoAlpha: 0,
+      });
+      tl.to('.open-room-screen', 0.3, {
+        autoAlpha: 1,
+        onComplete: () => {
+          resolve();
+        },
+      });
 
-    const blinkSpeed = 1;
-    let blinkTL = new TimelineMax({repeat: -1, repeatDelay: blinkSpeed});
-    blinkTL.set('.opponent-joined', {
-      opacity: 0,
-    }, 0);
-    blinkTL.set('.opponent-joined', {
-      opacity: 1,
-    }, blinkSpeed);
+      const blinkSpeed = 1;
+      let blinkTL = new TimelineMax({repeat: -1, repeatDelay: blinkSpeed});
+      blinkTL.set('.opponent-joined', {
+        opacity: 0,
+      }, 0);
+      blinkTL.set('.opponent-joined', {
+        opacity: 1,
+      }, blinkSpeed);
+    });
   }
 }
 
