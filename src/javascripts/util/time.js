@@ -1,5 +1,5 @@
 /**
- * Implementation of JS setTimeout and setInterval functions.  The core
+ * Implementation of JS setTimeout and setInterval functions. The core
  * difference is that there is a custom step function that the user can choose
  * to call or not to call.  Useful for animation loops that are paused when the
  * tab is inactive, so that timeouts and intervals are paused too. When an
@@ -50,7 +50,6 @@ export default class Time {
 
   step() {
     let now = Date.now();
-
     for (let key in this.timeouts) {
       if (now >= this.timeouts[key].delay) {
         this.timeouts[key].callback();

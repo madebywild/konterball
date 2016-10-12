@@ -236,7 +236,6 @@ class PingPong {
         }
       });
       $('#join-room-button').click(() => {
-        console.log('trying to connect');
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
           this.scene.setMultiplayer();
           this.viewVRChooserScreen();

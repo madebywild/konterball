@@ -35,7 +35,6 @@ export default class Communication {
   }
 
   tryConnecting(id) {
-    console.log(id);
     return new Promise((resolve, reject) => {
       if (this.connectionIsOpen) {
         this.peer.on('error', e => {
@@ -146,7 +145,6 @@ export default class Communication {
   }
 
   sendHit(point, velocity, addBall=false) {
-    console.log('send hit');
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.HIT,

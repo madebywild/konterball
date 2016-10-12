@@ -198,7 +198,6 @@ export default class Scene {
 
   setupControllers() {
     navigator.getVRDisplays().then(displays => {
-      console.log(navigator.getGamepads());
       if (displays) {
         // if we have more than 1 display: ¯\_(ツ)_/¯
         // TODO
@@ -377,7 +376,6 @@ export default class Scene {
         } else if (this.config.mode === MODE.MULTIPLAYER
             && !this.communication.isHost) {
           let physicsBody = this.addBall();
-          console.log('countdow done, initball');
           this.physics.initBallPosition();
           // if multiplayer, also send the other player a hit so the ball is synced
           this.communication.sendHit({
@@ -466,7 +464,6 @@ export default class Scene {
       // this doesnt add a ball if it already exists so were safe to call it
       this.addBall();
     }
-    console.log(data);
     // received vectors are in the other users space
     // invert x and z velocity and mirror the point across the center of the box
     this.physics.ball.position.copy(this.mirrorBallPosition(data.point));
@@ -492,7 +489,6 @@ export default class Scene {
   }
 
   receivedMiss(data) {
-    console.log('received miss');
     this.time.clearTimeout(this.resetBallTimeout);
     // opponent missed, update player score
     // and set game to be over if the score is high enough
@@ -526,7 +522,6 @@ export default class Scene {
           this.score.opponent++;
           this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
         }
-        console.log(this.score);
         if (this.score.opponent >= this.config.POINTS_FOR_WIN
             || this.score.self >= this.config.POINTS_FOR_WIN) {
           // game is over
@@ -549,8 +544,8 @@ export default class Scene {
         this.score.self = 0;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
         this.physics.initBallPosition();
-        this.restartPingpongTimeout();
       }
+      this.restartPingpongTimeout();
     }, this.resetTimeoutDuration);
   }
 
@@ -577,7 +572,7 @@ export default class Scene {
     // to make sure the collision is done and the ball is not
     // somewhere in the opponents paddle with a weird velocity
     // TODO tweak and test this timeout
-    setTimeout(() => {
+    this.time.setTimeout(() => {
       this.communication.sendHit({
         x: point.x,
         y: point.y,
@@ -611,7 +606,6 @@ export default class Scene {
   addBall() {
     this.config.state = STATE.PLAYING;
     if (this.ball) {
-      console.log('ball already here, returning');
       return;
     }
     let ball = new Ball(this.scene, this.config);
@@ -638,11 +632,8 @@ export default class Scene {
       controller = this.controller2;
     }
 
-    if (controller) {
-      //console.log(controller.getWorldPosition());
-    }
     if (this.frameNumber === 1000) {
-      console.log(navigator.getGamepads());
+      // console.log(navigator.getGamepads());
     }
 
     // place paddle according to controller
@@ -695,7 +686,7 @@ export default class Scene {
     // for multiplayer testing, set one player to always hit the ball,
     // easier to test for latency related issues that way
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
+      // this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
     }
 
     if (this.config.state === STATE.PLAYING) {
