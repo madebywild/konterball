@@ -71,6 +71,7 @@ export default class Physics {
     this.paddle._name = 'PADDLE';
     this.paddle.position.set(0, 1, this.config.paddlePositionZ);
     this.paddle.addEventListener('collide', this.paddleCollision.bind(this));
+    this.paddle.collisionResponse = 0;
     this.world.add(this.paddle);
   }
 
@@ -160,14 +161,14 @@ export default class Physics {
     hitpointY = hitpointY / (this.config.paddleSize / 2);
 
     if (this.config.mode === MODE.MULTIPLAYER) {
-      e.body.velocity.z = 3;
-      e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
-      e.body.velocity.y = 3;
+      e.body.velocity.z = -2.5;
+      e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.1;
+      e.body.velocity.y = 2.5;
     } else {
       let distFromCenter = this.paddle.position.x / this.config.tableWidth * 0.5;
-      e.body.velocity.z = 4;
-      e.body.velocity.x = (-distFromCenter * 0.8) + (hitpointX * e.body.velocity.z * 0.2);
-      e.body.velocity.y = 2 + hitpointY * e.body.velocity.z * 0.1;
+      e.body.velocity.z = -3.5;
+      e.body.velocity.x = (-distFromCenter * 0.8) - (hitpointX * e.body.velocity.z * 0.2);
+      e.body.velocity.y = 2; // + hitpointY * e.body.velocity.z * 0.1;
     }
   }
 
@@ -181,10 +182,10 @@ export default class Physics {
 
   initBallPosition() {
     if (this.config.mode === MODE.SINGLEPLAYER) {
-      this.ball.position.set(0, 1.6, this.config.tablePositionZ + 0.1);
+      this.ball.position.set(0, 1.4, this.config.tablePositionZ + 0.1);
       this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
       this.ball.velocity.y = this.config.ballInitVelocity * 0.0;
-      this.ball.velocity.z = this.config.ballInitVelocity * 1.5;
+      this.ball.velocity.z = this.config.ballInitVelocity * 2;
       this.ball.angularVelocity.x = 0;
       this.ball.angularVelocity.y = 0;
       this.ball.angularVelocity.z = 0;
@@ -202,11 +203,19 @@ export default class Physics {
   predictCollisions(ball, paddle, net) {
     // predict ball position in the next frame
     this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
-    this.raycaster.far = this.ball.velocity.clone().length() / 50;
+    // TODO find out how much velocity the ball actually has per frame
+    this.raycaster.far = this.ball.velocity.clone().length() / 30;
 
     let arr = this.raycaster.intersectObjects([paddle, net]);
     if (arr.length) {
-      this.ball.position.copy(arr[0].point);
+      if (arr[0].object.name === 'net-collider') {
+        this.ball.position.copy(arr[0].point);
+      } else {
+        this.paddleCollision({
+          body: this.ball,
+          target: this.paddle,
+        });
+      }
     }
   }
 

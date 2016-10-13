@@ -88,6 +88,14 @@ export default class Scene {
       this.renderer.domElement.onclick = () => {
         this.renderer.domElement.requestPointerLock();
       };
+      document.addEventListener('pointerlockchange', () => {
+        if (document.pointerLockElement === this.renderer.domElement) {
+          document.addEventListener("mousemove", this.mousemove.bind(this), false);
+        } else {
+          document.removeEventListener("mousemove", this.mousemove);
+        }
+
+      }, false);
 
       this.physics.setupWorld();
 
@@ -102,8 +110,36 @@ export default class Scene {
 
       this.hud = new Hud(this.scene, this.config, this.emitter, this.hudInitialized.bind(this));
 
+      document.addEventListener("keydown", e => {
+        if (e.key === 'w') {
+          this.camera.position.z -= 0.1;
+        } else if (e.key === 's') {
+          this.camera.position.z += 0.1;
+        } else if (e.key === 'u') {
+          this.camera.position.y += 0.1;
+        } else if (e.key === 'j') {
+          this.camera.position.y -= 0.1;
+        } else if (e.key === '+') {
+          this.camera.fov += 1;
+        } else if (e.key === '-') {
+          this.camera.fov -= 1;
+        } else if (e.key === 'ArrowUp') {
+          this.camera.rotation.x += 0.05;
+        } else if (e.key === 'ArrowDown') {
+          this.camera.rotation.x -= 0.05;
+        }
+        this.camera.updateProjectionMatrix();
+      });
+
       resolve('loaded');
     });
+  }
+
+  mousemove(e) {
+    this.setPaddlePosition(
+      this.paddle.position.x + 0.001 * e.movementX,
+      this.paddle.position.y - 0.001 * e.movementY
+    );
   }
 
   setupEventListeners() {
@@ -156,7 +192,7 @@ export default class Scene {
     this.camera.position.z = this.config.tablePositionZ;
     this.camera.position.y = 5;
     this.camera.up.set(-1, 0, 0);
-    this.camera.lookAt(new THREE.Vector3(0, 1, this.config.tablePositionZ));
+    this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
 
     // neccessary for the vive controllers
     this.loader = new THREE.TextureLoader();
@@ -166,13 +202,19 @@ export default class Scene {
     let light = new THREE.DirectionalLight(0xffffff, 0.3, 0);
     light.position.z = this.config.tablePositionZ;
     light.position.y = 4;
-    light.position.x = 0.5;
     light.shadow.camera.near = 0.5;
     light.shadow.camera.far = 4.2;
     light.shadow.camera.left = -1;
     light.shadow.camera.right = 1.5;
     light.shadow.camera.top = 0;
     light.shadow.camera.bottom = -4;
+    light.castShadow = true;
+    light.shadow.mapSize.width = (Util.isMobile() ? 1 : 8) * 512;
+    light.shadow.mapSize.height = (Util.isMobile() ? 1 : 8) * 512;
+    this.scene.add(light);
+    light = new THREE.DirectionalLight(0xffffff, 0.02, 0);
+    light.position.z = 2;
+    light.position.y = 4;
     light.castShadow = true;
     light.shadow.mapSize.width = (Util.isMobile() ? 1 : 8) * 512;
     light.shadow.mapSize.height = (Util.isMobile() ? 1 : 8) * 512;
@@ -193,6 +235,7 @@ export default class Scene {
     this.paddlePlane = new THREE.Mesh(geometry, material);
     this.paddlePlane.position.z = this.config.paddlePositionZ;
     this.paddlePlane.position.y = this.config.tableHeight;
+    this.paddlePlane.material.visible = false;
     this.scene.add(this.paddlePlane);
   }
 
@@ -246,6 +289,8 @@ export default class Scene {
   setupPaddles() {
     // player paddle
     this.paddle = Paddle(this.scene, this.config);
+    this.paddle.position.y = this.config.tableHeight + 0.3;
+    this.paddle.position.z = this.config.paddlePositionZ;
     // calculate bounding box for manual collision prediction
     this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
     this.paddleBoundingBox.material.visible = false;
@@ -307,7 +352,7 @@ export default class Scene {
     const panDuration = 1;
 
     tl.to(no, panDuration, {
-      fov: 75,
+      fov: 47,
       upX: 0,
       upY: 1,
       scaleY: 1,
@@ -321,10 +366,10 @@ export default class Scene {
     }, 1);
     tl.to(this.camera.position, panDuration, {
       x: 0,
-      y: this.config.cameraHeight,
-      z: 0,
+      y: 1.8,
+      z: 0.6,
       onUpdate: () => {
-        this.camera.lookAt(new THREE.Vector3(0, 1, this.config.tablePositionZ));
+        this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
       },
       onComplete: () => {
         this.paddle.visible = true;
@@ -619,7 +664,7 @@ export default class Scene {
   setPaddlePosition(x, y, z) {
     this.paddle.position.x = x;
     this.paddle.position.y = y;
-    this.paddle.position.z = this.config.paddlePositionZ;
+    this.paddle.position.z = z || this.config.paddlePositionZ;
     this.physics.setPaddlePosition(x, y, this.config.paddlePositionZ);
   }
 
@@ -639,6 +684,7 @@ export default class Scene {
     // place paddle according to controller
     if (this.display) {
       if (!controller) {
+        return;
         // if we dont have a controller, intersect the paddlePlane
         // with where the camera is looking and place the paddle there
         this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
@@ -686,7 +732,7 @@ export default class Scene {
     // for multiplayer testing, set one player to always hit the ball,
     // easier to test for latency related issues that way
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      // this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
+      this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
     }
 
     if (this.config.state === STATE.PLAYING) {
@@ -707,7 +753,7 @@ export default class Scene {
 
     // Update VR headset position and apply to camera.
     if (this.controls) {
-      this.controls.update();
+      //this.controls.update();
     }
 
     this.time.step();

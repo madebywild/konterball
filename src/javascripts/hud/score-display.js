@@ -41,6 +41,8 @@ export default class ScoreDisplay {
   }
 
   setSelfScore(value) {
+     this.selfScore.geometry.dynamic = true;
+
     this.selfScore.geometry = new THREE.TextGeometry('' + value, {
       font: this.font,
       size: 0.5,
@@ -48,11 +50,13 @@ export default class ScoreDisplay {
       curveSegments: 3,
     });
     this.selfScore.geometry.computeBoundingBox();
+    this.selfScore.geometry.verticesNeedUpdate = true;
+
 
     this.selfScore.position.x = -this.config.tableWidth / 2;
     this.selfScore.position.y = this.config.tableHeight + 0.2;
     this.selfScore.position.z = this.config.tablePositionZ
-      + this.config.tableDepth / 4
+      + this.config.tableDepth / 3
       + this.selfScore.geometry.boundingBox.max.x / 2;
   }
 

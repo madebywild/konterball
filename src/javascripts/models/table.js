@@ -18,12 +18,16 @@ export default (parent, config) => {
   group.add(mesh);
 
   let upwardsTableGroup = new THREE.Group();
+  const upwardsTableHeight = config.tableDepth / 3;
   upwardsTableGroup.name = 'upwardsTableGroup';
   upwardsTableGroup.visible = false;
   upwardsTableGroup.rotation.x = Math.PI / 2;
-  upwardsTableGroup.position.y = config.tableHeight / 2 + config.tableDepth / 4;
+  upwardsTableGroup.position.y = config.tableHeight / 2 + upwardsTableHeight / 2;
   upwardsTableGroup.position.z = -config.tableThickness / 2;
-  geometry = new THREE.BoxGeometry(config.tableWidth, config.tableThickness, config.tableDepth / 2);
+  geometry = new THREE.BoxGeometry(config.tableWidth, config.tableThickness, upwardsTableHeight);
+  material = new THREE.MeshLambertMaterial({
+    color: config.colors.PINK_TABLE_UPWARDS,
+  });
   mesh = new THREE.Mesh(geometry, material);
   mesh.castShadow = true;
   mesh.receiveShadow = true;
@@ -33,7 +37,6 @@ export default (parent, config) => {
 
   // lines
   // put the lines slightly above the table to combat z-fighting
-
   const epsilon = 0.001;
   const lineWidth = 0.03;
 
@@ -71,27 +74,26 @@ export default (parent, config) => {
   group.add(mesh);
 
   // lines for the upwards tilted table
-
   geometry = new THREE.BoxGeometry(config.tableWidth - lineWidth * 2, epsilon, lineWidth);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;
-  mesh.position.z = -config.tableDepth / 4 + lineWidth / 2;
+  mesh.position.z = -upwardsTableHeight / 2 + lineWidth / 2;
   upwardsTableGroup.add(mesh);
 
-  geometry = new THREE.BoxGeometry(lineWidth, epsilon, config.tableDepth / 2);
+  geometry = new THREE.BoxGeometry(lineWidth, epsilon, upwardsTableHeight);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;
   mesh.position.x = -config.tableWidth / 2 + lineWidth / 2;
   mesh.receiveShadow = true;
   upwardsTableGroup.add(mesh);
 
-  geometry = new THREE.BoxGeometry(lineWidth, epsilon, config.tableDepth / 2);
+  geometry = new THREE.BoxGeometry(lineWidth, epsilon, upwardsTableHeight);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;
   mesh.position.x = config.tableWidth / 2 - lineWidth / 2;
   upwardsTableGroup.add(mesh);
 
-  geometry = new THREE.BoxGeometry(lineWidth, 0.001, config.tableDepth / 2 - lineWidth);
+  geometry = new THREE.BoxGeometry(lineWidth, 0.001, upwardsTableHeight - lineWidth);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;
   mesh.position.z = lineWidth / 2;

@@ -40,8 +40,8 @@ export const INITIAL_CONFIG = {
   netHeight: 0.15,
   tablePositionZ: -2,
   tableThickness: 0.1,
-  paddleThickness: 0.04,
-  paddleSize: 0.16,
+  paddleThickness: 0.01,
+  paddleSize: 0.16 / 1.5,
   get paddlePositionZ() {
     return this.tablePositionZ
       + this.tableDepth / 2
@@ -63,6 +63,7 @@ export const INITIAL_CONFIG = {
     BLUE_HUD: 0X3376C7,
     PINK_BACKGROUND: 0XF78F9C,
     PINK_TABLE: 0XFF9BA3,
+    PINK_TABLE_UPWARDS: 0xE88794,
     GREEN_BACKGROUND: 0X34C177,
     GREEN_TABLE: 0X22B76C,
     PADDLE_COLOR: 0XD21515,
