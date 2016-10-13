@@ -74,6 +74,9 @@ export default (parent, config) => {
   group.add(mesh);
 
   // lines for the upwards tilted table
+  material = new THREE.MeshLambertMaterial({
+    color: 0xDDDDDD,
+  });
   geometry = new THREE.BoxGeometry(config.tableWidth - lineWidth * 2, epsilon, lineWidth);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;

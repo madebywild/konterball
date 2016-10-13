@@ -28,7 +28,10 @@ export default class Scene {
     this.controls = null;
     this.controller = null;
     this.effect = null;
-    this.loader = null;
+    this.textureLoader = new THREE.TextureLoader();
+    this.textureLoader.setPath('/models/');
+    this.objLoader = new THREE.OBJLoader();
+    this.objLoader.setPath('/models/');
     this.table = null;
     this.display = null;
     this.manager = null;
@@ -52,6 +55,7 @@ export default class Scene {
 
     this.playerRequestedCountdown = false;
     this.opponentRequestedCountdown = false;
+    this.mousemove = this.mousemove.bind(this);
 
     this.viewport = {
       width: $(document).width(),
@@ -90,11 +94,11 @@ export default class Scene {
       };
       document.addEventListener('pointerlockchange', () => {
         if (document.pointerLockElement === this.renderer.domElement) {
-          document.addEventListener("mousemove", this.mousemove.bind(this), false);
+          document.addEventListener("mousemove", this.mousemove, false);
         } else {
           document.removeEventListener("mousemove", this.mousemove);
+          this.setPaddlePosition(0, 1.3, this.config.paddlePositionZ);
         }
-
       }, false);
 
       this.physics.setupWorld();
@@ -104,11 +108,9 @@ export default class Scene {
       }
 
       this.setupEventListeners();
-      this.setupPaddles();
       this.setupPaddlePlane();
       this.setupLights();
-
-      this.hud = new Hud(this.scene, this.config, this.emitter, this.hudInitialized.bind(this));
+      this.hud = new Hud(this.scene, this.config, this.emitter);
 
       document.addEventListener("keydown", e => {
         if (e.key === 'w') {
@@ -129,9 +131,18 @@ export default class Scene {
           this.camera.rotation.x -= 0.05;
         }
         this.camera.updateProjectionMatrix();
+        console.log(this.camera.rotation);
+        console.log(this.camera.position);
+        console.log(this.camera.fov);
       });
 
-      resolve('loaded');
+      Promise.all([
+        this.hud.setup(),
+        this.setupPaddles(),
+      ]).then(() => {
+        requestAnimationFrame(this.animate.bind(this));
+        resolve('loaded');
+      });
     });
   }
 
@@ -140,6 +151,18 @@ export default class Scene {
       this.paddle.position.x + 0.001 * e.movementX,
       this.paddle.position.y - 0.001 * e.movementY
     );
+    let cameraDirection = this.camera.getWorldDirection();
+    let no = {
+      x: cameraDirection.x,
+    };
+    //this.camera.lookAt(this.paddle.position);
+    this.camera.lookAt(new THREE.Vector3(this.paddle.position.x / 3, this.config.tableHeight, this.config.tablePositionZ));
+    return;
+    TweenMax.to(no, 1, {
+      x: this.paddle.position.x,
+      onUpdate: () => {
+      },
+    });
   }
 
   setupEventListeners() {
@@ -178,7 +201,7 @@ export default class Scene {
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.setClearColor(this.config.colors.BLUE_BACKGROUND, 1);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     document.body.appendChild(this.renderer.domElement);
 
@@ -193,33 +216,24 @@ export default class Scene {
     this.camera.position.y = 5;
     this.camera.up.set(-1, 0, 0);
     this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
-
-    // neccessary for the vive controllers
-    this.loader = new THREE.TextureLoader();
   }
 
   setupLights() {
     let light = new THREE.DirectionalLight(0xffffff, 0.3, 0);
     light.position.z = this.config.tablePositionZ;
-    light.position.y = 4;
-    light.shadow.camera.near = 0.5;
-    light.shadow.camera.far = 4.2;
-    light.shadow.camera.left = -1;
-    light.shadow.camera.right = 1.5;
-    light.shadow.camera.top = 0;
-    light.shadow.camera.bottom = -4;
-    light.castShadow = true;
-    light.shadow.mapSize.width = (Util.isMobile() ? 1 : 8) * 512;
-    light.shadow.mapSize.height = (Util.isMobile() ? 1 : 8) * 512;
-    this.scene.add(light);
-    light = new THREE.DirectionalLight(0xffffff, 0.02, 0);
     light.position.z = 2;
     light.position.y = 4;
+    light.shadow.camera.near = 2.5;
+    light.shadow.camera.far = 6.2;
+    light.shadow.camera.left = -1;
+    light.shadow.camera.right = 1;
+    // light.shadow.camera.top = 0;
+    // light.shadow.camera.bottom = -4;
     light.castShadow = true;
     light.shadow.mapSize.width = (Util.isMobile() ? 1 : 8) * 512;
     light.shadow.mapSize.height = (Util.isMobile() ? 1 : 8) * 512;
     this.scene.add(light);
-    // this.scene.add(new THREE.CameraHelper(light.shadow.camera));
+    //this.scene.add(new THREE.CameraHelper(light.shadow.camera));
 
     light = new THREE.AmbientLight(0xFFFFFF, 0.9);
     this.scene.add(light);
@@ -254,15 +268,11 @@ export default class Scene {
           this.controller2.standingMatrix = this.controls.getStandingMatrix();
           this.scene.add(this.controller2);
 
-          var loader = new THREE.OBJLoader();
-          loader.setPath('/models/');
-          loader.load('vr_controller_vive_1_5.obj', object => {
-            var loader = new THREE.TextureLoader();
-            loader.setPath('/models/');
+          this.objLoader.load('vr_controller_vive_1_5.obj', object => {
 
             this.controller = object.children[ 0 ];
-            this.controller.material.map = loader.load('onepointfive_texture.png');
-            this.controller.material.specularMap = loader.load('onepointfive_spec.png');
+            this.controller.material.map = this.textureLoader.load('onepointfive_texture.png');
+            this.controller.material.specularMap = this.textureLoader.load('onepointfive_spec.png');
 
             this.controller1.add(object.clone());
             this.controller2.add(object.clone());
@@ -287,29 +297,59 @@ export default class Scene {
   }
 
   setupPaddles() {
+    return new Promise((resolve, reject) => {
+      this.objLoader.load('paddle.obj', object => {
+        const scale = 0.024;
+        object.scale.set(scale, scale, scale);
+
+        let redMaterial = new THREE.MeshLambertMaterial({
+          color: this.config.colors.PADDLE_COLOR,
+          side: THREE.DoubleSide,
+        });
+        let woodMaterial = new THREE.MeshLambertMaterial({
+          color: this.config.colors.PADDLE_WOOD_COLOR,
+          side: THREE.DoubleSide,
+        });
+        object.traverse(function(child) {
+          if (child instanceof THREE.Mesh) {
+            if (child.name === 'Cap_1' || child.name === 'Cap_2' || child.name === 'Extrude') {
+              console.log(child.name);
+              child.material = redMaterial;
+            } else {
+              child.material = woodMaterial;
+            }
+            child.geometry.verticesNeedUpdate = true;
+          }
+        });
+        this.paddle = object.clone();
+        this.paddle.name = 'paddle';
+        this.paddle.visible = true;
+        this.paddle.castShadow = true;
+        this.paddle.position.y = this.config.tableHeight + 0.3;
+        this.paddle.position.z = this.config.paddlePositionZ;
+        this.scene.add(this.paddle);
+
+        this.paddleOpponent = object.clone();
+        this.paddleOpponent.name = 'paddleOpponent';
+        this.paddleOpponent.position.z = this.config.tablePositionZ - this.config.tableDepth / 2;
+        this.paddleOpponent.position.y = 1;
+        this.scene.add(this.paddleOpponent);
+        //this.paddleOpponent.visible = false;
+        resolve();
+      });
+    });
+
+    /*
     // player paddle
     this.paddle = Paddle(this.scene, this.config);
-    this.paddle.position.y = this.config.tableHeight + 0.3;
-    this.paddle.position.z = this.config.paddlePositionZ;
     // calculate bounding box for manual collision prediction
-    this.paddleBoundingBox = new THREE.BoundingBoxHelper(this.paddle, 0xffffff);
-    this.paddleBoundingBox.material.visible = false;
-    this.scene.add(this.paddleBoundingBox);
 
     // opponent, set to invisible for now
     this.paddleOpponent = Paddle(this.scene, this.config, this.config.colors.WHITE);
     this.paddleOpponent.position.z = this.config.tablePositionZ - this.config.tableDepth / 2;
     this.paddleOpponent.position.y = 1;
     this.paddleOpponent.visible = false;
-  }
-
-  hudInitialized() {
-    // TODO move this to the right place
-    if (this.config.mode === MODE.MULTIPLAYER) {
-      this.hud.scoreDisplay.opponentScore.visible = true;
-      this.paddleOpponent.visible = true;
-    }
-    requestAnimationFrame(this.animate.bind(this));
+    */
   }
 
   startGame() {
@@ -366,7 +406,7 @@ export default class Scene {
     }, 1);
     tl.to(this.camera.position, panDuration, {
       x: 0,
-      y: 1.8,
+      y: 1.6,
       z: 0.6,
       onUpdate: () => {
         this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
@@ -391,8 +431,6 @@ export default class Scene {
   }
 
   receivedRequestCountdown() {
-    this.hud.scoreDisplay.opponentScore.visible = true;
-    this.paddleOpponent.visible = true;
     this.opponentRequestedCountdown = true;
     this.requestCountdown();
   }
@@ -460,9 +498,12 @@ export default class Scene {
   }
 
   setMultiplayer() {
+    console.log('setting multiplayer');
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
     this.resetTimeoutDuration = 3000;
+    this.hud.scoreDisplay.opponentScore.visible = true;
+    this.paddleOpponent.visible = true;
     // setup communication channels,
     // add callbacks for received actions
     // TODO throw exception on connection failure
@@ -485,13 +526,16 @@ export default class Scene {
     let no = {
       x: this.paddleOpponent.position.x,
       y: this.paddleOpponent.position.y,
+      rotationZ: this.paddleOpponent.rotation.z,
     };
     TweenMax.to(no, 0.14, {
       x: move.x,
       y: move.y,
+      rotationZ: -move.x,
       onUpdate: () => {
         this.paddleOpponent.position.x = no.x;
         this.paddleOpponent.position.y = no.y;
+        this.paddleOpponent.rotation.z = no.rotationZ;
       }
     });
   }
@@ -662,6 +706,7 @@ export default class Scene {
   }
 
   setPaddlePosition(x, y, z) {
+    this.paddle.rotation.z = -x;
     this.paddle.position.x = x;
     this.paddle.position.y = y;
     this.paddle.position.z = z || this.config.paddlePositionZ;
@@ -732,7 +777,7 @@ export default class Scene {
     // for multiplayer testing, set one player to always hit the ball,
     // easier to test for latency related issues that way
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
+      /// this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
     }
 
     if (this.config.state === STATE.PLAYING) {
@@ -741,7 +786,6 @@ export default class Scene {
         this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
       }
 
-      this.paddleBoundingBox.update();
       this.physics.step(delta / 1000);
       this.updateBall(this.ball);
       this.physics.predictCollisions(this.physics.ball, this.paddle, this.scene.getObjectByName('net-collider'));
@@ -762,6 +806,7 @@ export default class Scene {
     this.lastRender = timestamp;
 
     this.manager.render(this.scene, this.camera, this.timestamp);
+    // this.paddle.rotation.y += 0.01;
 
     this.frameNumber++;
     requestAnimationFrame(this.animate.bind(this));

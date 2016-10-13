@@ -4228,8 +4228,8 @@ var KEY_SPEED = 0.15;
 var KEY_ANIMATION_DURATION = 80;
 
 // How much to rotate for mouse events.
-var MOUSE_SPEED_X = 0.5 * 0;
-var MOUSE_SPEED_Y = 0.3 * 0;
+var MOUSE_SPEED_X = 0.5;
+var MOUSE_SPEED_Y = 0.3;
 
 /**
  * VRDisplay based on mouse and keyboard input. Designed for desktops/laptops

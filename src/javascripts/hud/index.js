@@ -5,7 +5,7 @@ import Message from './message';
 import {MODE, EVENT} from '../constants';
 
 export default class Hud {
-  constructor(scene, config, emitter, callback) {
+  constructor(scene, config, emitter) {
     this.config = config;
     this.emitter = emitter;
     this.scene = scene;
@@ -17,39 +17,34 @@ export default class Hud {
     this.paddleModel = 'box';
     this.activateTween = null;
 
-    this.initializedCallback = callback;
-
     this.font = null;
     this.container = null;
     this.initialized = false;
     this.modeWasSelected = false;
-
-    this.loadFont();
   }
 
-  loadFont() {
-    let fontloader = new THREE.FontLoader();
-    fontloader.load('fonts/futura.json', font => {
-      this.font = font;
-      this.setup();
-    });
-  }
 
   setup() {
-    this.container = new THREE.Group();
-    this.container.position.z = 1;
-    this.container.position.y = 1.6;
-    this.container.rotation.y = Math.PI;
-    this.scene.add(this.container);
+    return new Promise((resolve, reject) => {
+      let fontloader = new THREE.FontLoader();
+      fontloader.load('fonts/futura.json', font => {
+        this.font = font;
+        this.container = new THREE.Group();
+        this.container.position.z = 1;
+        this.container.position.y = 1.6;
+        this.container.rotation.y = Math.PI;
+        this.scene.add(this.container);
 
-    this.initialized = true;
+        this.initialized = true;
 
-    this.message = new Message(this.scene, this.config, this.font);
-    this.message.hideMessage();
+        this.message = new Message(this.scene, this.config, this.font);
+        this.message.hideMessage();
 
-    this.scoreDisplay = new ScoreDisplay(this.scene, this.config, this.font);
-    this.countdown = new Countdown(this.scene, this.config, this.font);
-    this.countdown.hideCountdown();
-    this.initializedCallback();
+        this.scoreDisplay = new ScoreDisplay(this.scene, this.config, this.font);
+        this.countdown = new Countdown(this.scene, this.config, this.font);
+        this.countdown.hideCountdown();
+        resolve();
+      });
+    });
   }
 }

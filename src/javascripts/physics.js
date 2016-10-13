@@ -206,8 +206,9 @@ export default class Physics {
     // TODO find out how much velocity the ball actually has per frame
     this.raycaster.far = this.ball.velocity.clone().length() / 30;
 
-    let arr = this.raycaster.intersectObjects([paddle, net]);
+    let arr = this.raycaster.intersectObjects([paddle, net], true);
     if (arr.length) {
+      console.log(arr);
       if (arr[0].object.name === 'net-collider') {
         this.ball.position.copy(arr[0].point);
       } else {

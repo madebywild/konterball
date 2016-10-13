@@ -115,6 +115,7 @@ class PingPong {
     });
 
     $('#open-room').click(e => {
+      this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
         bodymovin.stop();
         bodymovin.destroy();
@@ -122,6 +123,7 @@ class PingPong {
     });
 
     $('#join-room').click(e => {
+      this.scene.setMultiplayer();
       this.viewJoinRoomScreenAnimation().then(() => {
         bodymovin.stop();
         bodymovin.destroy();
@@ -187,7 +189,6 @@ class PingPong {
         delay: 0.5,
       });
     } else {
-      this.scene.setMultiplayer();
       this.viewVRChooserScreen();
     }
   }
@@ -237,7 +238,6 @@ class PingPong {
       });
       $('#join-room-button').click(() => {
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
-          this.scene.setMultiplayer();
           this.viewVRChooserScreen();
         }).catch(e => {
           alert(e);
@@ -264,7 +264,6 @@ class PingPong {
   viewOpenRoomScreenAnimation() {
     return new Promise((resolve, reject) => {
       let id = this.communication.openRoom();
-      this.scene.setMultiplayer();
 
       // $('#room-url').val('http://' + location.hostname + '/' + this.scene.communication.id);
       $('#room-url').val(id);

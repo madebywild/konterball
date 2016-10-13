@@ -20,7 +20,7 @@ export default class ScoreDisplay {
     });
     let geometry = new THREE.TextGeometry('0', {
       font: this.font,
-      size: 0.5,
+      size: 0.35,
       height: 0.001,
       curveSegments: 3,
     });
@@ -45,7 +45,7 @@ export default class ScoreDisplay {
 
     this.selfScore.geometry = new THREE.TextGeometry('' + value, {
       font: this.font,
-      size: 0.5,
+      size: 0.35,
       height: 0.001,
       curveSegments: 3,
     });
@@ -63,7 +63,7 @@ export default class ScoreDisplay {
   setOpponentScore(value) {
     this.opponentScore.geometry = new THREE.TextGeometry('' + value, {
       font: this.font,
-      size: 0.5,
+      size: 0.35,
       height: 0.001,
       curveSegments: 3,
     });
