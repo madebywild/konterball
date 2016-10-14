@@ -53,6 +53,10 @@ button {
   border: 3px solid #fff;
   color: #fff;
 }
+.futura-italic {
+  font-family: FuturaItalic;
+  letter-spacing: 0.15em;
+}
 .absolute-center {
   position: absolute;
   top: 50%;
@@ -172,7 +176,7 @@ $margin: 4vh;
     @extend .absolute-center;
     margin: 0;
   }
-  font-family: FuturaItalic;
+  @extend .futura-italic;
   p {
     font-size: calc(20px + 1vw);
     opacity: 0,
@@ -181,7 +185,7 @@ $margin: 4vh;
 .grey-text {
   margin-top: -5px;
   color: $medium-grey;
-  font-family: FuturaItalic;
+  @extend .futura-italic;
 }
 .open-room-screen,
 .join-room-screen {
@@ -231,9 +235,35 @@ button.inactive {
 
 .game-over-screen-wrapper {
   display: none;
+  .game-over-screen {
+    width: 100%;
+  }
+  #result {
+    font-family: AntiqueOlive;
+    font-size: $font-size-olive;
+    display: block;
+    margin-top: 0;
+  }
   .share-info-text {
+    @extend .futura-italic;
+    text-transform: uppercase;
     color: $medium-grey;
-    margin-top: -5px;
+  }
+  #play-again, #exit {
+    width: 200px;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .share-wrapper {
+    margin-top: 50px;
+    button {
+      border: 0;
+      padding: 0;
+      img {
+        width: 50px;
+        filter: invert(100%);
+      }
+    }
   }
 }
 .game-over-screen {

@@ -146,22 +146,33 @@ export default class Scene {
     });
   }
 
+  paddleBallDistance() {
+  }
+
   mousemove(e) {
+    let y = this.ball ? this.ball.position.y : 1;
     this.setPaddlePosition(
       this.paddle.position.x + 0.001 * e.movementX,
-      this.paddle.position.y - 0.001 * e.movementY
+      y,
+      this.paddle.position.z + 0.001 * e.movementY
     );
-    let cameraDirection = this.camera.getWorldDirection();
-    let no = {
-      x: cameraDirection.x,
-    };
+    // backup original rotation
+    let startRotation = new THREE.Euler().copy(this.camera.rotation);
+    
+    // final rotation (with lookAt)
+    this.camera.lookAt(new THREE.Vector3(this.paddle.position.x, this.config.tableHeight, this.config.tablePositionZ));
+    let endRotation = new THREE.Euler().copy(this.camera.rotation);
+    
+    // revert to original rotation
+    this.camera.rotation.copy(startRotation);
     //this.camera.lookAt(this.paddle.position);
-    this.camera.lookAt(new THREE.Vector3(this.paddle.position.x / 3, this.config.tableHeight, this.config.tablePositionZ));
-    return;
-    TweenMax.to(no, 1, {
-      x: this.paddle.position.x,
-      onUpdate: () => {
-      },
+    if (this.tween) {
+      this.tween.kill();
+    }
+    this.tween = TweenMax.to(this.camera.rotation, 1, {
+      x: endRotation.x,
+      y: endRotation.y,
+      z: endRotation.z,
     });
   }
 
@@ -313,12 +324,11 @@ export default class Scene {
         object.traverse(function(child) {
           if (child instanceof THREE.Mesh) {
             if (child.name === 'Cap_1' || child.name === 'Cap_2' || child.name === 'Extrude') {
-              console.log(child.name);
               child.material = redMaterial;
             } else {
               child.material = woodMaterial;
             }
-            child.geometry.verticesNeedUpdate = true;
+            child.castShadow = true;
           }
         });
         this.paddle = object.clone();
@@ -708,9 +718,9 @@ export default class Scene {
   setPaddlePosition(x, y, z) {
     this.paddle.rotation.z = -x;
     this.paddle.position.x = x;
-    this.paddle.position.y = y;
+    //this.paddle.position.y = Math.max(y, this.config.tableHeight + 0.1);
     this.paddle.position.z = z || this.config.paddlePositionZ;
-    this.physics.setPaddlePosition(x, y, this.config.paddlePositionZ);
+    this.physics.setPaddlePosition(this.paddle.position.x, this.paddle.position.y, this.paddle.position.z);
   }
 
   updateControls() {
@@ -776,9 +786,20 @@ export default class Scene {
 
     // for multiplayer testing, set one player to always hit the ball,
     // easier to test for latency related issues that way
-    if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      /// this.setPaddlePosition(this.ball.position.x, this.ball.position.y + 0.05);
+    if (this.ball) {
+      if (this.paddle.position.distanceTo(this.ball.position) < 0.4) {
+        TweenMax.to(this.paddle.position, 0.5, {
+          y: Math.max(this.config.tableHeight + 0.1, this.ball.position.y),
+        });
+      } else {
+        this.paddle.position.y = this.config.tableHeight + 0.2;
+      }
     }
+    if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
+      this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
+      this.paddle.position.x = this.ball.position.x;
+    }
+    this.physics.setPaddlePosition(this.paddle.position.x, this.paddle.position.y, this.paddle.position.z);
 
     if (this.config.state === STATE.PLAYING) {
       if (this.config.mode === MODE.MULTIPLAYER) {
