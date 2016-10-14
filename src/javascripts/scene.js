@@ -313,7 +313,6 @@ export default class Scene {
         object.traverse(function(child) {
           if (child instanceof THREE.Mesh) {
             if (child.name === 'Cap_1' || child.name === 'Cap_2' || child.name === 'Extrude') {
-              console.log(child.name);
               child.material = redMaterial;
             } else {
               child.material = woodMaterial;
@@ -498,7 +497,6 @@ export default class Scene {
   }
 
   setMultiplayer() {
-    console.log('setting multiplayer');
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
     this.resetTimeoutDuration = 3000;
