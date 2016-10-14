@@ -161,9 +161,9 @@ export default class Physics {
     hitpointY = hitpointY / (this.config.paddleSize / 2);
 
     if (this.config.mode === MODE.MULTIPLAYER) {
-      e.body.velocity.z = -2.5;
+      e.body.velocity.z = -3.5;
       e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.1;
-      e.body.velocity.y = 2.5;
+      e.body.velocity.y = 1.8;
     } else {
       let distFromCenter = this.paddle.position.x / this.config.tableWidth * 0.5;
       e.body.velocity.z = -3.5;
@@ -192,7 +192,7 @@ export default class Physics {
     } else {
       this.ball.position.set(0, 1.6, this.config.tablePositionZ - this.config.tableDepth * 0.3);
       this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
-      this.ball.velocity.y = this.config.ballInitVelocity * 1.0;
+      this.ball.velocity.y = this.config.ballInitVelocity * 0.7;
       this.ball.velocity.z = this.config.ballInitVelocity * 2.5;
       this.ball.angularVelocity.x = 0;
       this.ball.angularVelocity.y = 0;
