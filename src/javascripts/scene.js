@@ -796,8 +796,8 @@ export default class Scene {
       }
     }
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
-      this.paddle.position.x = this.ball.position.x;
+      // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
+      // this.paddle.position.x = this.ball.position.x;
     }
     this.physics.setPaddlePosition(this.paddle.position.x, this.paddle.position.y, this.paddle.position.z);
 

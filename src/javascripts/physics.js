@@ -208,7 +208,6 @@ export default class Physics {
 
     let arr = this.raycaster.intersectObjects([paddle, net], true);
     if (arr.length) {
-      console.log(arr);
       if (arr[0].object.name === 'net-collider') {
         this.ball.position.copy(arr[0].point);
       } else {
