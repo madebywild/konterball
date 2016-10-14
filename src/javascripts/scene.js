@@ -39,7 +39,7 @@ export default class Scene {
     this.controller1 = null;
     this.controller2 = null;
     this.raycaster = null;
-    this.paddlePlane = null;
+    this.tablePlane = null;
     this.controllerRay = null;
     this.net = null;
     this.tabActive = true;
@@ -49,6 +49,9 @@ export default class Scene {
     this.state = STATE.PRELOADER;
     this.ballHasHitEnemyTable = false;
     this.resetTimeoutDuration = 1500;
+
+    this.paddleTween = null;
+    this.hitAvailable = true;
 
     this.playerRequestedRestart = false;
     this.opponentRequestedRestart = false;
@@ -70,8 +73,7 @@ export default class Scene {
     this.config = Object.assign({}, INITIAL_CONFIG);
     this.physics = new Physics(
       this.config,
-      this.ballPaddleCollision.bind(this),
-      this.ballTableCollision.bind(this)
+      this.emitter
     );
     this.sound = new SoundManager();
 
@@ -108,7 +110,7 @@ export default class Scene {
       }
 
       this.setupEventListeners();
-      this.setupPaddlePlane();
+      this.setupTablePlane();
       this.setupLights();
       this.hud = new Hud(this.scene, this.config, this.emitter);
 
@@ -152,7 +154,10 @@ export default class Scene {
   mousemove(e) {
     let y = this.ball ? this.ball.position.y : 1;
     this.setPaddlePosition(
-      this.paddle.position.x + 0.001 * e.movementX,
+      Math.max(
+        Math.min(
+          this.paddle.position.x + 0.001 * e.movementX, this.config.tableWidth),
+        -this.config.tableWidth),
       y,
       this.paddle.position.z + 0.001 * e.movementY
     );
@@ -169,10 +174,11 @@ export default class Scene {
     if (this.tween) {
       this.tween.kill();
     }
-    this.tween = TweenMax.to(this.camera.rotation, 1, {
+    this.tween = TweenMax.to(this.camera.rotation, 0.5, {
       x: endRotation.x,
       y: endRotation.y,
       z: endRotation.z,
+      ease: Power4.easeOut,
     });
   }
 
@@ -180,6 +186,8 @@ export default class Scene {
     this.emitter.on(EVENT.GAME_OVER, e => {
       this.config.state = STATE.GAME_OVER;
     });
+    this.emitter.on(EVENT.BALL_PADDLE_COLLISION, this.ballPaddleCollision.bind(this));
+    this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
   }
 
   setupVRControls() {
@@ -250,18 +258,19 @@ export default class Scene {
     this.scene.add(light);
   }
 
-  setupPaddlePlane() {
+  setupTablePlane() {
     this.raycaster = new THREE.Raycaster();
 
     // set opacity to 0 because otherwise it wont be intersected by the raytracer
     // TODO use this instead https://threejs.org/docs/#Reference/Math/Plane
-    let geometry = new THREE.PlaneGeometry(10, 10);
-    let material = new THREE.MeshBasicMaterial({color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 0});
-    this.paddlePlane = new THREE.Mesh(geometry, material);
-    this.paddlePlane.position.z = this.config.paddlePositionZ;
-    this.paddlePlane.position.y = this.config.tableHeight;
-    this.paddlePlane.material.visible = false;
-    this.scene.add(this.paddlePlane);
+    let geometry = new THREE.PlaneGeometry(this.config.tableWidth * 1.5, this.config.tableDepth, 5, 5);
+    let material = new THREE.MeshBasicMaterial({color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 1, wireframe: true});
+    this.tablePlane = new THREE.Mesh(geometry, material);
+    this.tablePlane.rotation.x = Math.PI / 2;
+    this.tablePlane.position.y = this.config.tableHeight + 0.2;
+    this.tablePlane.position.z = this.config.tablePositionZ + this.config.tableDepth / 2;
+    this.tablePlane.material.visible = true;
+    this.scene.add(this.tablePlane);
   }
 
   setupControllers() {
@@ -344,22 +353,9 @@ export default class Scene {
         this.paddleOpponent.position.z = this.config.tablePositionZ - this.config.tableDepth / 2;
         this.paddleOpponent.position.y = 1;
         this.scene.add(this.paddleOpponent);
-        //this.paddleOpponent.visible = false;
         resolve();
       });
     });
-
-    /*
-    // player paddle
-    this.paddle = Paddle(this.scene, this.config);
-    // calculate bounding box for manual collision prediction
-
-    // opponent, set to invisible for now
-    this.paddleOpponent = Paddle(this.scene, this.config, this.config.colors.WHITE);
-    this.paddleOpponent.position.z = this.config.tablePositionZ - this.config.tableDepth / 2;
-    this.paddleOpponent.position.y = 1;
-    this.paddleOpponent.visible = false;
-    */
   }
 
   startGame() {
@@ -655,12 +651,12 @@ export default class Scene {
         && ball.position.z + E >= -4;
   }
 
-  ballPaddleCollision(point, physicsBody) {
+  ballPaddleCollision(body) {
     // the ball collided with the players paddle
     this.restartPingpongTimeout();
     this.paddleCollisionAnimation();
     this.ballHasHitEnemyTable = false;
-    this.sound.hit(point);
+    this.sound.hit(body.position);
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.score.self++;
       this.hud.scoreDisplay.setSelfScore(this.score.self);
@@ -672,13 +668,13 @@ export default class Scene {
     // TODO tweak and test this timeout
     this.time.setTimeout(() => {
       this.communication.sendHit({
-        x: point.x,
-        y: point.y,
-        z: point.z,
+        x: body.position.x,
+        y: body.position.y,
+        z: body.position.z,
       }, {
-        x: physicsBody.velocity.x,
-        y: physicsBody.velocity.y,
-        z: physicsBody.velocity.z,
+        x: body.velocity.x,
+        y: body.velocity.y,
+        z: body.velocity.z,
       });
     }, 10);
   }
@@ -723,6 +719,9 @@ export default class Scene {
   }
 
   updateControls() {
+    if (this.hitTween && this.hitTween.isActive()) {
+      return;
+    }
     // TODO proper controller managment
     let controller = null;
     if (this.controller1 && this.controller1.visible) {
@@ -731,37 +730,28 @@ export default class Scene {
       controller = this.controller2;
     }
 
-    if (this.frameNumber === 1000) {
-      // console.log(navigator.getGamepads());
-    }
-
     // place paddle according to controller
     if (this.display) {
+      let intersects = [];
       if (!controller) {
-        return;
         // if we dont have a controller, intersect the paddlePlane
         // with where the camera is looking and place the paddle there
         this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-        this.raycaster.far = 2;
-        let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
-        if (intersects.length > 0) {
-          let intersectionPoint = intersects[0].point;
-          let posX =  intersectionPoint.x * 2;
-          let posY = this.config.cameraHeight + (this.config.cameraHeight - intersectionPoint.y) * -2;
-          this.setPaddlePosition(posX, posY, this.config.paddlePositionZ + 0.03);
-        }
+        this.raycaster.far = 5;
+        intersects = this.raycaster.intersectObject(this.tablePlane, false);
       } else {
         // if we do have a controller, intersect it with where the controller is looking
         let direction = new THREE.Vector3(0, 0, -1);
         direction.applyQuaternion(controller.getWorldQuaternion());
         direction.normalize();
         this.raycaster.set(controller.getWorldPosition(), direction);
-        this.raycaster.far = 10;
-        let intersects = this.raycaster.intersectObject(this.paddlePlane, false);
-        if (intersects.length > 0) {
-          let intersectionPoint = intersects[0].point;
-          this.setPaddlePosition(intersectionPoint.x, intersectionPoint.y, this.config.paddlePositionZ + 0.03);
-        }
+        this.raycaster.far = 5;
+        intersects = this.raycaster.intersectObject(this.tablePlane, false);
+      }
+      if (intersects.length > 0) {
+        console.log(intersects);
+        let point = intersects[0].point;
+        this.setPaddlePosition(point.x, point.y, point.z);
       }
     }
   }
@@ -769,6 +759,28 @@ export default class Scene {
   updateBall(ball) {
     ball.position.copy(ball.physicsReference.position);
     ball.quaternion.copy(ball.physicsReference.quaternion);
+  }
+
+  ballHitAnimation() {
+    if (!this.hitTween || !this.hitTween.isActive() && this.hitAvailable) {
+      this.hitTween = new TimelineMax();
+      this.hitTween.to(this.paddle.position, 0.05, {
+        x: this.ball.position.x,
+        y: this.ball.position.y,
+        z: this.ball.position.z,
+      }).to(this.paddle.position, 0.2, {
+        x: this.paddle.position.x,
+        y: this.paddle.position.y,
+        z: this.paddle.position.z,
+      });
+      // TweenMax.to(this.paddle.rotation, 0.05, {
+      //   x: -0.9,
+      //   repeat: 1,
+      //   yoyo: true,
+      // });
+      this.hitAvailable = false;
+      this.time.setTimeout(() => {this.hitAvailable = true;}, 300);
+    }
   }
 
   animate(timestamp) {
@@ -783,20 +795,18 @@ export default class Scene {
 
     this.updateControls();
 
-    // for multiplayer testing, set one player to always hit the ball,
-    // easier to test for latency related issues that way
     if (this.ball) {
-      if (this.paddle.position.distanceTo(this.ball.position) < 0.4) {
-        TweenMax.to(this.paddle.position, 0.5, {
-          y: Math.max(this.config.tableHeight + 0.1, this.ball.position.y),
-        });
+      let dist = new THREE.Vector3();
+      dist.subVectors(this.ball.position, this.paddle.position);
+      if (dist.length() < 0.3) {
+        this.ballHitAnimation();
       } else {
-        this.paddle.position.y = this.config.tableHeight + 0.2;
+        // this.paddle.position.y = this.config.tableHeight + 0.2;
       }
     }
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
-      // this.paddle.position.x = this.ball.position.x;
+      this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
+      this.paddle.position.x = this.ball.position.x;
     }
     this.physics.setPaddlePosition(this.paddle.position.x, this.paddle.position.y, this.paddle.position.z);
 
@@ -817,7 +827,7 @@ export default class Scene {
 
     // Update VR headset position and apply to camera.
     if (this.controls) {
-      //this.controls.update();
+      this.controls.update();
     }
 
     this.time.step();

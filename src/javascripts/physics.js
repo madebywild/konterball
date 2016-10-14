@@ -1,10 +1,11 @@
-import {MODE} from './constants';
+import {MODE, EVENT} from './constants';
 
 export default class Physics {
-  constructor(config, ballPaddleCollisionCallback, ballTableCollisionCallback) {
+  constructor(config, emitter) {
 
     // config
     this.config = config;
+    this.emitter = emitter;
 
     this.world = null;
     this.ball = null;
@@ -15,9 +16,6 @@ export default class Physics {
     this.ballGroundContact = null;
     this.ballPaddleContact = null;
     this.raycaster = new THREE.Raycaster();
-
-    this.ballPaddleCollisionCallback = ballPaddleCollisionCallback;
-    this.ballTableCollisionCallback = ballTableCollisionCallback;
   }
 
   setupWorld() {
@@ -152,7 +150,7 @@ export default class Physics {
   }
 
   paddleCollision(e) {
-    this.ballPaddleCollisionCallback(e.body.position, e.body);
+    this.emitter.emit(EVENT.BALL_PADDLE_COLLISION, e.body);
 
     let hitpointX = e.body.position.x - e.target.position.x;
     let hitpointY = e.body.position.y - e.target.position.y;
@@ -173,7 +171,7 @@ export default class Physics {
   }
 
   tableCollision(e) {
-    this.ballTableCollisionCallback(e.body.position);
+    this.emitter.emit(EVENT.BALL_TABLE_COLLISION, e.body.position);
   }
 
   setPaddlePosition(x, y, z) {
