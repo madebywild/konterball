@@ -148,9 +148,6 @@ export default class Scene {
     });
   }
 
-  paddleBallDistance() {
-  }
-
   mousemove(e) {
     let y = this.ball ? this.ball.position.y : 1;
     this.setPaddlePosition(
@@ -260,16 +257,13 @@ export default class Scene {
 
   setupTablePlane() {
     this.raycaster = new THREE.Raycaster();
-
-    // set opacity to 0 because otherwise it wont be intersected by the raytracer
-    // TODO use this instead https://threejs.org/docs/#Reference/Math/Plane
     let geometry = new THREE.PlaneGeometry(this.config.tableWidth * 1.5, this.config.tableDepth, 5, 5);
-    let material = new THREE.MeshBasicMaterial({color: 0xffff00, side: THREE.DoubleSide, transparent: true, opacity: 1, wireframe: true});
+    let material = new THREE.MeshBasicMaterial({color: 0xffff00, wireframe: true});
     this.tablePlane = new THREE.Mesh(geometry, material);
-    this.tablePlane.rotation.x = Math.PI / 2;
+    this.tablePlane.rotation.x = -Math.PI * 0.45;
     this.tablePlane.position.y = this.config.tableHeight + 0.2;
     this.tablePlane.position.z = this.config.tablePositionZ + this.config.tableDepth / 2;
-    this.tablePlane.material.visible = true;
+    this.tablePlane.material.visible = false;
     this.scene.add(this.tablePlane);
   }
 
@@ -289,7 +283,6 @@ export default class Scene {
           this.scene.add(this.controller2);
 
           this.objLoader.load('vr_controller_vive_1_5.obj', object => {
-
             this.controller = object.children[ 0 ];
             this.controller.material.map = this.textureLoader.load('onepointfive_texture.png');
             this.controller.material.specularMap = this.textureLoader.load('onepointfive_spec.png');
@@ -712,10 +705,12 @@ export default class Scene {
 
   setPaddlePosition(x, y, z) {
     this.paddle.rotation.z = -x;
+    this.paddle.rotation.x = z * 0.5;
     this.paddle.position.x = x;
     //this.paddle.position.y = Math.max(y, this.config.tableHeight + 0.1);
-    this.paddle.position.z = z || this.config.paddlePositionZ;
-    this.physics.setPaddlePosition(this.paddle.position.x, this.paddle.position.y, this.paddle.position.z);
+    this.paddle.position.z = Math.max(this.config.tablePositionZ + 0.5, 
+      Math.min(0, z || this.config.paddlePositionZ)
+    );
   }
 
   updateControls() {
@@ -733,13 +728,7 @@ export default class Scene {
     // place paddle according to controller
     if (this.display) {
       let intersects = [];
-      if (!controller) {
-        // if we dont have a controller, intersect the paddlePlane
-        // with where the camera is looking and place the paddle there
-        this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-        this.raycaster.far = 5;
-        intersects = this.raycaster.intersectObject(this.tablePlane, false);
-      } else {
+      if (controller) {
         // if we do have a controller, intersect it with where the controller is looking
         let direction = new THREE.Vector3(0, 0, -1);
         direction.applyQuaternion(controller.getWorldQuaternion());
@@ -747,9 +736,15 @@ export default class Scene {
         this.raycaster.set(controller.getWorldPosition(), direction);
         this.raycaster.far = 5;
         intersects = this.raycaster.intersectObject(this.tablePlane, false);
+      } else {
+        // if we dont have a controller, intersect the plane
+        // with where the camera is looking and place the paddle there
+        this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
+        this.raycaster.far = 10;
+        intersects = this.raycaster.intersectObject(this.tablePlane, false);
       }
       if (intersects.length > 0) {
-        console.log(intersects);
+        console.log('intersection!');
         let point = intersects[0].point;
         this.setPaddlePosition(point.x, point.y, point.z);
       }
@@ -763,6 +758,7 @@ export default class Scene {
 
   ballHitAnimation() {
     if (!this.hitTween || !this.hitTween.isActive() && this.hitAvailable) {
+      this.physics.paddleCollision({body: this.physics.ball, target: this.paddle});
       this.hitTween = new TimelineMax();
       this.hitTween.to(this.paddle.position, 0.05, {
         x: this.ball.position.x,
@@ -798,7 +794,7 @@ export default class Scene {
     if (this.ball) {
       let dist = new THREE.Vector3();
       dist.subVectors(this.ball.position, this.paddle.position);
-      if (dist.length() < 0.3) {
+      if (dist.length() < 0.2) {
         this.ballHitAnimation();
       } else {
         // this.paddle.position.y = this.config.tableHeight + 0.2;
@@ -808,7 +804,6 @@ export default class Scene {
       this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
       this.paddle.position.x = this.ball.position.x;
     }
-    this.physics.setPaddlePosition(this.paddle.position.x, this.paddle.position.y, this.paddle.position.z);
 
     if (this.config.state === STATE.PLAYING) {
       if (this.config.mode === MODE.MULTIPLAYER) {

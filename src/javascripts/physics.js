@@ -61,6 +61,7 @@ export default class Physics {
   }
 
   setupPaddle() {
+    return;
     this.paddle = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Cylinder(this.config.paddleSize, this.config.paddleSize, this.config.paddleThickness, 10),
@@ -68,7 +69,7 @@ export default class Physics {
     });
     this.paddle._name = 'PADDLE';
     this.paddle.position.set(0, 1, this.config.paddlePositionZ);
-    this.paddle.addEventListener('collide', this.paddleCollision.bind(this));
+    // this.paddle.addEventListener('collide', this.paddleCollision.bind(this));
     this.paddle.collisionResponse = 0;
     this.world.add(this.paddle);
   }
@@ -129,7 +130,7 @@ export default class Physics {
     ball._name = threeReference.name;
     ball.linearDamping = 0.1;
 
-    this.addContactMaterial(ball.material, this.paddle.material, 0.99, 0.7);
+    // this.addContactMaterial(ball.material, this.paddle.material, 0.99, 0.7);
     this.addContactMaterial(ball.material, this.table.material, 0.7, 0.3);
     this.addContactMaterial(ball.material, this.upwardsTable.material, 0.7, 0.3);
 
@@ -163,7 +164,7 @@ export default class Physics {
       e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.1;
       e.body.velocity.y = 1.8;
     } else {
-      let distFromCenter = this.paddle.position.x / this.config.tableWidth * 0.5;
+      let distFromCenter = e.target.position.x / this.config.tableWidth * 0.5;
       e.body.velocity.z = -3.5;
       e.body.velocity.x = (-distFromCenter * 0.8) - (hitpointX * e.body.velocity.z * 0.2);
       e.body.velocity.y = 2; // + hitpointY * e.body.velocity.z * 0.1;
@@ -209,10 +210,10 @@ export default class Physics {
       if (arr[0].object.name === 'net-collider') {
         this.ball.position.copy(arr[0].point);
       } else {
-        this.paddleCollision({
-          body: this.ball,
-          target: this.paddle,
-        });
+        // this.paddleCollision({
+        //   body: this.ball,
+        //   target: this.paddle,
+        // });
       }
     }
   }
