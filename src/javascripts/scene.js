@@ -1,5 +1,6 @@
 import TweenMax from 'gsap';
 import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
+import VR_MODES from './webvr-manager/modes';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
@@ -705,12 +706,14 @@ export default class Scene {
 
   setPaddlePosition(x, y, z) {
     this.paddle.rotation.z = -x;
-    this.paddle.rotation.x = z * 0.5;
     this.paddle.position.x = x;
     //this.paddle.position.y = Math.max(y, this.config.tableHeight + 0.1);
     this.paddle.position.z = Math.max(this.config.tablePositionZ + 0.5, 
       Math.min(0, z || this.config.paddlePositionZ)
     );
+    this.paddle.rotation.x = -((this.config.tablePositionZ + this.config.tableDepth / 2) - this.paddle.position.z * 1);
+    console.log(z);
+    this.paddle.position.y = this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
   }
 
   updateControls() {
@@ -727,9 +730,11 @@ export default class Scene {
 
     // place paddle according to controller
     if (this.display) {
+      alert(this.manager.mode);
       let intersects = [];
       if (controller) {
-        // if we do have a controller, intersect it with where the controller is looking
+        // VIVE ETC
+        // if we do have a controller, intersect the table with where the controller is facing
         let direction = new THREE.Vector3(0, 0, -1);
         direction.applyQuaternion(controller.getWorldQuaternion());
         direction.normalize();
@@ -737,14 +742,20 @@ export default class Scene {
         this.raycaster.far = 5;
         intersects = this.raycaster.intersectObject(this.tablePlane, false);
       } else {
-        // if we dont have a controller, intersect the plane
+        // CARDBOARD
+        // if we dont have a controller, intersect the table
         // with where the camera is looking and place the paddle there
-        this.raycaster.setFromCamera(new THREE.Vector2(0, 0), this.camera);
-        this.raycaster.far = 10;
+        // if we are in vr, position paddle below looking direction so we dont have
+        // to look down at all times
+        let rayYDirection = this.manager.mode === VR_MODES.VR ? -0.7 : -0.3;
+        this.raycaster.setFromCamera(new THREE.Vector2(0, rayYDirection), this.camera);
+        this.raycaster.far = 5;
         intersects = this.raycaster.intersectObject(this.tablePlane, false);
+        if (intersects.length > 0) {
+          intersects[0].point.x *= 1.5;
+        }
       }
       if (intersects.length > 0) {
-        console.log('intersection!');
         let point = intersects[0].point;
         this.setPaddlePosition(point.x, point.y, point.z);
       }
@@ -823,6 +834,11 @@ export default class Scene {
     // Update VR headset position and apply to camera.
     if (this.controls) {
       this.controls.update();
+      if (this.camera.position.x === 0
+        && this.camera.position.z === 0) {
+          // no position sensor in the device, put it behind the table
+          this.camera.position.z = 1;
+      }
     }
 
     this.time.step();
