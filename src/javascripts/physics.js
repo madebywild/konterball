@@ -131,7 +131,6 @@ export default class Physics {
     ball._name = threeReference.name;
     ball.linearDamping = 0.1;
 
-    // this.addContactMaterial(ball.material, this.paddle.material, 0.99, 0.7);
     this.addContactMaterial(ball.material, this.table.material, 0.7, 0.3);
     this.addContactMaterial(ball.material, this.upwardsTable.material, 0.7, 0.3);
 
@@ -141,14 +140,6 @@ export default class Physics {
     this.world.add(ball);
     this.initBallPosition(ball);
     return ball;
-  }
-
-  setBallBoxBounciness(val) {
-    this.leftBounce.restitution = val;
-    this.topBounce.restitution = val;
-    this.rightBounce.restitution = val;
-    this.bottomBounce.restitution = val;
-    this.frontBounce.restitution = val;
   }
 
   paddleCollision(e) {
@@ -168,7 +159,7 @@ export default class Physics {
       let distFromCenter = e.target.position.x / this.config.tableWidth * 0.5;
       e.body.velocity.z = -3.5;
       e.body.velocity.x = (-distFromCenter * 0.8) - (hitpointX * e.body.velocity.z * 0.2);
-      e.body.velocity.y = 2; // + hitpointY * e.body.velocity.z * 0.1;
+      e.body.velocity.y = 2;
     }
   }
 

@@ -9,18 +9,6 @@ import Util from 'webvr-manager/util';
 import NoSleep from 'nosleep';
 import Communication from './communication';
 
-/*
-// TODO disable sleep mode on mobile devices
-let noSleep = new NoSleep();
-
-function fullscreenNoSleep() {
-  console.log('äueaaaaaaa');
-  noSleep.enable();
-  document.documentElement.requestFullscreen();
-  document.removeEventListener('click', fullscreenNoSleep, false);
-}
-document.documentElement.addEventListener('click', fullscreenNoSleep, false);
-*/
 
 const minimumLoadingTime = 1000000;
 
@@ -39,11 +27,23 @@ class PingPong {
     ]).then(() => {
       this.loaded();
     });
+  }
 
-    if (this.checkRoom()) {
-      // dont display the mode chooser if the user wants to join a room
-      $('.player-mode-chooser').hide();
-      $('#room-url, #join-waiting-room').hide();
+  requestFullscreen() {
+    if (!Util.isMobile()) {
+      return;
+    }
+    let noSleep = new NoSleep();
+    noSleep.enable();
+    let i = document.documentElement;
+    if (i.requestFullscreen) {
+      i.requestFullscreen();
+    } else if (i.webkitRequestFullscreen) {
+      i.webkitRequestFullscreen();
+    } else if (i.mozRequestFullScreen) {
+      i.mozRequestFullScreen();
+    } else if (i.msRequestFullscreen) {
+      i.msRequestFullscreen();
     }
   }
 
@@ -107,6 +107,7 @@ class PingPong {
 
   setupHandlers() {
     $('#start-singleplayer').click(e => {
+      this.requestFullscreen();
       this.scene.setSingleplayer();
       this.viewVRChooserScreen().then(() => {
         bodymovin.stop();
@@ -115,6 +116,7 @@ class PingPong {
     });
 
     $('#open-room').click(e => {
+      this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
         bodymovin.stop();
@@ -123,6 +125,7 @@ class PingPong {
     });
 
     $('#join-room').click(e => {
+      this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewJoinRoomScreenAnimation().then(() => {
         bodymovin.stop();
@@ -166,12 +169,6 @@ class PingPong {
     });
   }
 
-  checkRoom() {
-    return false;
-    // is the user trying to join a room?
-    return window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1;
-  }
-
   loaded() {
     TweenMax.to('.intro', 0.5, {
       autoAlpha: 0,
@@ -179,18 +176,14 @@ class PingPong {
         TweenMax.killTweensOf('.intro *');
       },
     });
-    if (!this.checkRoom()) {
-      TweenMax.set('.player-mode-chooser', {
-        display: 'block',
-        autoAlpha: 0,
-      });
-      TweenMax.to('.player-mode-chooser, .webvr-button', 0.5, {
-        autoAlpha: 1,
-        delay: 0.5,
-      });
-    } else {
-      this.viewVRChooserScreen();
-    }
+    TweenMax.set('.player-mode-chooser', {
+      display: 'block',
+      autoAlpha: 0,
+    });
+    TweenMax.to('.player-mode-chooser, .webvr-button', 0.5, {
+      autoAlpha: 1,
+      delay: 0.5,
+    });
   }
 
   viewVRChooserScreen() {
