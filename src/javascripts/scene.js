@@ -1,5 +1,6 @@
 import TweenMax from 'gsap';
 import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
+import {cap} from './util/helpers';
 import VR_MODES from './webvr-manager/modes';
 import Physics from './physics';
 import Hud from './hud';
@@ -152,10 +153,7 @@ export default class Scene {
   mousemove(e) {
     let y = this.ball ? this.ball.position.y : 1;
     this.setPaddlePosition(
-      Math.max(
-        Math.min(
-          this.paddle.position.x + 0.001 * e.movementX, this.config.tableWidth),
-        -this.config.tableWidth),
+      this.paddle.position.x + 0.001 * e.movementX,
       y,
       this.paddle.position.z + 0.001 * e.movementY
     );
@@ -244,8 +242,6 @@ export default class Scene {
     light.shadow.camera.far = 6.2;
     light.shadow.camera.left = -1;
     light.shadow.camera.right = 1;
-    // light.shadow.camera.top = 0;
-    // light.shadow.camera.bottom = -4;
     light.castShadow = true;
     light.shadow.mapSize.width = (Util.isMobile() ? 1 : 8) * 512;
     light.shadow.mapSize.height = (Util.isMobile() ? 1 : 8) * 512;
@@ -258,7 +254,7 @@ export default class Scene {
 
   setupTablePlane() {
     this.raycaster = new THREE.Raycaster();
-    let geometry = new THREE.PlaneGeometry(this.config.tableWidth * 1.5, this.config.tableDepth, 5, 5);
+    let geometry = new THREE.PlaneGeometry(40, 40, 5, 5);
     let material = new THREE.MeshBasicMaterial({color: 0xffff00, wireframe: true});
     this.tablePlane = new THREE.Mesh(geometry, material);
     this.tablePlane.rotation.x = -Math.PI * 0.45;
@@ -705,22 +701,19 @@ export default class Scene {
   }
 
   setPaddlePosition(x, y, z) {
-    this.paddle.rotation.z = -x;
-    this.paddle.position.x = x;
-    //this.paddle.position.y = Math.max(y, this.config.tableHeight + 0.1);
-    this.paddle.position.z = Math.max(this.config.tablePositionZ + 0.5, 
-      Math.min(0, z || this.config.paddlePositionZ)
-    );
-    this.paddle.rotation.x = -((this.config.tablePositionZ + this.config.tableDepth / 2) - this.paddle.position.z * 1);
-    console.log(z);
+    this.paddle.position.x = cap(x, this.config.tableWidth, -this.config.tableWidth),
+    this.paddle.position.z = cap(z || this.config.paddlePositionZ, 0, this.config.tablePositionZ + 0.5);
     this.paddle.position.y = this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
+
+    this.paddle.rotation.x = -((this.config.tablePositionZ + this.config.tableDepth / 2) - this.paddle.position.z * 1);
+    this.paddle.rotation.z = -x;
   }
 
   updateControls() {
     if (this.hitTween && this.hitTween.isActive()) {
       return;
     }
-    // TODO proper controller managment
+
     let controller = null;
     if (this.controller1 && this.controller1.visible) {
       controller = this.controller1;
@@ -730,7 +723,6 @@ export default class Scene {
 
     // place paddle according to controller
     if (this.display) {
-      alert(this.manager.mode);
       let intersects = [];
       if (controller) {
         // VIVE ETC
@@ -805,7 +797,8 @@ export default class Scene {
     if (this.ball) {
       let dist = new THREE.Vector3();
       dist.subVectors(this.ball.position, this.paddle.position);
-      if (dist.length() < 0.2) {
+      if (dist.length() < 0.4 && Math.abs(dist.x) < 0.2 && Math.abs(dist.z) < 0.1
+        || Util.isMobile() && dist.length() < 0.8 && Math.abs(dist.x) < 0.3 && Math.abs(dist.z) < 0.1) {
         this.ballHitAnimation();
       } else {
         // this.paddle.position.y = this.config.tableHeight + 0.2;

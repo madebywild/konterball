@@ -1,4 +1,5 @@
 import {MODE, EVENT} from './constants';
+import {cap} from './util/helpers';
 
 export default class Physics {
   constructor(config, emitter) {
@@ -156,8 +157,8 @@ export default class Physics {
     let hitpointX = e.body.position.x - e.target.position.x;
     let hitpointY = e.body.position.y - e.target.position.y;
     // normalize to -1 to 1
-    hitpointX = hitpointX / (this.config.paddleSize / 2);
-    hitpointY = hitpointY / (this.config.paddleSize / 2);
+    hitpointX = cap(hitpointX / this.config.paddleSize, -1, 1);
+    hitpointY = cap(hitpointY / this.config.paddleSize, -1, 1);
 
     if (this.config.mode === MODE.MULTIPLAYER) {
       e.body.velocity.z = -3.5;
