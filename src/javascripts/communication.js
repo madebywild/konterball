@@ -43,7 +43,7 @@ export default class Communication {
         resolve();
       });
       this.peer.on('error', e => {
-        console.log(e);
+        alert(e);
         reject(e);
       });
     });
@@ -66,7 +66,7 @@ export default class Communication {
           this.connectionClosed();
         });
       }).catch(e => {
-        console.log('error');
+        alert(e);
         reject(e);
       });
     });

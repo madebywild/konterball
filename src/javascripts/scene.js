@@ -124,6 +124,7 @@ export default class Scene {
       this.hud = new Hud(this.scene, this.config, this.emitter);
 
       document.addEventListener("keydown", e => {
+        return;
         if (e.key === 'w') {
           this.camera.position.z -= 0.1;
         } else if (e.key === 's') {
