@@ -1,1 +1,128 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Pong Pong</title><link rel="stylesheet" href="stylesheets/app-e6cc29e635.css"><meta name="viewport" content="width=device-width,initial-scale=1"><!-- Generate using http://realfavicongenerator.net/ --></head><body><div class="intro-wrapper"><div class="about-button">About</div><div class="intro"><div><h1>Webpong</h1><p>A 2-player virtual reality game, built for the web</p><button id="start">Let’s Go</button></div></div><div class="player-mode-chooser"><div id="start-singleplayer"><div id="singleplayer-animation"></div><div class="inner"><h3>Singleplayer</h3>1 Player</div></div><div id="open-room"><div class="inner"><h3>New Game</h3>2 Player</div></div><div id="join-room"><div id="multiplayer-animation"></div><div class="inner"><h3>Join Game</h3>2 Player</div></div></div><div class="open-room-screen"><div><div class="present-players"><img src="images/icon-person-0da579745b.svg"> <img class="opponent-icon" src="images/icon-person-0da579745b.svg"></div><input type="text" id="room-url" value="Generating Code..." readonly="readonly" data-clipboard-target="#room-url"><br><p class="grey-text">Send Code to your Opponent</p><br><p class="opponent-joined">Waiting for opponent</p><br></div></div><div class="join-room-screen"><div><div class="present-players"><img src="images/icon-person-0da579745b.svg"> <img class="opponent-icon" src="images/icon-person-0da579745b.svg"></div><input type="text" id="room-code" placeholder="____" maxlength="4"><br><p class="grey-text">Type in your Code</p><br><button id="join-room-button" class="inactive">Join Game</button></div></div><div class="vr-mode-chooser"><div><h2>Choose Game Mode</h2><div class="options-wrapper"><div class="cardboard" id="cardboard"><img src="/images/cardboard-animation-27527bbcbc.gif"><p>Phone + Cardboard</p></div><div class="tilt" id="tilt"><img src="/images/tilt-phone-a33823b704.gif"><p>Tilt Phone</p></div></div></div></div><div class="about-screen"><div class="about-inner"><p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p><p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p><p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p><p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p><p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p></div></div></div><div class="game-over-screen-wrapper"><div class="game-over-screen"><h2 id="result">Your opponent won!</h2><button id="play-again">Play again</button> <button id="exit">Exit</button><div class="share-wrapper"><button id="share-gplus"><img src="images/icon-googleplus-8a1ef6aaa8.svg"></button> <button id="share-fb"><img src="images/icon-facebook-164776e90c.svg"></button> <button id="share-twitter"><img src="images/icon-twitter-85f8e49b79.svg"></button><p class="share-info-text">Share Result</p></div></div></div><script>window.WebVRConfig = {MOUSE_KEYBOARD_CONTROLS_DISABLED: true};</script><script src="lib/es6-promise.min.js"></script><script src="lib/cannon.js"></script><script src="lib/three.js"></script><script src="lib/VRControls.js"></script><script src="lib/VREffect.js"></script><script src="lib/OBJLoader.js"></script><script src="lib/CannonDebugRenderer.js"></script><script src="lib/vive-controller.js"></script><script src="lib/webvr-polyfill.js"></script><script src="javascripts/app-7fada881283a1a7f46dd.js"></script></body></html>
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Pong Pong</title>
+    <link rel="stylesheet" href="stylesheets/app.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Generate using http://realfavicongenerator.net/ -->
+
+
+    
+  </head>
+  <body>
+    
+<div class='intro-wrapper'>
+  <div class='about-button'>About</div>
+  <div class='intro'>
+    <div>
+      <h1>Webpong</h1>
+      <p>A 2-player virtual reality game, built for the web</p>
+      <button id='start'>Let’s Go</button>
+    </div>
+  </div>
+
+  <div class='player-mode-chooser'>
+    <div id='start-singleplayer'>
+      <div id='singleplayer-animation'></div>
+      <div class='inner'>
+        <h3>Singleplayer</h3>
+        1 Player
+      </div>
+    </div>
+    <div id='open-room'>
+      <div class='inner'>
+        <h3>New Game</h3>
+        2 Player
+      </div>
+    </div>
+    <div id='join-room'>
+      <div id='multiplayer-animation'></div>
+      <div class='inner'>
+        <h3>Join Game</h3>
+        2 Player
+      </div>
+    </div>
+  </div>
+
+  <div class='open-room-screen'>
+    <div>
+      <div class='present-players'>
+        <img src='images/icon-person.svg'>
+        <img class='opponent-icon' src='images/icon-person.svg'>
+      </div>
+      <input type='text' id='room-url' value='Generating Code...' readonly data-clipboard-target="#room-url"><br>
+      <p class='grey-text'>Send Code to your Opponent</p><br>
+      <p class='opponent-joined'>Waiting for opponent</p><br>
+    </div>
+  </div>
+
+  <div class='join-room-screen'>
+    <div>
+      <div class='present-players'>
+        <img src='images/icon-person.svg'>
+        <img class='opponent-icon' src='images/icon-person.svg'>
+      </div>
+      <input type='text' id='room-code' placeholder='____' maxlength='4'><br>
+      <p class='grey-text'>Type in your Code</p><br>
+      <button id='join-room-button' class='inactive'>Join Game</button>
+    </div>
+  </div>
+
+  <div class='vr-mode-chooser'>
+    <div>
+      <h2>Choose Game Mode</h2>
+      <div class='options-wrapper'>
+        <div class='cardboard' id='cardboard'>
+          <img src='/images/cardboard-animation.gif'>
+          <p>Phone + Cardboard</p>
+        </div>
+        <div class='tilt' id='tilt'>
+          <img src='/images/tilt-phone.gif'>
+          <p>Tilt Phone</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class='about-screen'>
+    <div class='about-inner'>
+      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class='game-over-screen-wrapper'>
+  <div class='game-over-screen'>
+    <h2 id='result'>Your opponent won!</h2>
+    <button id='play-again'>Play again</button>
+    <button id='exit'>Exit</button>
+    <div class='share-wrapper'>
+      <button id='share-gplus'><img src='images/icon-googleplus.svg'></button>
+      <button id='share-fb'><img src='images/icon-facebook.svg'></button>
+      <button id='share-twitter'><img src='images/icon-twitter.svg'></button>
+      <p class='share-info-text'>Share Result</p>
+    </div>
+  </div>
+</div>
+
+    
+      <script>window.WebVRConfig = {MOUSE_KEYBOARD_CONTROLS_DISABLED: true};</script>
+      <script src="lib/es6-promise.min.js"></script>
+      <script src="lib/cannon.js"></script>
+      <script src="lib/three.js"></script>
+      <script src="lib/VRControls.js"></script>
+      <script src="lib/VREffect.js"></script>
+      <script src="lib/OBJLoader.js"></script>
+      <script src="lib/CannonDebugRenderer.js"></script>
+      <script src="lib/vive-controller.js"></script>
+      <script src="lib/webvr-polyfill.js"></script>
+      <script src="javascripts/app.js"></script>
+    
+  </body>
+</html>

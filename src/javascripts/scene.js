@@ -22,6 +22,7 @@ export default class Scene {
   constructor(emitter, communication) {
     this.emitter = emitter;
     this.time = new Time();
+    this.controlMode = 'MOUSE';
 
     this.communication = communication;
     this.renderer = null;
@@ -425,7 +426,6 @@ export default class Scene {
 
     this.paddle.visible = true;
     this.hud.container.visible = true;
-    this.setupVRControls();
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.countdown();
     } else {
@@ -728,7 +728,8 @@ export default class Scene {
     if (pos) {
       this.setPaddlePosition(pos.x, pos.y, pos.z);
     }
-    if (!this.display) {
+    console.log(this.controlMode);
+    if (!this.display || this.controlMode === 'MOUSE') {
       // MOUSE controls
       // backup original rotation
       let startRotation = new THREE.Euler().copy(this.camera.rotation);
@@ -765,7 +766,7 @@ export default class Scene {
 
   computePaddlePosition() {
     // place paddle according to controller
-    if (this.display) {
+    if (this.display && this.controlMode === 'VR') {
       let controller = null;
       if (this.controller1 && this.controller1.visible) {
         controller = this.controller1;

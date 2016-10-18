@@ -185,11 +185,15 @@ class PingPong {
     });
 
     $('#cardboard').click(() => {
+      this.scene.setupVRControls();
+      this.scene.controlMode = 'VR';
       this.scene.manager.enterVRMode_();
       this.scene.startGame();
     });
 
     $('#tilt').click(() => {
+      // TODO 
+      this.scene.controlMode = 'MOUSE';
       this.scene.startGame();
     });
   }
