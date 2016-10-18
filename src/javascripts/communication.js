@@ -43,7 +43,7 @@ export default class Communication {
         resolve();
       });
       this.peer.on('error', e => {
-        console.log('error');
+        console.log(e);
         reject(e);
       });
     });
