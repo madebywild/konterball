@@ -1,0 +1,22 @@
+@include font-face('AntiqueOlive', '/fonts/AntiqueOlive');
+@include font-face('Futura', '/fonts/Futura');
+@include font-face('FuturaItalic', '/fonts/FuturaItalic');
+
+$font-size: 20px;
+$font-size-large: 24px;
+$font-size-olive: calc(30px + 5vw);
+
+// colors
+$dark-grey: #262626;
+$medium-grey: rgba(255, 255, 255, 0.5);
+$blue-background: #16487e;
+$blue-table: #124787;
+$blue-hud: #3376c7;
+$paddle-color: #d21515;
+$ball: #f9fc56;
+$pink-background: #f78f9c;
+$pink-table: #ff9ba3;
+$green-background: #34c177;
+$green-table: #22b76c;
+
+$breakpoint-mobile: 768px;

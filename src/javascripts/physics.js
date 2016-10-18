@@ -1,13 +1,15 @@
-import {PRESET, MODE} from './constants';
+import {MODE, EVENT} from './constants';
+import {cap} from './util/helpers';
 
 export default class Physics {
-  constructor(config, ballPaddleCollisionCallback) {
+  constructor(config, emitter) {
 
     // config
     this.config = config;
+    this.emitter = emitter;
 
     this.world = null;
-    this.balls = [];
+    this.ball = null;
     this.net = null;
     this.ground = null;
     this.paddle = null;
@@ -15,23 +17,20 @@ export default class Physics {
     this.ballGroundContact = null;
     this.ballPaddleContact = null;
     this.raycaster = new THREE.Raycaster();
-
-    this.ballPaddleCollisionCallback = ballPaddleCollisionCallback;
   }
 
   setupWorld() {
-    // world
     this.world = new CANNON.World();
     this.world.gravity.set(0, -this.config.gravity, 0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
     this.world.solver.iterations = 20;
-    this.setupBox();
+    this.setupTable();
     this.setupPaddle();
     this.setupNet();
+    this.setupGround();
   }
 
   setupGround() {
-    // ground
     this.ground = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Plane(),
@@ -42,12 +41,11 @@ export default class Physics {
   }
 
   setupNet() {
-    // net
     this.net = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          this.config.boxWidth / 2,
+          this.config.tableWidth / 2,
           this.config.netHeight / 2,
           this.config.netThickness / 2
         )
@@ -57,28 +55,23 @@ export default class Physics {
     this.net._name = 'NET';
     this.net.position.set(
       0,
-      this.config.netHeight / 2,
-      this.config.boxPositionZ
+      this.config.tableHeight + this.config.netHeight / 2,
+      this.config.tablePositionZ
     );
     this.world.add(this.net);
   }
 
   setupPaddle() {
-    // paddle
+    return;
     this.paddle = new CANNON.Body({
       mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.paddleSize / 2,
-          this.config.paddleSize / 2,
-          this.config.paddleThickness / 2
-        )
-      ),
+      shape: new CANNON.Cylinder(this.config.paddleSize, this.config.paddleSize, this.config.paddleThickness, 10),
       material: new CANNON.Material(),
     });
     this.paddle._name = 'PADDLE';
     this.paddle.position.set(0, 1, this.config.paddlePositionZ);
-    this.paddle.addEventListener('collide', this.paddleCollision.bind(this));
+    // this.paddle.addEventListener('collide', this.paddleCollision.bind(this));
+    this.paddle.collisionResponse = 0;
     this.world.add(this.paddle);
   }
 
@@ -92,97 +85,39 @@ export default class Physics {
     return contact;
   }
 
-  setupBox() {
-    let wallWidth = 10;
-    this.leftWall = new CANNON.Body({
+  setupTable() {
+    this.table = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          wallWidth / 2,
-          this.config.boxHeight / 2,
-          this.config.boxDepth / 2
+          this.config.tableWidth / 2,
+          this.config.tableHeight / 2,
+          this.config.tableDepth / 2
         )
       ),
       material: new CANNON.Material(),
     });
-    this.leftWall.position.set(
-      -this.config.boxWidth / 2 - wallWidth / 2,
-      this.config.boxHeight / 2,
-      this.config.boxPositionZ
-    );
-    this.world.add(this.leftWall);
+    this.table.position.y = this.config.tableHeight / 2;
+    this.table.position.z = this.config.tablePositionZ;
+    this.table.addEventListener('collide', this.tableCollision.bind(this));
+    this.world.add(this.table);
 
-    this.rightWall = new CANNON.Body({
+    this.upwardsTable = new CANNON.Body({
       mass: 0,
       shape: new CANNON.Box(
         new CANNON.Vec3(
-          wallWidth / 2,
-          this.config.boxHeight / 2,
-          this.config.boxDepth / 2
+          this.config.tableWidth / 2,
+          this.config.tableHeight / 2,
+          this.config.tableDepth / 4
         )
       ),
       material: new CANNON.Material(),
     });
-    this.rightWall.position.set(
-      this.config.boxWidth / 2 + wallWidth / 2,
-      this.config.boxHeight / 2,
-      this.config.boxPositionZ
-    );
-    this.world.add(this.rightWall);
-
-    this.bottomWall = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.boxWidth * 2,
-          wallWidth / 2,
-          this.config.boxDepth / 2
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.bottomWall.position.set(
-      0,
-      -wallWidth / 2,
-      this.config.boxPositionZ
-    );
-    this.world.add(this.bottomWall);
-
-    this.topWall = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.boxWidth * 2,
-          wallWidth / 2,
-          this.config.boxDepth / 2
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.topWall.position.set(
-      0,
-      this.config.boxHeight + wallWidth / 2,
-      this.config.boxPositionZ
-    );
-    this.world.add(this.topWall);
-
-    this.frontWall = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Box(
-        new CANNON.Vec3(
-          this.config.boxWidth * 2,
-          this.config.boxHeight * 2,
-          wallWidth / 2
-        )
-      ),
-      material: new CANNON.Material(),
-    });
-    this.frontWall.position.set(
-      0,
-      this.config.boxHeight / 2,
-      this.config.boxPositionZ - this.config.boxDepth / 2 - wallWidth / 2
-    );
-    this.world.add(this.frontWall);
+    this.upwardsTable.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI / 2);
+    this.upwardsTable.position.z = this.config.tablePositionZ - this.config.tableHeight / 2;
+    this.upwardsTable.position.y = this.config.tableHeight + this.config.tableDepth / 4;
+    this.upwardsTable.collisionResponse = 0;
+    this.world.add(this.upwardsTable);
   }
 
   addBall(threeReference) {
@@ -194,100 +129,84 @@ export default class Physics {
 
     ball.threeReference = threeReference;
     ball._name = threeReference.name;
-    // TODO
-    // newBall.linearDamping = 0.4;
-    ball.linearDamping = 0;
+    ball.linearDamping = 0.1;
 
-    this.leftBounce = this.addContactMaterial(ball.material, this.leftWall.material, this.config.ballBoxBounciness, 0);
-    this.topBounce = this.addContactMaterial(ball.material, this.topWall.material, this.config.ballBoxBounciness, 0);
-    this.rightBounce = this.addContactMaterial(ball.material, this.rightWall.material, this.config.ballBoxBounciness, 0);
-    this.bottomBounce = this.addContactMaterial(ball.material, this.bottomWall.material, this.config.ballBoxBounciness, 0);
-    this.frontBounce = this.addContactMaterial(ball.material, this.frontWall.material, this.config.ballBoxBounciness, 0);
-    this.addContactMaterial(ball.material, this.paddle.material, 1, 0);
+    this.addContactMaterial(ball.material, this.table.material, 0.7, 0.3);
+    this.addContactMaterial(ball.material, this.upwardsTable.material, 0.7, 0.3);
 
-    ball.position.y = this.config.boxHeight / 2;
-    ball.position.z = this.config.boxPositionZ;
-    this.balls.push(ball);
+    ball.position.y = this.config.tableHeight / 2;
+    ball.position.z = this.config.tablePositionZ;
+    this.ball = ball;
     this.world.add(ball);
     this.initBallPosition(ball);
     return ball;
   }
 
-  setBallBoxBounciness(val) {
-    this.leftBounce.restitution = val;
-    this.topBounce.restitution = val;
-    this.rightBounce.restitution = val;
-    this.bottomBounce.restitution = val;
-    this.frontBounce.restitution = val;
-  }
-
   paddleCollision(e) {
-    this.ballPaddleCollisionCallback(e.body.position, e.body);
+    this.emitter.emit(EVENT.BALL_PADDLE_COLLISION, e.body);
 
     let hitpointX = e.body.position.x - e.target.position.x;
     let hitpointY = e.body.position.y - e.target.position.y;
     // normalize to -1 to 1
-    hitpointX = hitpointX / (this.config.paddleSize / 2);
-    hitpointY = hitpointY / (this.config.paddleSize / 2);
-    // did we hit the edge of the paddle?
-    if (hitpointX > 1 || hitpointX < -1 || hitpointY > 1 || hitpointY < -1) {
-      return;
-    }
-    if (this.config.preset !== PRESET.PINGPONG) {
-      // insane mode and normal mode
-      e.body.velocity.x = hitpointX * e.body.velocity.z * 0.7;
-      e.body.velocity.y = hitpointY * e.body.velocity.z * 0.7;
-      e.body.velocity.z += 0.05;
+    hitpointX = cap(hitpointX / this.config.paddleSize, -1, 1);
+    hitpointY = cap(hitpointY / this.config.paddleSize, -1, 1);
+
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      e.body.velocity.z = -3.5;
+      e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.1;
+      e.body.velocity.y = 1.8;
     } else {
-      // pingpong mode
-      // adjust velocity
-      // these values are heavily tweakable
-      e.body.velocity.z = 3;
-      e.body.velocity.x = hitpointX * 0.7;
-      e.body.velocity.y = 3;
+      let distFromCenter = e.target.position.x / this.config.tableWidth * 0.5;
+      e.body.velocity.z = -3.5;
+      e.body.velocity.x = (-distFromCenter * 0.8) - (hitpointX * e.body.velocity.z * 0.2);
+      e.body.velocity.y = 2;
     }
+  }
+
+  tableCollision(e) {
+    this.emitter.emit(EVENT.BALL_TABLE_COLLISION, e.body.position);
   }
 
   setPaddlePosition(x, y, z) {
     this.paddle.position.set(x, y, z);
   }
 
-  initBallPosition(ball) {
-    switch (this.config.preset) {
-      case PRESET.NORMAL:
-      case PRESET.INSANE:
-        ball.position.set(0, this.config.boxHeight / 2, this.config.boxPositionZ);
-        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
-        ball.velocity.y = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.1;
-        ball.velocity.z = this.config.ballInitVelocity * 2.0;
-        ball.angularVelocity.x = 0;
-        ball.angularVelocity.y = 0;
-        ball.angularVelocity.z = 0;
-        break;
-      case PRESET.PINGPONG:
-        ball.position.set(0, 1.6, this.config.boxPositionZ - this.config.boxDepth * 0.3);
-        ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
-        ball.velocity.y = this.config.ballInitVelocity * 1.0;
-        ball.velocity.z = this.config.ballInitVelocity * 3.0;
-        ball.angularVelocity.x = 0;
-        ball.angularVelocity.y = 0;
-        ball.angularVelocity.z = 0;
-        break;
-      default:
-        break;
+  initBallPosition() {
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.ball.position.set(0, 1.4, this.config.tablePositionZ + 0.1);
+      this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
+      this.ball.velocity.y = this.config.ballInitVelocity * 0.0;
+      this.ball.velocity.z = this.config.ballInitVelocity * 2;
+      this.ball.angularVelocity.x = 0;
+      this.ball.angularVelocity.y = 0;
+      this.ball.angularVelocity.z = 0;
+    } else {
+      this.ball.position.set(0, 1.6, this.config.tablePositionZ - this.config.tableDepth * 0.3);
+      this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
+      this.ball.velocity.y = this.config.ballInitVelocity * 0.7;
+      this.ball.velocity.z = this.config.ballInitVelocity * 2.5;
+      this.ball.angularVelocity.x = 0;
+      this.ball.angularVelocity.y = 0;
+      this.ball.angularVelocity.z = 0;
     }
   }
 
   predictCollisions(ball, paddle, net) {
     // predict ball position in the next frame
-    this.raycaster.set(ball.position.clone(), ball.velocity.clone().unit());
-    this.raycaster.far = ball.velocity.clone().length() / 50;
+    this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
+    // TODO find out how much velocity the ball actually has per frame
+    this.raycaster.far = this.ball.velocity.clone().length() / 30;
 
-    // the raycaster only intersects visible objects, so if the net is invisible
-    // in non-pingpong-mode, it wont get an intersection
-    let arr = this.raycaster.intersectObjects([paddle, net]);
+    let arr = this.raycaster.intersectObjects([paddle, net], true);
     if (arr.length) {
-      ball.position.copy(arr[0].point);
+      if (arr[0].object.name === 'net-collider') {
+        this.ball.position.copy(arr[0].point);
+      } else {
+        // this.paddleCollision({
+        //   body: this.ball,
+        //   target: this.paddle,
+        // });
+      }
     }
   }
 

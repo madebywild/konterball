@@ -18,6 +18,7 @@ export default class Communication {
     this.id = randomstring.generate({
       length: INITIAL_CONFIG.ROOM_CODE_LENGTH,
       capitalization: 'uppercase',
+      readable: true,
     });
 
     this.peer = new Peer(this.id, {host: location.hostname, port: 80, path: '/api'});
@@ -34,7 +35,6 @@ export default class Communication {
   }
 
   tryConnecting(id) {
-    console.log(id);
     return new Promise((resolve, reject) => {
       if (this.connectionIsOpen) {
         this.peer.on('error', e => {
@@ -107,7 +107,7 @@ export default class Communication {
   }
 
   startListening() {
-    // this.sendPings();
+    this.sendPings();
     this.conn.on('data', data => {
       switch (data.action) {
         case ACTION.MOVE:
@@ -118,9 +118,6 @@ export default class Communication {
           break;
         case ACTION.MISS:
           this.callbacks.miss(data);
-          break;
-        case ACTION.PRESETCHANGE:
-          this.callbacks.presetChange(data);
           break;
         case ACTION.RESTART_GAME:
           this.callbacks.restartGame(data);
@@ -147,25 +144,23 @@ export default class Communication {
     });
   }
 
-  sendHit(point, velocity, name, addBall=false) {
-    console.log('send hit');
+  sendHit(point, velocity, addBall=false) {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.HIT,
       point: point,
       velocity: velocity,
-      name: name,
       addBall: addBall,
     });
   }
 
-  sendMiss(point, velocity, name) {
+  sendMiss(point, velocity, ballHasHitEnemyTable) {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.MISS,
       point: point,
       velocity: velocity,
-      name: name,
+      ballHasHitEnemyTable: ballHasHitEnemyTable,
     });
   }
 
@@ -180,14 +175,6 @@ export default class Communication {
     if (!this.conn) return;
     this.conn.send({
       action: ACTION.REQUEST_COUNTDOWN,
-    });
-  }
-
-  sendPresetChange(name) {
-    if (!this.conn) return;
-    this.conn.send({
-      action: ACTION.PRESETCHANGE,
-      name: name,
     });
   }
 }
