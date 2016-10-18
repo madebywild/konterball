@@ -22,24 +22,29 @@ export default class Communication {
     });
 
     this.peer = new Peer(this.id, {host: location.hostname, port: 80, path: '/api'});
-
-    // connect to the peer server
-    this.peer.on('open', () => {
-      if (this.connectionIsOpen) return;
-      this.connectionIsOpen = true;
-    });
   }
 
   setCallbacks(callbacks) {
     this.callbacks = callbacks;
   }
 
+  connectToServer() {
+    // connect to the peer server
+    return new Promise((resolve, reject) => {
+      this.peer.on('open', () => {
+        if (this.connectionIsOpen) return;
+        this.connectionIsOpen = true;
+        resolve();
+      });
+      this.peer.on('error', e => {
+        reject(e);
+      });
+    });
+  }
+
   tryConnecting(id) {
     return new Promise((resolve, reject) => {
-      if (this.connectionIsOpen) {
-        this.peer.on('error', e => {
-          reject(e);
-        });
+      this.connectToServer().then(() => {
         this.conn = this.peer.connect(id);
         this.conn.on('open', () => {
           this.isHost = false;
@@ -53,10 +58,9 @@ export default class Communication {
         this.conn.on('close', () => {
           this.connectionClosed();
         });
-      } else {
-        // TODO
-        alert('not connected to signaling server');
-      }
+      }).catch(e => {
+        reject(e);
+      });
     });
   }
 
