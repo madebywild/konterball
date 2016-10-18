@@ -15,6 +15,8 @@ export default class Communication {
     this.isHost = undefined;
     this.lastPings = [];
 
+    this.connectToServer();
+
     this.id = randomstring.generate({
       length: INITIAL_CONFIG.ROOM_CODE_LENGTH,
       capitalization: 'uppercase',
@@ -29,9 +31,14 @@ export default class Communication {
   }
 
   connectToServer() {
+    console.log('connecting to server...');
     // connect to the peer server
     return new Promise((resolve, reject) => {
+      if (this.connectionIsOpen) {
+        resolve();
+      }
       this.peer.on('open', () => {
+        console.log('connected');
         if (this.connectionIsOpen) return;
         this.connectionIsOpen = true;
         resolve();
@@ -59,6 +66,7 @@ export default class Communication {
           this.connectionClosed();
         });
       }).catch(e => {
+        console.log('error');
         reject(e);
       });
     });
