@@ -10,6 +10,15 @@ body {
   background-color: $blue-background;
   color: #fff;
 }
+.pink {
+  background-color: $pink-background;
+}
+.blue {
+  background-color: $blue-background;
+}
+.green {
+  background-color: $green-background;
+}
 h1 {
   text-transform: uppercase;
   font-size: $font-size-olive;
@@ -264,13 +273,15 @@ button.inactive {
   @extend .absolute-center;
 }
 .vr-mode-chooser {
-  @extend .absolute-center;
-  width: 100%;
-  background-color: $blue-background;
-  z-index: 50;
   display: none;
-  padding-left: 15px;
-  padding-right: 15px;
+  @extend .screen;
+  & > div {
+    @extend .absolute-center;
+    width: 100%;
+    z-index: 50;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
   .options-wrapper {
     display: flex;
     align-items: stretch;

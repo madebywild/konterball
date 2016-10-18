@@ -119,6 +119,9 @@ class PingPong {
     });
 
     $('#start-singleplayer').click(e => {
+      $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
+      $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
+      $('.vr-mode-chooser').addClass('pink');
       this.requestFullscreen();
       this.scene.setSingleplayer();
       this.viewVRChooserScreen().then(() => {
@@ -128,6 +131,9 @@ class PingPong {
     });
 
     $('#open-room').click(e => {
+      $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
+      $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
+      $('.vr-mode-chooser').addClass('blue');
       this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
@@ -137,6 +143,9 @@ class PingPong {
     });
 
     $('#join-room').click(e => {
+      $('#cardboard img').attr('src', '/images/cardboard-green.gif');
+      $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
+      $('.vr-mode-chooser').addClass('green');
       this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewJoinRoomScreenAnimation().then(() => {
