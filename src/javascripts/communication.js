@@ -31,19 +31,20 @@ export default class Communication {
   }
 
   connectToServer() {
-    console.log('connecting to server...');
     // connect to the peer server
     return new Promise((resolve, reject) => {
+      console.log('connecting to server...');
       if (this.connectionIsOpen) {
+        console.log('already open');
         resolve();
       }
       this.peer.on('open', () => {
         console.log('connected');
-        if (this.connectionIsOpen) return;
         this.connectionIsOpen = true;
         resolve();
       });
       this.peer.on('error', e => {
+        console.log('error');
         reject(e);
       });
     });
@@ -83,7 +84,6 @@ export default class Communication {
       this.emitter.emit(EVENT.OPPONENT_CONNECTED);
 
       this.conn = c;
-      this.connectionIsOpen = true;
       this.opponentConnected = true;
       this.startListening();
       this.conn.on('close', () => {
