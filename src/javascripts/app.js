@@ -23,9 +23,10 @@ class PingPong {
 
     Promise.all([
       this.scene.setup(), 
-      this.intro()
     ]).then(() => {
-      this.loaded();
+      TweenMax.to('#start', 0.5, {
+        opacity: 1,
+      });
     });
   }
 
@@ -33,6 +34,14 @@ class PingPong {
     if (!Util.isMobile()) {
       return;
     }
+    /*
+    document.addEventListener("fullscreenchange", function(event) {
+      if ( document.fullscreen ) {
+        screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
+        window.screen.lockOrientationUniversal('landscape-primary');
+      }
+    });
+    */
     let noSleep = new NoSleep();
     noSleep.enable();
     let i = document.documentElement;
@@ -69,19 +78,18 @@ class PingPong {
     });
   }
 
-  intro() {
-    return new Promise((resolve, reject) => {
-      let tl = new TimelineMax();
-      tl.timeScale(100);
-      tl.to('.intro h1', 0.5, {
-        opacity: 0,
-      }, '+=1.5');
-      tl.to('.intro p', 0.5, {
-        opacity: 1,
-      }, '-=0.3');
-      tl.call(this.modeChooserAnimation.bind(this));
-      tl.call(resolve, null, null, '+=3');
+  showModeChooserScreen() {
+    TweenMax.set('.player-mode-chooser', {
+      display: 'block',
+      autoAlpha: 0,
     });
+    TweenMax.to('.player-mode-chooser, .webvr-button', 0.5, {
+      autoAlpha: 1,
+    });
+    TweenMax.to('.intro', 0.5, {
+      autoAlpha: 0,
+    });
+    this.modeChooserAnimation();
   }
   
   modeChooserAnimation() {
@@ -91,7 +99,7 @@ class PingPong {
         renderer: 'svg',
         loop: true,
         autoplay: true,
-        animationData: data // the animation data
+        animationData: data,
       });
     });
     $.getJSON('/animations/2player.json', data => {
@@ -100,12 +108,16 @@ class PingPong {
         renderer: 'svg',
         loop: true,
         autoplay: true,
-        animationData: data // the animation data
+        animationData: data,
       });
     });
   }
 
   setupHandlers() {
+    $('#start').click(() => {
+      this.showModeChooserScreen();
+    });
+
     $('#start-singleplayer').click(e => {
       this.requestFullscreen();
       this.scene.setSingleplayer();
@@ -140,6 +152,10 @@ class PingPong {
       this.scene.restartGame();
     });
 
+    $('#exit').click(() => {
+      location.reload();
+    });
+
     $('.about-button').click(() => {
       if (this.aboutScreenOpen) {
         TweenMax.to('.about-screen', 0.5, {
@@ -166,23 +182,6 @@ class PingPong {
 
     $('#tilt').click(() => {
       this.scene.startGame();
-    });
-  }
-
-  loaded() {
-    TweenMax.to('.intro', 0.5, {
-      autoAlpha: 0,
-      onComplete: () => {
-        TweenMax.killTweensOf('.intro *');
-      },
-    });
-    TweenMax.set('.player-mode-chooser', {
-      display: 'block',
-      autoAlpha: 0,
-    });
-    TweenMax.to('.player-mode-chooser, .webvr-button', 0.5, {
-      autoAlpha: 1,
-      delay: 0.5,
     });
   }
 

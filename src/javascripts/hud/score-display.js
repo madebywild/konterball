@@ -56,7 +56,7 @@ export default class ScoreDisplay {
     this.selfScore.position.x = -this.config.tableWidth / 2;
     this.selfScore.position.y = this.config.tableHeight + 0.2;
     this.selfScore.position.z = this.config.tablePositionZ
-      + this.config.tableDepth / 3
+      + this.config.tableDepth / 2.8
       + this.selfScore.geometry.boundingBox.max.x / 2;
   }
 

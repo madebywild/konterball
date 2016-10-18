@@ -18,7 +18,7 @@ export default (parent, config) => {
   group.add(mesh);
 
   let upwardsTableGroup = new THREE.Group();
-  const upwardsTableHeight = config.tableDepth / 3;
+  const upwardsTableHeight = config.tableDepth * 0.37;
   upwardsTableGroup.name = 'upwardsTableGroup';
   upwardsTableGroup.visible = false;
   upwardsTableGroup.rotation.x = Math.PI / 2;

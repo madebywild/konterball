@@ -107,7 +107,7 @@ export default class Communication {
   }
 
   startListening() {
-    // this.sendPings();
+    this.sendPings();
     this.conn.on('data', data => {
       switch (data.action) {
         case ACTION.MOVE:

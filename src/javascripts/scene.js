@@ -52,6 +52,11 @@ export default class Scene {
     this.ballHasHitEnemyTable = false;
     this.resetTimeoutDuration = 1500;
 
+    this.mouseMoveSinceLastFrame = {
+      x: 0,
+      y: 0,
+    };
+
     this.paddleTween = null;
     this.hitAvailable = true;
 
@@ -61,6 +66,8 @@ export default class Scene {
     this.playerRequestedCountdown = false;
     this.opponentRequestedCountdown = false;
     this.mousemove = this.mousemove.bind(this);
+
+    this.isMobile = Util.isMobile();
 
     this.viewport = {
       width: $(document).width(),
@@ -151,31 +158,11 @@ export default class Scene {
   }
 
   mousemove(e) {
-    let y = this.ball ? this.ball.position.y : 1;
-    this.setPaddlePosition(
-      this.paddle.position.x + 0.001 * e.movementX,
-      y,
-      this.paddle.position.z + 0.001 * e.movementY
-    );
-    // backup original rotation
-    let startRotation = new THREE.Euler().copy(this.camera.rotation);
-    
-    // final rotation (with lookAt)
-    this.camera.lookAt(new THREE.Vector3(this.paddle.position.x, this.config.tableHeight, this.config.tablePositionZ));
-    let endRotation = new THREE.Euler().copy(this.camera.rotation);
-    
-    // revert to original rotation
-    this.camera.rotation.copy(startRotation);
-    //this.camera.lookAt(this.paddle.position);
-    if (this.tween) {
-      this.tween.kill();
+    if (this.hitTween && this.hitTween.isActive()) {
+      return;
     }
-    this.tween = TweenMax.to(this.camera.rotation, 0.5, {
-      x: endRotation.x,
-      y: endRotation.y,
-      z: endRotation.z,
-      ease: Power4.easeOut,
-    });
+    this.mouseMoveSinceLastFrame.x += e.movementX;
+    this.mouseMoveSinceLastFrame.y += e.movementY;
   }
 
   setupEventListeners() {
@@ -243,8 +230,8 @@ export default class Scene {
     light.shadow.camera.left = -1;
     light.shadow.camera.right = 1;
     light.castShadow = true;
-    light.shadow.mapSize.width = (Util.isMobile() ? 1 : 8) * 512;
-    light.shadow.mapSize.height = (Util.isMobile() ? 1 : 8) * 512;
+    light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
+    light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
     this.scene.add(light);
     //this.scene.add(new THREE.CameraHelper(light.shadow.camera));
 
@@ -342,6 +329,7 @@ export default class Scene {
         this.paddleOpponent.name = 'paddleOpponent';
         this.paddleOpponent.position.z = this.config.tablePositionZ - this.config.tableDepth / 2;
         this.paddleOpponent.position.y = 1;
+        this.paddleOpponent.visible = false;
         this.scene.add(this.paddleOpponent);
         resolve();
       });
@@ -385,6 +373,7 @@ export default class Scene {
       autoAlpha: 0,
     }, 0);
 
+    /*
     const panDuration = 1;
 
     tl.to(no, panDuration, {
@@ -410,20 +399,40 @@ export default class Scene {
       onComplete: () => {
         this.paddle.visible = true;
         this.hud.container.visible = true;
-
         this.setupVRControls();
-        this.hud.message.showMessage();
       }
     }, 1);
     tl.call(() => {
       if (this.config.mode === MODE.SINGLEPLAYER) {
         this.countdown();
       } else {
+        this.paddleOpponent.visible = true;
         this.communication.sendRequestCountdown();
         this.playerRequestedCountdown = true;
         this.requestCountdown();
       }
     }, [], null, '+=1');
+    */
+
+    this.camera.position.x = 0;
+    this.camera.position.y = 1.6;
+    this.camera.position.z = 0.6;
+    this.camera.up.set(0, 1, 0);
+    this.camera.fov = 47;
+    this.scene.scale.y = 1;
+    this.camera.updateProjectionMatrix();
+
+    this.paddle.visible = true;
+    this.hud.container.visible = true;
+    this.setupVRControls();
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.countdown();
+    } else {
+      this.paddleOpponent.visible = true;
+      this.communication.sendRequestCountdown();
+      this.playerRequestedCountdown = true;
+      this.requestCountdown();
+    }
   }
 
   receivedRequestCountdown() {
@@ -496,9 +505,9 @@ export default class Scene {
   setMultiplayer() {
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
+    this.hud.message.showMessage();
     this.resetTimeoutDuration = 3000;
     this.hud.scoreDisplay.opponentScore.visible = true;
-    this.paddleOpponent.visible = true;
     // setup communication channels,
     // add callbacks for received actions
     // TODO throw exception on connection failure
@@ -714,15 +723,54 @@ export default class Scene {
       return;
     }
 
-    let controller = null;
-    if (this.controller1 && this.controller1.visible) {
-      controller = this.controller1;
-    } else if (this.controller2 && this.controller2.visible) {
-      controller = this.controller2;
+    let pos = this.computePaddlePosition();
+    if (pos) {
+      this.setPaddlePosition(pos.x, pos.y, pos.z);
     }
+    if (!this.display) {
+      // MOUSE controls
+      // backup original rotation
+      let startRotation = new THREE.Euler().copy(this.camera.rotation);
 
+      // look at the point at the middle position betwee the table center and paddle position
+      this.camera.lookAt(
+        new THREE.Vector3().lerpVectors(
+          this.paddle.position,
+          new THREE.Vector3(
+            this.table.position.x,
+            this.config.tableHeight + 0.3,
+            this.table.position.z
+          ),
+          0.5
+        )
+      );
+      // the rotation we want to end up with
+      let endRotation = new THREE.Euler().copy(this.camera.rotation);
+      // revert to original rotation and the we can tween it
+      this.camera.rotation.copy(startRotation);
+      if (this.cameraTween) {
+        this.cameraTween.kill();
+      }
+      this.cameraTween = TweenMax.to(this.camera.rotation, 0.5, {
+        x: endRotation.x,
+        y: endRotation.y,
+        z: endRotation.z,
+        ease: Power4.easeOut,
+      });
+      this.mouseMoveSinceLastFrame.x = 0;
+      this.mouseMoveSinceLastFrame.y = 0;
+    }
+  }
+
+  computePaddlePosition() {
     // place paddle according to controller
     if (this.display) {
+      let controller = null;
+      if (this.controller1 && this.controller1.visible) {
+        controller = this.controller1;
+      } else if (this.controller2 && this.controller2.visible) {
+        controller = this.controller2;
+      }
       let intersects = [];
       if (controller) {
         // VIVE ETC
@@ -749,8 +797,18 @@ export default class Scene {
       }
       if (intersects.length > 0) {
         let point = intersects[0].point;
-        this.setPaddlePosition(point.x, point.y, point.z);
+        return point;
+      } else {
+        return null;
       }
+    } else {
+      // MOUSE
+      let y = this.ball ? this.ball.position.y : 1;
+      return {
+        x: this.paddle.position.x + 0.001 * this.mouseMoveSinceLastFrame.x,
+        y: y,
+        z: this.paddle.position.z + 0.001 * this.mouseMoveSinceLastFrame.y,
+      };
     }
   }
 
@@ -767,11 +825,20 @@ export default class Scene {
         x: this.ball.position.x,
         y: this.ball.position.y,
         z: this.ball.position.z,
-      }).to(this.paddle.position, 0.2, {
-        x: this.paddle.position.x,
-        y: this.paddle.position.y,
-        z: this.paddle.position.z,
       });
+      if (!this.display) {
+        this.hitTween.to(this.paddle.position, 0.2, {
+          x: this.paddle.position.x,
+          y: this.paddle.position.y,
+          z: this.paddle.position.z,
+        });
+      } else {
+        this.hitTween.to(this.paddle.position, 0.2, {
+          x: this.paddle.position.x,
+          y: this.paddle.position.y,
+          z: this.paddle.position.z,
+        });
+      }
       // TweenMax.to(this.paddle.rotation, 0.05, {
       //   x: -0.9,
       //   repeat: 1,
@@ -798,23 +865,26 @@ export default class Scene {
       let dist = new THREE.Vector3();
       dist.subVectors(this.ball.position, this.paddle.position);
       if (dist.length() < 0.4 && Math.abs(dist.x) < 0.2 && Math.abs(dist.z) < 0.1
-        || Util.isMobile() && dist.length() < 0.8 && Math.abs(dist.x) < 0.3 && Math.abs(dist.z) < 0.1) {
+        || this.isMobile && dist.length() < 0.8 && Math.abs(dist.x) < 0.3 && Math.abs(dist.z) < 0.1) {
         this.ballHitAnimation();
       } else {
         // this.paddle.position.y = this.config.tableHeight + 0.2;
       }
     }
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
-      this.paddle.position.x = this.ball.position.x;
+      // for multiplayer testing
+      // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
+      // this.paddle.position.x = this.ball.position.x;
     }
 
-    if (this.config.state === STATE.PLAYING) {
+    if (this.config.state === STATE.PLAYING || this.config.state === STATE.COUNTDOWN) {
       if (this.config.mode === MODE.MULTIPLAYER) {
         // send where the paddle has moved, if it has moved
         this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
       }
+    }
 
+    if (this.config.state === STATE.PLAYING) {
       this.physics.step(delta / 1000);
       this.updateBall(this.ball);
       this.physics.predictCollisions(this.physics.ball, this.paddle, this.scene.getObjectByName('net-collider'));

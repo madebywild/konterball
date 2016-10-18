@@ -1,7 +1,7 @@
 import wrap from 'wordwrap';
 
 const CHAR_LIMIT = 16;
-const FONT_SIZE = 0.13;
+const FONT_SIZE = 0.07;
 const LINE_SPACING = 0.1;
 
 export default class Message {
@@ -11,7 +11,7 @@ export default class Message {
     this.config = config;
     this.wrap = wrap(CHAR_LIMIT);
     this.messageGroup = new THREE.Group();
-    this.messageGroup.position.z = this.config.boxPositionZ;
+    this.messageGroup.position.z = this.config.tablePositionZ;
     this.setMessage('waiting for opponent to start...');
     this.scene.add(this.messageGroup);
   }
@@ -41,7 +41,7 @@ export default class Message {
       lineHeight = geometry.boundingBox.max.y;
     });
     let height = splitText.length * (LINE_SPACING + lineHeight);
-    this.messageGroup.position.y = this.config.boxHeight / 2 - height / 2;
+    this.messageGroup.position.y = this.config.tableHeight + height / 2 + 0.2;
   }
 
   showMessage() {
