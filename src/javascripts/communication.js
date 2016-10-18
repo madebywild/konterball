@@ -15,8 +15,6 @@ export default class Communication {
     this.isHost = undefined;
     this.lastPings = [];
 
-    this.connectToServer();
-
     this.id = randomstring.generate({
       length: INITIAL_CONFIG.ROOM_CODE_LENGTH,
       capitalization: 'uppercase',
@@ -24,6 +22,7 @@ export default class Communication {
     });
 
     this.peer = new Peer(this.id, {host: location.hostname, port: 80, path: '/api'});
+    this.connectToServer();
   }
 
   setCallbacks(callbacks) {
