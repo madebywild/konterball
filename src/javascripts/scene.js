@@ -339,6 +339,7 @@ export default class Scene {
   }
 
   startGame() {
+    alert(this.controlMode);
     // prepare the scene
     this.paddle.visible = false;
     this.hud.container.visible = false;
@@ -437,6 +438,7 @@ export default class Scene {
   }
 
   receivedRequestCountdown() {
+    console.log('received request countdown');
     this.opponentRequestedCountdown = true;
     this.requestCountdown();
   }
@@ -728,7 +730,6 @@ export default class Scene {
     if (pos) {
       this.setPaddlePosition(pos.x, pos.y, pos.z);
     }
-    console.log(this.controlMode);
     if (!this.display || this.controlMode === 'MOUSE') {
       // MOUSE controls
       // backup original rotation
@@ -765,7 +766,6 @@ export default class Scene {
   }
 
   computePaddlePosition() {
-    // place paddle according to controller
     if (this.display && this.controlMode === 'VR') {
       let controller = null;
       if (this.controller1 && this.controller1.visible) {

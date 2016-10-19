@@ -1,4 +1,4 @@
-import Peer from 'peerjs';
+import deepstream from 'deepstream.io-client-js';
 import randomstring from 'randomstring';
 import {ACTION, INITIAL_CONFIG, EVENT} from './constants';
 import $ from 'jquery';
@@ -13,15 +13,7 @@ export default class Communication {
     this.conn = null;
     this.reliableConn = null;
     this.isHost = undefined;
-    this.lastPings = [];
 
-    this.id = randomstring.generate({
-      length: INITIAL_CONFIG.ROOM_CODE_LENGTH,
-      capitalization: 'uppercase',
-      readable: true,
-    });
-
-    this.peer = new Peer(this.id, {host: location.hostname, port: 80, path: '/api'});
     this.connectToServer();
   }
 
@@ -30,69 +22,45 @@ export default class Communication {
   }
 
   connectToServer() {
-    // connect to the peer server
+    // connect to the deepstream server
     return new Promise((resolve, reject) => {
-      console.log('connecting to server...');
-      if (this.connectionIsOpen) {
-        console.log('already open');
-        resolve();
-      }
-      this.peer.on('open', () => {
-        console.log('connected');
-        this.connectionIsOpen = true;
-        resolve();
-      });
-      this.peer.on('error', e => {
-        reject(e);
+      this.client = deepstream('192.168.1.5:6020').login();
+      this.client.on('connectionStateChanged', e => {
+        if (e === deepstream.CONSTANTS.CONNECTION_STATE.OPEN) {
+          resolve();
+        }
       });
     });
   }
 
   tryConnecting(id) {
     return new Promise((resolve, reject) => {
-      this.connectToServer().then(() => {
-        this.conn = this.peer.connect(id);
-        this.conn.on('open', () => {
-          this.isHost = false;
-          this.opponentConnected = true;
-          this.startListening();
-          resolve('connected');
-        });
-        this.conn.on('error', e => {
-          reject(e);
-        });
-        this.conn.on('close', () => {
-          this.connectionClosed();
-        });
-      }).catch(e => {
-        //alert(e);
-        reject(e);
-      });
+      this.GAME_ID = id;
+      this.isHost = false;
+      this.setRecords();
+      this.statusRecord.set('player-2', {action: ACTION.CONNECT});
+      this.startListening();
+      resolve();
     });
   }
 
   openRoom() {
     this.isHost = true;
-    // use my id as a room code and listen for incoming connections
-    this.peer.on('connection', c => {
-      if (this.conn) {
-        c.close();
-        return;
-      }
-      this.emitter.emit(EVENT.OPPONENT_CONNECTED);
-
-      this.conn = c;
-      this.opponentConnected = true;
-      this.startListening();
-      this.conn.on('close', () => {
-        this.connectionClosed();
-      });
+    this.GAME_ID = randomstring.generate({
+      length: 4,
+      capitalization: 'uppercase',
+      readable: true,
     });
-    return this.id;
+    this.setRecords();
+    this.startListening();
+    return this.GAME_ID;
   }
 
-  connectionClosed() {
-    this.emitter.emit(EVENT.OPPONENT_DISCONNECTED);
+  setRecords() {
+    this.statusRecord = this.client.record.getRecord(`${this.GAME_ID}-status`);
+    this.paddleRecord = this.client.record.getRecord(`${this.GAME_ID}-paddle`);
+    this.hitRecord = this.client.record.getRecord(`${this.GAME_ID}-hit`);
+    this.missRecord = this.client.record.getRecord(`${this.GAME_ID}-miss`);
   }
 
   sendPings() {
@@ -117,74 +85,50 @@ export default class Communication {
   }
 
   startListening() {
-    this.sendPings();
-    this.conn.on('data', data => {
-      switch (data.action) {
-        case ACTION.MOVE:
-          this.callbacks.move(data);
+    this.statusRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
+      switch (value.action) {
+        case ACTION.CONNECT:
+          this.emitter.emit(EVENT.OPPONENT_CONNECTED);
           break;
-        case ACTION.HIT:
-          this.callbacks.hit(data);
-          break;
-        case ACTION.MISS:
-          this.callbacks.miss(data);
-          break;
-        case ACTION.RESTART_GAME:
-          this.callbacks.restartGame(data);
+        case ACTION.DISCONNECT:
+          this.emitter.emit(EVENT.OPPONENT_DISCONNECTED);
           break;
         case ACTION.REQUEST_COUNTDOWN:
-          this.callbacks.requestCountdown(data);
+          this.callbacks.requestCountdown();
           break;
-        case 'PING':
-          this.receivedPing(data);
-          break;
-        case 'PONG':
-          this.receivedPong(data);
+        case ACTION.RESTART_GAME:
+          this.callbacks.restartGame();
           break;
       }
+    });
+    this.paddleRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
+      this.callbacks.move(value);
+    });
+    this.hitRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
+      this.callbacks.hit(value);
+    });
+    this.missRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
+      this.callbacks.miss(value);
     });
   }
 
   sendMove(x, y) {
-    if (!this.conn) return;
-    this.conn.send({
-      action: ACTION.MOVE,
-      x: x,
-      y: y,
-    });
+    this.paddleRecord.set(`player-${this.isHost ? 1 : 2}`, {x, y});
   }
 
   sendHit(point, velocity, addBall=false) {
-    if (!this.conn) return;
-    this.conn.send({
-      action: ACTION.HIT,
-      point: point,
-      velocity: velocity,
-      addBall: addBall,
-    });
+    this.hitRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, addBall});
   }
 
   sendMiss(point, velocity, ballHasHitEnemyTable) {
-    if (!this.conn) return;
-    this.conn.send({
-      action: ACTION.MISS,
-      point: point,
-      velocity: velocity,
-      ballHasHitEnemyTable: ballHasHitEnemyTable,
-    });
+    this.missRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, ballHasHitEnemyTable});
   }
 
   sendRestartGame() {
-    if (!this.conn) return;
-    this.conn.send({
-      action: ACTION.RESTART_GAME,
-    });
+    this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {action: ACTION.RESTART_GAME});
   }
 
   sendRequestCountdown() {
-    if (!this.conn) return;
-    this.conn.send({
-      action: ACTION.REQUEST_COUNTDOWN,
-    });
+    this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {action: ACTION.REQUEST_COUNTDOWN});
   }
 }

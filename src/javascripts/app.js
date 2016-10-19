@@ -193,7 +193,12 @@ class PingPong {
 
     $('#tilt').click(() => {
       // TODO 
-      this.scene.controlMode = 'MOUSE';
+      if (Util.isMobile()) {
+        this.scene.setupVRControls();
+        this.scene.controlMode = 'VR';
+      } else {
+        this.scene.controlMode = 'MOUSE';
+      }
       this.scene.startGame();
     });
   }
