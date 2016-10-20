@@ -19,32 +19,6 @@ body {
 .green {
   background-color: $green-background;
 }
-header {
-  text-transform: uppercase;
-  font-size: $font-size-olive;
-  font-family: AntiqueOlive;
-  font-weight: normal;
-  letter-spacing: 0.05em;
-  position: relative;
-  h1 {
-    opacity: 0.4;
-    font-size: $font-size-olive;
-    font-family: AntiqueOlive;
-    font-weight: normal;
-  }
-  span {
-    font-size: $font-size-olive;
-    font-family: AntiqueOlive;
-    font-weight: normal;
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    opacity: 1;
-    width: 0%;
-    overflow: hidden;
-  }
-}
 h2 {
   text-transform: uppercase;
   font-size: $font-size-large;
@@ -52,11 +26,12 @@ h2 {
 }
 button {
   text-transform: uppercase;
-  font-size: 0.8em;
+  font-size: 12px;
   cursor: pointer;
-  padding: 20px 30px;
-  background: transparent;
-  border: 3px solid #fff;
+  padding: 15px 30px;
+  background-color: transparent;
+  border: 2px solid #fff;
+  letter-spacing: 0.15em;
   color: #fff;
 }
 .futura-italic {
@@ -84,7 +59,8 @@ $border-width: 2px;
 $margin: calc(100px - 4vw);
 $margin: 4vh;
 .player-mode-chooser {
-  display: none;
+  left: -100vw;
+  @extend .screen;
   h3 {
     font-family: AntiqueOlive;
     font-size: calc(30px + 0.5vw);
@@ -173,8 +149,38 @@ $margin: 4vh;
   background: url(/images/intro-background.svg) no-repeat center center fixed; 
   background-size: cover;
 
+  header {
+    text-transform: uppercase;
+    font-size: $font-size-olive;
+    font-family: AntiqueOlive;
+    font-weight: normal;
+    letter-spacing: 0.05em;
+    position: relative;
+    h1 {
+      opacity: 0.4;
+      font-size: $font-size-olive;
+      font-family: AntiqueOlive;
+      font-weight: normal;
+    }
+    span {
+      font-size: $font-size-olive;
+      font-family: AntiqueOlive;
+      font-weight: normal;
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 1;
+      width: 0%;
+      overflow: hidden;
+    }
+  }
+
   & > div {
     @extend .absolute-center;
+    & > * {
+      transform: translateY(50px);
+    }
   }
   h1 {
     margin: 0;
@@ -182,7 +188,7 @@ $margin: 4vh;
   p {
     @extend .futura-italic;
     opacity: 0;
-    font-size: calc(15px + 1.2vw);
+    font-size: calc(15px + 0.8vw);
     letter-spacing: 0.03em;
     margin-bottom: 50px;
     margin-top: 10px;
@@ -192,21 +198,20 @@ $margin: 4vh;
   }
 }
 .grey-text {
-  margin-top: -5px;
+  margin-top: -15px;
   color: $medium-grey;
   @extend .futura-italic;
 }
 .open-room-screen,
 .join-room-screen {
-  display: none;
-  background-color: $blue-background;
+  left: -100vw;
   @extend .screen;
   & > div {
     @extend .absolute-center;
     width: 100%;
   }
   width: 100%;
-  font-size: $font-size-large;
+  font-size: 16px;
   input {
     display: block;
     text-align: center;
@@ -216,7 +221,6 @@ $margin: 4vh;
     border: 0;
     color: #fff;
     padding: 0;
-    margin-bottom: 15px;
     font-size: $font-size-olive;
     letter-spacing: 0.05em;
     width: 100%;
@@ -224,6 +228,9 @@ $margin: 4vh;
   #room-code {
     text-transform: uppercase;
   }
+}
+.open-room-screen {
+  background-color: $blue-background;
 }
 .join-room-screen {
   background-color: $green-background;
@@ -235,9 +242,9 @@ button.inactive {
 
 .present-players img {
   filter: invert(100%);
-  width: 50px;
+  width: 30px;
   height: auto;
-  margin: 20px 10px;
+  margin: 40px 10px;
 }
 .opponent-icon {
   opacity: 0.3;
@@ -313,4 +320,12 @@ button.inactive {
     width: 50%;
     margin: auto;
   }
+}
+.transition-color-screen {
+  z-index: 3;
+  position: absolute;
+  height: 100vh;
+  width: 100vw;
+  top: 0;
+  left: -100vw;
 }

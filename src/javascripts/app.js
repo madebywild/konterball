@@ -9,9 +9,9 @@ import Util from 'webvr-manager/util';
 import NoSleep from 'nosleep';
 import Communication from './communication';
 
-
 const minimumLoadingTime = 1000000;
-const headingOffset = 100;
+const vw = $(window).width();
+const vh = $(window).height();
 
 class PingPong {
   constructor() {
@@ -22,17 +22,17 @@ class PingPong {
     this.setupListeners();
     this.aboutScreenOpen = false;
 
-    TweenMax.set('header', {
-      y: headingOffset,
-    });
-
     Promise.all([
       this.scene.setup(), 
+      this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
-      TweenMax.to('header, .intro p, .intro button', 0.5, {
-        y: 0,
+      TweenMax.to(['.intro > div > *'], 0.5, {
+        y: 10,
+      });
+      TweenMax.to(['.intro > div > *'], 0.2, {
         opacity: 1,
+        delay: 0.3,
       });
     });
   }
@@ -42,6 +42,8 @@ class PingPong {
       TweenMax.to('header span', 0.5, {
         width: '100%',
         onComplete: () => {
+          $('header h1').css('opacity', 1);
+          $('header span').remove();
           resolve();
         }
       });
@@ -97,38 +99,72 @@ class PingPong {
   }
 
   showModeChooserScreen() {
-    TweenMax.set('.player-mode-chooser', {
-      display: 'block',
-      autoAlpha: 0,
+    let tl = new TimelineMax();
+    tl.set('.player-mode-chooser h3, .player-mode-chooser svg, .buttons', {
+      opacity: 0,
+      y: 10,
     });
-    TweenMax.to('.player-mode-chooser, .webvr-button', 0.5, {
-      autoAlpha: 1,
+    tl.set('.intro', {zIndex: 10});
+    tl.set('.transition-color-screen', {zIndex: 11});
+    tl.set('.player-mode-chooser', {zIndex: 12});
+    tl.staggerTo([
+      '.intro button',
+      '.intro p',
+      '.intro h1',
+      '.intro',
+      '.transition-color-screen.pink',
+      '.transition-color-screen.blue',
+      '.transition-color-screen.green',
+      '.player-mode-chooser',
+    ], 0.5, {
+      x: vw,
+      ease: Power2.easeInOut,
+    }, 0.1);
+    tl.set([
+      '.transition-color-screen.pink',
+      '.transition-color-screen.blue',
+      '.transition-color-screen.green',
+    ], {
+      x: 0,
     });
-    TweenMax.to('.intro', 0.5, {
-      autoAlpha: 0,
-    });
-    this.modeChooserAnimation();
+    tl.staggerTo([
+      '#singleplayer-animation svg',
+      '#multiplayer-animation svg',
+      '.one-player-col h3',
+      '.two-player-col h3',
+      '.one-player-col .buttons',
+      '.two-player-col .buttons',
+    ], 0.3, {
+      y: 0,
+      opacity: 1,
+    }, 0.1);
   }
   
-  modeChooserAnimation() {
-    $.getJSON('/animations/1player.json', data => {
-      this.singleplayerAnimation = bodymovin.loadAnimation({
-        container: document.getElementById('singleplayer-animation'),
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        animationData: data,
-      });
-    });
-    $.getJSON('/animations/2player.json', data => {
-      this.multiplayerAnimation = bodymovin.loadAnimation({
-        container: document.getElementById('multiplayer-animation'),
-        renderer: 'svg',
-        loop: true,
-        autoplay: true,
-        animationData: data,
-      });
-    });
+  loadModeChooserAnimation() {
+    return Promise.all([
+      new Promise((resolve, reject) => {
+        $.getJSON('/animations/1player.json', data => {
+          this.singleplayerAnimation = bodymovin.loadAnimation({
+            container: document.getElementById('singleplayer-animation'),
+            renderer: 'svg',
+            loop: true,
+            animationData: data,
+          });
+          resolve();
+        });
+      }),
+      new Promise((resolve, reject) => {
+        $.getJSON('/animations/2player.json', data => {
+          this.multiplayerAnimation = bodymovin.loadAnimation({
+            container: document.getElementById('multiplayer-animation'),
+            renderer: 'svg',
+            loop: true,
+            animationData: data,
+          });
+          resolve();
+        });
+      })
+    ]);
   }
 
   setupHandlers() {
@@ -140,7 +176,8 @@ class PingPong {
       $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
       $('.vr-mode-chooser').addClass('pink');
-      this.requestFullscreen();
+      // TODO dev
+      // this.requestFullscreen();
       this.scene.setSingleplayer();
       this.viewVRChooserScreen().then(() => {
         bodymovin.stop();
@@ -152,7 +189,7 @@ class PingPong {
       $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
       $('.vr-mode-chooser').addClass('blue');
-      this.requestFullscreen();
+      // this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
         bodymovin.stop();
@@ -164,7 +201,7 @@ class PingPong {
       $('#cardboard img').attr('src', '/images/cardboard-green.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
       $('.vr-mode-chooser').addClass('green');
-      this.requestFullscreen();
+      // this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewJoinRoomScreenAnimation().then(() => {
         bodymovin.stop();
@@ -173,7 +210,7 @@ class PingPong {
     });
 
     $('#play-again').click(() => {
-      this.scene.communication.sendRestartGame();
+      this.communication.sendRestartGame();
       $('#play-again').text('Waiting for opponent to restart...');
       this.scene.playerRequestedRestart = true;
       this.scene.restartGame();
@@ -219,6 +256,17 @@ class PingPong {
       }
       this.scene.startGame();
     });
+
+    $('button').on('click', function() {
+      const duration = 0.1;
+      TweenMax.to($(this), duration, {
+        backgroundColor: '#fff',
+      });
+      TweenMax.to($(this), duration, {
+        backgroundColor: 'transparent',
+        delay: duration,
+      });
+    });
   }
 
   viewVRChooserScreen() {
@@ -255,6 +303,7 @@ class PingPong {
 
   viewJoinRoomScreenAnimation() {
     return new Promise((resolve, reject) => {
+      $('#room-code').focus();
       $('#room-code').bind('input', function() {
         if ($(this).val().length === 4) {
           $('#join-room-button').removeClass('inactive');
@@ -273,31 +322,45 @@ class PingPong {
       });
 
       let tl = new TimelineMax();
-      tl.set('.join-room-screen', {
-        display: 'block',
-        autoAlpha: 0,
+      tl.set('.join-room-screen > div > *', {
+        opacity: 0,
+        y: 10,
       });
-      tl.to('.join-room-screen', 0.3, {
-        autoAlpha: 1,
-      });
-      tl.to('.player-mode-chooser', 0.3, {
-        autoAlpha: 0,
-        onComplete: () => {
-          resolve();
-        },
-      });
+      tl.set('.player-mode-chooser', {zIndex: 10});
+      tl.set('.transition-color-screen', {zIndex: 11});
+      tl.set('.join-room-screen', {zIndex: 12});
+      tl.staggerTo([
+        '.one-player-col',
+        '.two-player-col',
+        '.transition-color-screen.pink',
+        '.transition-color-screen.blue',
+        '.transition-color-screen.green',
+        '.join-room-screen',
+      ], 0.5, {
+        x: vw,
+        ease: Power2.easeInOut,
+      }, 0.1);
+      tl.staggerTo([
+        '.join-room-screen .present-players',
+        '.join-room-screen #room-code',
+        '.join-room-screen .grey-text',
+        '.join-room-screen #join-room-button',
+      ], 0.3, {
+        y: 0,
+        opacity: 1,
+      }, 0.1);
     });
   }
 
   viewOpenRoomScreenAnimation() {
     return new Promise((resolve, reject) => {
-      let id = this.communication.openRoom();
 
-      // $('#room-url').val('http://' + location.hostname + '/' + this.scene.communication.id);
-      $('#room-url').val(id);
+      this.communication.chooseClosestServer().then(() => {
+        let id = this.communication.openRoom();
+        $('#room-url').val(id);
+      });
 
       // TODO annoying during development
-      // history.pushState(null, null, this.scene.communication.id);
       this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
         $('.opponent-joined').text('Opponent joined');
         TweenMax.set('.opponent-icon', {opacity: 1});
@@ -309,28 +372,48 @@ class PingPong {
 
       new Clipboard('#room-url');
       let tl = new TimelineMax();
-      tl.to('.player-mode-chooser', 0.3, {
-        autoAlpha: 0,
+      tl.set('.open-room-screen > div > *', {
+        opacity: 0,
+        y: 10,
       });
-      tl.set('.open-room-screen', {
-        display: 'block',
-        autoAlpha: 0,
+      tl.set(['.open-room-screen #room-url', '.open-room-screen .grey-text'], {
+        opacity: 0,
+        y: 10,
       });
-      tl.to('.open-room-screen', 0.3, {
-        autoAlpha: 1,
-        onComplete: () => {
-          resolve();
-        },
+      tl.set(['.open-room-screen .present-players', '.open-room-screen .opponent-joined'], {
+        opacity: 0,
       });
+      tl.set('.player-mode-chooser', {zIndex: 10});
+      tl.set('.transition-color-screen', {zIndex: 11});
+      tl.set('.open-room-screen', {zIndex: 12});
+      tl.staggerTo([
+        '.one-player-col',
+        '.two-player-col',
+        '.transition-color-screen.pink',
+        '.transition-color-screen.blue',
+        '.transition-color-screen.green',
+        '.open-room-screen',
+      ], 0.5, {
+        x: vw,
+        ease: Power2.easeInOut,
+      }, 0.1);
+      tl.staggerTo(['.open-room-screen #room-url', '.open-room-screen .grey-text'], 0.3, {
+        y: 0,
+        opacity: 1,
+      });
+      tl.to(['.open-room-screen .present-players', '.open-room-screen .opponent-joined'], 0.3, {
+        opacity: 1,
+      }, '+=0.5');
 
       const blinkSpeed = 1;
       let blinkTL = new TimelineMax({repeat: -1, repeatDelay: blinkSpeed});
       blinkTL.set('.opponent-joined', {
-        opacity: 0,
+        visibility: 'hidden',
       }, 0);
       blinkTL.set('.opponent-joined', {
-        opacity: 1,
+        visibility: 'visible',
       }, blinkSpeed);
+
     });
   }
 }

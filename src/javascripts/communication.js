@@ -20,20 +20,18 @@ export default class Communication {
 
     this.pings = {};
     this.roundTripTimes = [];
-    //this.connectToServer();
-    this.chooseClosestServer();
   }
 
   setCallbacks(callbacks) {
     this.callbacks = callbacks;
   }
 
-  pingServer(host) {
+  pingServer(hostIndex) {
     return new Promise((resolve, reject) => {
-      let client = deepstream(host);
+      let client = deepstream(this.availableServers[hostIndex]);
       client.on('connectionStateChanged', e => {
         client.close();
-        resolve(host);
+        resolve(hostIndex);
         return;
       });
       setTimeout(5000, () => {
@@ -44,10 +42,13 @@ export default class Communication {
 
   chooseClosestServer() {
     return new Promise((resolve, reject) => {
-      Promise.race(this.availableServers.map(server => {
-        return this.pingServer(server);
+      Promise.race(this.availableServers.map((server, index) => {
+        return this.pingServer(index);
       })).then(fastestServer => {
-        this.connectToServer(fastestServer);
+        this.chosenServer = fastestServer;
+        return this.connectToServer(this.availableServers[fastestServer]);
+      }).then(() => {
+        resolve();
       });
     });
   }
@@ -64,25 +65,33 @@ export default class Communication {
           resolve();
         }
       });
+      setTimeout(2000, () => {
+        reject('timeout');
+      });
     });
   }
 
   tryConnecting(id) {
     return new Promise((resolve, reject) => {
-      this.GAME_ID = id;
-      this.isHost = false;
-      this.setRecords();
-      this.startListening();
-      this.statusRecord.set('player-2', {action: ACTION.CONNECT});
-      setTimeout(this.sendPings.bind(this), 1000);
-      resolve();
+      let serverIndex = parseInt(id[0]);
+      this.connectToServer(this.availableServers[serverIndex]).then(() => {
+        this.GAME_ID = id;
+        this.isHost = false;
+        this.setRecords();
+        this.startListening();
+        this.statusRecord.set('player-2', {action: ACTION.CONNECT});
+        setTimeout(this.sendPings.bind(this), 1000);
+        resolve();
+      }).catch(e => {
+        reject(e);
+      });
     });
   }
 
   openRoom() {
     this.isHost = true;
-    this.GAME_ID = randomstring.generate({
-      length: 4,
+    this.GAME_ID = this.chosenServer + randomstring.generate({
+      length: 3,
       capitalization: 'uppercase',
       readable: true,
     });
