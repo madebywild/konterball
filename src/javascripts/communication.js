@@ -13,23 +13,49 @@ export default class Communication {
     this.isHost = undefined;
     this.pingNumber = 0;
     this.pingInterval = null;
+    this.availableServers = [
+      '138.68.98.41:6020',
+      'localhost:6020',
+    ];
 
     this.pings = {};
     this.roundTripTimes = [];
-    this.connectToServer();
-    navigator.geolocation.getCurrentPosition(pos => {
-      console.log(pos);
-    });
+    //this.connectToServer();
+    this.chooseClosestServer();
   }
 
   setCallbacks(callbacks) {
     this.callbacks = callbacks;
   }
 
-  connectToServer() {
+  pingServer(host) {
+    return new Promise((resolve, reject) => {
+      let client = deepstream(host);
+      client.on('connectionStateChanged', e => {
+        client.close();
+        resolve(host);
+        return;
+      });
+      setTimeout(5000, () => {
+        reject('timeout');
+      });
+    });
+  }
+
+  chooseClosestServer() {
+    return new Promise((resolve, reject) => {
+      Promise.race(this.availableServers.map(server => {
+        return this.pingServer(server);
+      })).then(fastestServer => {
+        this.connectToServer(fastestServer);
+      });
+    });
+  }
+
+  connectToServer(host) {
     // connect to the deepstream server
     return new Promise((resolve, reject) => {
-      this.client = deepstream('107.170.205.99:6020', {
+      this.client = deepstream(host, {
         mergeStrategy: deepstream.MERGE_STRATEGIES.REMOTE_WINS
       });
       this.client.login();
@@ -93,6 +119,7 @@ export default class Communication {
     this.roundTripTimes.push(rtt);
     this.roundTripTimes.sort((a, b) => a - b);
     this.latency = this.roundTripTimes[Math.floor(this.roundTripTimes.length / 2)] / 2;
+    console.log(this.latency);
   }
 
   startListening() {

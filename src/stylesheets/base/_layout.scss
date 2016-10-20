@@ -85,40 +85,37 @@ $margin: calc(100px - 4vw);
 $margin: 4vh;
 .player-mode-chooser {
   display: none;
-  font-family: FuturaItalic;
-  color: $medium-grey;
-  font-size: 25px;
-  letter-spacing: 2px;
   h3 {
     font-family: AntiqueOlive;
     font-size: calc(30px + 0.5vw);
-  }
-  & > div {
-    width: 50%;
-    position: absolute;
-    cursor: pointer;
-    text-align: center;
-    & > div {
-      position: absolute;
-      left: 0;
-      right: 0;
-    }
-  }
-  h3 {
     text-transform: uppercase;
     font-size: 40px;
     margin-bottom: 20px;
     margin-top: 0;
     color: #fff;
+    position: absolute;
+    top: 10vh;
+    width: 100%;
     letter-spacing: 4px;
+    font-weight: normal;
+  }
+  & > div {
+    width: 50%;
+    position: absolute;
+    text-align: center;
+  }
+  .buttons {
+    position: absolute;
+    width: 100%;
+    bottom: 10vh;
   }
   @media screen and (max-width: $breakpoint-mobile) {
     font-size: 15px;
     h3 {
-      font-size: 20px;
+      font-size: 25px;
     }
   }
-  #start-singleplayer {
+  .one-player-col {
     background-color: $pink-background;
     left: 0;
     top: 0;
@@ -127,22 +124,13 @@ $margin: 4vh;
       bottom: $margin;
     }
   }
-  #open-room {
+  .two-player-col {
     background-color: $blue-background;
     right: 0;
     top: 0;
-    height: 50%;
+    height: 100%;
     .inner {
       top: $margin * 1.5;
-    }
-  }
-  #join-room {
-    background-color: $green-background;
-    bottom: 0;
-    right: 0;
-    height: 50%;
-    .inner {
-      bottom: $margin;
     }
   }
   #singleplayer-animation {
@@ -151,10 +139,9 @@ $margin: 4vh;
     @extend .absolute-center;
   }
   #multiplayer-animation {
-    pointer-events: none;
-    width: 80%;
+    width: 85%;
     margin: auto;
-    transform: translateY(-50%);
+    @extend .absolute-center;
   }
 }
 .about-button {

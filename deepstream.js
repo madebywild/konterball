@@ -8,7 +8,7 @@ const C = DeepstreamServer.constants
  * 4) pass some options, missing options will be merged with the base configuration
  * */
 const server = new DeepstreamServer({
-  host: '192.168.1.5',
+  host: 'localhost',
   port: 6020,
   tcpPort: 6021
 })
