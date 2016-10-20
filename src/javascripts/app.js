@@ -39,7 +39,8 @@ class PingPong {
 
   loadingAnimation() {
     return new Promise((resolve, reject) => {
-      TweenMax.to('header span', 0.5, {
+      TweenMax.to('header span', 2.5, {
+        ease: SlowMo.ease.config(0.3, 0.7, false),
         width: '100%',
         onComplete: () => {
           $('header h1').css('opacity', 1);

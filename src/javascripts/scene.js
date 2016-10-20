@@ -887,29 +887,40 @@ export default class Scene {
     if (!this.hitTween || !this.hitTween.isActive() && this.hitAvailable) {
       this.physics.paddleCollision({body: this.physics.ball, target: this.paddle});
       this.hitTween = new TimelineMax();
-      this.hitTween.to(this.paddle.position, 0.05, {
+      this.hitTween.to(this.paddle.position, 0.1, {
         x: this.ball.position.x,
         y: this.ball.position.y,
         z: this.ball.position.z,
       });
-      if (!this.display) {
+      if (!this.controlMode === 'MOUSE') {
+        // in mouse mode we dont care if the user moved while the animation was
+        // running because the paddle will smoothly continue the motion after
+        // the animation is done
         this.hitTween.to(this.paddle.position, 0.2, {
           x: this.paddle.position.x,
           y: this.paddle.position.y,
           z: this.paddle.position.z,
         });
       } else {
-        this.hitTween.to(this.paddle.position, 0.2, {
-          x: this.paddle.position.x,
-          y: this.paddle.position.y,
-          z: this.paddle.position.z,
+        // in vr mode, we have to interpolate the paddle position between the
+        // hit position and the position that the player is looking at,
+        // otherwise the paddle would 'teleport' to the new position after the
+        // tween
+        let no = {
+          alpha: 0,
+        };
+        const fromPosition = this.ball.position.clone();
+        this.hitTween.to(no, 0.3, {
+          alpha: 1,
+          onUpdate: () => {
+            let newPos = new THREE.Vector3().lerpVectors(
+              fromPosition,
+              this.computePaddlePosition(), no.alpha
+            );
+            this.setPaddlePosition(newPos.x, newPos.y, newPos.z);
+          },
         });
       }
-      // TweenMax.to(this.paddle.rotation, 0.05, {
-      //   x: -0.9,
-      //   repeat: 1,
-      //   yoyo: true,
-      // });
       this.hitAvailable = false;
       this.time.setTimeout(() => {this.hitAvailable = true;}, 300);
     }
