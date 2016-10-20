@@ -52,6 +52,8 @@ export default class Scene {
     this.state = STATE.PRELOADER;
     this.ballHasHitEnemyTable = false;
     this.resetTimeoutDuration = 1500;
+    this.physicsTimeStep = 1000;
+    this.lastOpponentHitPosition = null;
 
     this.mouseMoveSinceLastFrame = {
       x: 0,
@@ -339,7 +341,6 @@ export default class Scene {
   }
 
   startGame() {
-    alert(this.controlMode);
     // prepare the scene
     this.paddle.visible = false;
     this.hud.container.visible = false;
@@ -438,7 +439,6 @@ export default class Scene {
   }
 
   receivedRequestCountdown() {
-    console.log('received request countdown');
     this.opponentRequestedCountdown = true;
     this.requestCountdown();
   }
@@ -530,18 +530,31 @@ export default class Scene {
   receivedMove(move) {
     // received a move from the opponent,
     // set his paddle to the position received
+    let pos = this.mirrorPosition(move.position);
     let no = {
       x: this.paddleOpponent.position.x,
       y: this.paddleOpponent.position.y,
+      z: this.paddleOpponent.position.z,
+      rotationX: this.paddleOpponent.rotation.x,
+      rotationY: this.paddleOpponent.rotation.y,
       rotationZ: this.paddleOpponent.rotation.z,
     };
+    // show the opponent paddle slightly behind
+    // the actual position to prevent the ball going
+    // 'through' it
     TweenMax.to(no, 0.14, {
-      x: move.x,
-      y: move.y,
-      rotationZ: -move.x,
+      x: pos.x,
+      y: pos.y,
+      z: pos.z - 0.1,
+      rotationX: -move.rotation._x,
+      rotationY: move.rotation._y,
+      rotationZ: -move.rotation._z,
       onUpdate: () => {
         this.paddleOpponent.position.x = no.x;
         this.paddleOpponent.position.y = no.y;
+        this.paddleOpponent.position.z = no.z;
+        this.paddleOpponent.rotation.x = no.rotationX;
+        this.paddleOpponent.rotation.y = no.rotationY;
         this.paddleOpponent.rotation.z = no.rotationZ;
       }
     });
@@ -560,13 +573,25 @@ export default class Scene {
       // this doesnt add a ball if it already exists so were safe to call it
       this.addBall();
     }
+    this.physicsTimeStep = 1000;
+    // the received position will sometimes be slightly off from the position
+    // of this players ball due to changes in latency. save the difference and
+    // interpolate it until the ball is at our side again. this way the user
+    // shouldnt notice any hard position changes
+    this.ballPositionDifference = new THREE.Vector3().subVectors(
+      this.physics.ball.position,
+      this.mirrorPosition(data.point)
+    );
+    this.lastOpponentHitPosition = new THREE.Vector3().copy(
+      this.mirrorPosition(data.point)
+    );
     // received vectors are in the other users space
     // invert x and z velocity and mirror the point across the center of the box
-    this.physics.ball.position.copy(this.mirrorBallPosition(data.point));
-    this.physics.ball.velocity.copy(this.mirrorBallVelocity(data.velocity));
+    this.physics.ball.position.copy(this.mirrorPosition(data.point));
+    this.physics.ball.velocity.copy(this.mirrorVelocity(data.velocity));
   }
 
-  mirrorBallPosition(pos) {
+  mirrorPosition(pos) {
     let z = pos.z;
     z = z - Math.sign(z - this.config.tablePositionZ) * Math.abs(z - this.config.tablePositionZ) * 2;
     return {
@@ -576,7 +601,7 @@ export default class Scene {
     };
   }
 
-  mirrorBallVelocity(vel) {
+  mirrorVelocity(vel) {
     return {
       x: -vel.x,
       y: vel.y,
@@ -585,6 +610,7 @@ export default class Scene {
   }
 
   receivedMiss(data) {
+    this.physicsTimeStep = 1000;
     this.time.clearTimeout(this.resetBallTimeout);
     // opponent missed, update player score
     // and set game to be over if the score is high enough
@@ -605,12 +631,28 @@ export default class Scene {
     }
   }
 
+  slowdownBall() {
+    // if the ball is on the way to the opponent,
+    // we slow it down so it will be on the opponents side
+    // approximately at the time they actually hit it
+    // NOTE we still only receive the hit half a roundtriptime later
+    if (this.physics.ball.velocity.z > 0) {
+      return;
+    }
+    const velocity = this.physics.ball.velocity.length();
+    const dist = new THREE.Vector3().subVectors(this.ball.position, this.paddleOpponent.position).length();
+    const eta = dist/velocity;
+    const desirableEta = eta + (this.communication.latency / 1000);
+    this.physicsTimeStep = 1000 * (desirableEta/eta) * 1;
+  }
+
   restartPingpongTimeout() {
     // reset the ball position in case the ball is stuck at the net
     // or fallen to the floor
     this.time.clearTimeout(this.resetBallTimeout);
     this.resetBallTimeout = this.time.setTimeout(() => {
       if (this.config.mode === MODE.MULTIPLAYER) {
+        this.physicsTimeStep = 1000;
         if (this.ballHasHitEnemyTable) {
           this.score.self++;
           this.hud.scoreDisplay.setSelfScore(this.score.self);
@@ -654,6 +696,7 @@ export default class Scene {
   }
 
   ballPaddleCollision(body) {
+    this.ballPositionDifference = null;
     // the ball collided with the players paddle
     this.restartPingpongTimeout();
     this.paddleCollisionAnimation();
@@ -669,6 +712,7 @@ export default class Scene {
     // somewhere in the opponents paddle with a weird velocity
     // TODO tweak and test this timeout
     this.time.setTimeout(() => {
+      this.slowdownBall();
       this.communication.sendHit({
         x: body.position.x,
         y: body.position.y,
@@ -814,9 +858,29 @@ export default class Scene {
     }
   }
 
-  updateBall(ball) {
-    ball.position.copy(ball.physicsReference.position);
-    ball.quaternion.copy(ball.physicsReference.quaternion);
+  updateBall() {
+    if (this.ballPositionDifference) {
+      // we interpolate between the actual (received) position and the position
+      // the user would expect. as closer the ball comes to our paddle, the
+      // closer the shown ball will come to the actual position. when it hits
+      // the paddle, both positions will be the same.
+      let wayLeftToTravel = this.physics.ball.position.distanceTo(this.paddle.position);
+      let totalWayToTravel = this.lastOpponentHitPosition.distanceTo(this.paddle.position);
+      let interpolationAlpha = wayLeftToTravel / totalWayToTravel;
+      let fauxPosition = new THREE.Vector3().lerpVectors(
+        this.physics.ball.position,
+        new THREE.Vector3().addVectors(
+          this.physics.ball.position,
+          this.ballPositionDifference
+        ),
+        interpolationAlpha
+      );
+      this.ball.position.copy(fauxPosition);
+      this.ball.quaternion.copy(this.physics.ball.quaternion);
+    } else {
+      this.ball.position.copy(this.physics.ball.position);
+      this.ball.quaternion.copy(this.physics.ball.quaternion);
+    }
   }
 
   ballHitAnimation() {
@@ -864,6 +928,7 @@ export default class Scene {
     this.updateControls();
 
     if (this.ball) {
+
       let dist = new THREE.Vector3();
       dist.subVectors(this.ball.position, this.paddle.position);
       if (dist.length() < 0.4 && Math.abs(dist.x) < 0.2 && Math.abs(dist.z) < 0.1
@@ -882,12 +947,17 @@ export default class Scene {
     if (this.config.state === STATE.PLAYING || this.config.state === STATE.COUNTDOWN) {
       if (this.config.mode === MODE.MULTIPLAYER) {
         // send where the paddle has moved, if it has moved
-        this.communication.sendMove(-this.paddle.position.x, this.paddle.position.y);
+        if (this.frameNumber % 6 === 0) {
+          this.communication.sendMove(
+            this.paddle.position,
+            this.paddle.rotation
+          );
+        }
       }
     }
 
     if (this.config.state === STATE.PLAYING) {
-      this.physics.step(delta / 1000);
+      this.physics.step(delta / this.physicsTimeStep);
       this.updateBall(this.ball);
       this.physics.predictCollisions(this.physics.ball, this.paddle, this.scene.getObjectByName('net-collider'));
     }

@@ -11,6 +11,7 @@ import Communication from './communication';
 
 
 const minimumLoadingTime = 1000000;
+const headingOffset = 100;
 
 class PingPong {
   constructor() {
@@ -21,11 +22,28 @@ class PingPong {
     this.setupListeners();
     this.aboutScreenOpen = false;
 
+    TweenMax.set('header', {
+      y: headingOffset,
+    });
+
     Promise.all([
       this.scene.setup(), 
+      this.loadingAnimation(),
     ]).then(() => {
-      TweenMax.to('#start', 0.5, {
+      TweenMax.to('header, .intro p, .intro button', 0.5, {
+        y: 0,
         opacity: 1,
+      });
+    });
+  }
+
+  loadingAnimation() {
+    return new Promise((resolve, reject) => {
+      TweenMax.to('header span', 0.5, {
+        width: '100%',
+        onComplete: () => {
+          resolve();
+        }
       });
     });
   }

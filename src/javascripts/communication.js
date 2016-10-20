@@ -7,14 +7,19 @@ export default class Communication {
   constructor(emitter) {
     this.emitter = emitter;
     this.callbacks = {};
-    this.connectionIsOpen = false;
     this.opponentConnected = false;
-    this.latency = null;
+    this.latency = 100;
     this.conn = null;
-    this.reliableConn = null;
     this.isHost = undefined;
+    this.pingNumber = 0;
+    this.pingInterval = null;
 
+    this.pings = {};
+    this.roundTripTimes = [];
     this.connectToServer();
+    navigator.geolocation.getCurrentPosition(pos => {
+      console.log(pos);
+    });
   }
 
   setCallbacks(callbacks) {
@@ -24,7 +29,10 @@ export default class Communication {
   connectToServer() {
     // connect to the deepstream server
     return new Promise((resolve, reject) => {
-      this.client = deepstream('192.168.1.5:6020').login();
+      this.client = deepstream('107.170.205.99:6020', {
+        mergeStrategy: deepstream.MERGE_STRATEGIES.REMOTE_WINS
+      });
+      this.client.login();
       this.client.on('connectionStateChanged', e => {
         if (e === deepstream.CONSTANTS.CONNECTION_STATE.OPEN) {
           resolve();
@@ -38,8 +46,9 @@ export default class Communication {
       this.GAME_ID = id;
       this.isHost = false;
       this.setRecords();
-      this.statusRecord.set('player-2', {action: ACTION.CONNECT});
       this.startListening();
+      this.statusRecord.set('player-2', {action: ACTION.CONNECT});
+      setTimeout(this.sendPings.bind(this), 1000);
       resolve();
     });
   }
@@ -58,36 +67,39 @@ export default class Communication {
 
   setRecords() {
     this.statusRecord = this.client.record.getRecord(`${this.GAME_ID}-status`);
-    this.paddleRecord = this.client.record.getRecord(`${this.GAME_ID}-paddle`);
+    this.paddle1Record = this.client.record.getRecord(`${this.GAME_ID}-paddle1`);
+    this.paddle2Record = this.client.record.getRecord(`${this.GAME_ID}-paddle2`);
     this.hitRecord = this.client.record.getRecord(`${this.GAME_ID}-hit`);
     this.missRecord = this.client.record.getRecord(`${this.GAME_ID}-miss`);
+    this.pingRecord = this.client.record.getRecord(`${this.GAME_ID}-ping`);
   }
 
   sendPings() {
-    setInterval(() => {
-      console.log('SEND PING');
-      this.conn.send({
-        action: 'PING',
-        time: Date.now(),
+    this.pingInterval = setInterval(() => {
+      this.pings[this.pingNumber] = Date.now();
+      this.pingRecord.set(`player-${this.isHost ? 1 : 2}-ping-${this.pingNumber}`, {
+        index: this.pingNumber,
+        ping: true
       });
+      this.pingNumber++;
+      if (this.pingNumber >= 20) {
+        clearInterval(this.pingInterval);
+      }
     }, 1000);
   }
 
-  receivedPing(data) {
-    this.conn.send({
-      action: 'PONG',
-      time: data.time,
-    });
-  }
-
   receivedPong(data) {
-    console.log('PING TIME: ' + (Date.now() - data.time) / 2 + 'ms');
+    let rtt = Date.now() - this.pings[data.index];
+    this.roundTripTimes.push(rtt);
+    this.roundTripTimes.sort((a, b) => a - b);
+    this.latency = this.roundTripTimes[Math.floor(this.roundTripTimes.length / 2)] / 2;
   }
 
   startListening() {
     this.statusRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
       switch (value.action) {
         case ACTION.CONNECT:
+          setTimeout(this.sendPings.bind(this), 1000);
           this.emitter.emit(EVENT.OPPONENT_CONNECTED);
           break;
         case ACTION.DISCONNECT:
@@ -101,19 +113,41 @@ export default class Communication {
           break;
       }
     });
-    this.paddleRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
-      this.callbacks.move(value);
-    });
+    if (this.isHost) {
+      this.paddle2Record.subscribe(`position`, value => {
+        this.callbacks.move(value);
+      });
+    } else {
+      this.paddle1Record.subscribe(`position`, value => {
+        this.callbacks.move(value);
+      });
+    }
     this.hitRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
       this.callbacks.hit(value);
     });
     this.missRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
       this.callbacks.miss(value);
     });
+    for (let i = 0; i < 20; i++) {
+      this.pingRecord.subscribe(`player-${this.isHost ? 2 : 1}-ping-${i}`, value => {
+        if (value.ping) {
+          this.pingRecord.set(`player-${this.isHost ? 1 : 2}-ping-${value.index}`, {
+            index: value.index,
+            pong: true,
+          });
+        } else {
+          this.receivedPong(value);
+        }
+      });
+    }
   }
 
-  sendMove(x, y) {
-    this.paddleRecord.set(`player-${this.isHost ? 1 : 2}`, {x, y});
+  sendMove(position, rotation) {
+    if (this.isHost) {
+      this.paddle1Record.set(`position`, {position, rotation});
+    } else {
+      this.paddle2Record.set(`position`, {position, rotation});
+    }
   }
 
   sendHit(point, velocity, addBall=false) {
