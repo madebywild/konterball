@@ -59,7 +59,7 @@ $border-width: 2px;
 $margin: calc(100px - 4vw);
 $margin: 4vh;
 .player-mode-chooser {
-  left: -100vw;
+  left: -100%;
   @extend .screen;
   h3 {
     font-family: AntiqueOlive;
@@ -179,7 +179,7 @@ $margin: 4vh;
   & > div {
     @extend .absolute-center;
     & > * {
-      transform: translateY(50px);
+      transform: translateY(70px);
     }
   }
   h1 {
@@ -204,7 +204,7 @@ $margin: 4vh;
 }
 .open-room-screen,
 .join-room-screen {
-  left: -100vw;
+  left: -100%;
   @extend .screen;
   & > div {
     @extend .absolute-center;
@@ -324,8 +324,8 @@ button.inactive {
 .transition-color-screen {
   z-index: 3;
   position: absolute;
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
   top: 0;
-  left: -100vw;
+  left: -100%;
 }

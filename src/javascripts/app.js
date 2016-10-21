@@ -9,10 +9,6 @@ import Util from 'webvr-manager/util';
 import NoSleep from 'nosleep';
 import Communication from './communication';
 
-const minimumLoadingTime = 1000000;
-const vw = $(window).width();
-const vh = $(window).height();
-
 class PingPong {
   constructor() {
     this.emitter = EventEmitter({});
@@ -113,20 +109,24 @@ class PingPong {
       '.intro p',
       '.intro h1',
       '.intro',
+    ], 0.5, {
+      left: '100%',
+    }, 0.1);
+    tl.staggerTo([
       '.transition-color-screen.pink',
       '.transition-color-screen.blue',
       '.transition-color-screen.green',
       '.player-mode-chooser',
     ], 0.5, {
-      x: vw,
+      left: '0%',
       ease: Power2.easeInOut,
-    }, 0.1);
+    }, 0.1, '-=0.9');
     tl.set([
       '.transition-color-screen.pink',
       '.transition-color-screen.blue',
       '.transition-color-screen.green',
     ], {
-      x: 0,
+      left: '-100%',
     });
     tl.staggerTo([
       '#singleplayer-animation svg',
@@ -330,17 +330,18 @@ class PingPong {
       tl.set('.player-mode-chooser', {zIndex: 10});
       tl.set('.transition-color-screen', {zIndex: 11});
       tl.set('.join-room-screen', {zIndex: 12});
+      tl.to('.player-mode-chooser', 0.5, {
+        left: '100%',
+      });
       tl.staggerTo([
-        '.one-player-col',
-        '.two-player-col',
         '.transition-color-screen.pink',
         '.transition-color-screen.blue',
         '.transition-color-screen.green',
         '.join-room-screen',
       ], 0.5, {
-        x: vw,
+        left: '0%',
         ease: Power2.easeInOut,
-      }, 0.1);
+      }, 0.1, '-=0.6');
       tl.staggerTo([
         '.join-room-screen .present-players',
         '.join-room-screen #room-code',
@@ -387,17 +388,18 @@ class PingPong {
       tl.set('.player-mode-chooser', {zIndex: 10});
       tl.set('.transition-color-screen', {zIndex: 11});
       tl.set('.open-room-screen', {zIndex: 12});
+      tl.to('.player-mode-chooser', 0.5, {
+        left: '100%',
+      });
       tl.staggerTo([
-        '.one-player-col',
-        '.two-player-col',
         '.transition-color-screen.pink',
         '.transition-color-screen.blue',
         '.transition-color-screen.green',
         '.open-room-screen',
       ], 0.5, {
-        x: vw,
+        left: '0%',
         ease: Power2.easeInOut,
-      }, 0.1);
+      }, 0.1, '-=0.6');
       tl.staggerTo(['.open-room-screen #room-url', '.open-room-screen .grey-text'], 0.3, {
         y: 0,
         opacity: 1,
@@ -414,7 +416,6 @@ class PingPong {
       blinkTL.set('.opponent-joined', {
         visibility: 'visible',
       }, blinkSpeed);
-
     });
   }
 }

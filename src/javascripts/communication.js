@@ -49,6 +49,8 @@ export default class Communication {
         return this.connectToServer(this.availableServers[fastestServer]);
       }).then(() => {
         resolve();
+      }).catch(e => {
+        reject(e);
       });
     });
   }
@@ -61,10 +63,15 @@ export default class Communication {
       });
       this.client.login();
       this.client.on('connectionStateChanged', e => {
+        console.log(e);
         if (e === deepstream.CONSTANTS.CONNECTION_STATE.OPEN) {
           resolve();
         }
+        if (e === deepstream.CONSTANTS.CONNECTION_STATE.ERROR) {
+          reject('error');
+        }
       });
+      console.log('settimeout');
       setTimeout(2000, () => {
         reject('timeout');
       });
