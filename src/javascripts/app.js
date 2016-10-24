@@ -35,7 +35,7 @@ class PingPong {
 
   loadingAnimation() {
     return new Promise((resolve, reject) => {
-      TweenMax.to('header span', 2.5, {
+      TweenMax.to('header span', 0.5, {
         ease: SlowMo.ease.config(0.3, 0.7, false),
         width: '100%',
         onComplete: () => {
@@ -51,14 +51,15 @@ class PingPong {
     if (!Util.isMobile()) {
       return;
     }
-    /*
     document.addEventListener("fullscreenchange", function(event) {
-      if ( document.fullscreen ) {
-        screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
+      if (document.fullscreen) {
+        screen.lockOrientationUniversal
+          = screen.lockOrientation
+          || screen.mozLockOrientation
+          || screen.msLockOrientation;
         window.screen.lockOrientationUniversal('landscape-primary');
       }
     });
-    */
     let noSleep = new NoSleep();
     noSleep.enable();
     let i = document.documentElement;
@@ -96,7 +97,7 @@ class PingPong {
   }
 
   showModeChooserScreen() {
-    let tl = new TimelineMax();
+    const tl = new TimelineMax();
     tl.set('.player-mode-chooser h3, .player-mode-chooser svg, .buttons', {
       opacity: 0,
       y: 10,
@@ -221,6 +222,10 @@ class PingPong {
       location.reload();
     });
 
+    $('.exit-arrow').click(() => {
+      location.reload();
+    });
+
     $('.about-button').click(() => {
       if (this.aboutScreenOpen) {
         TweenMax.to('.about-screen', 0.5, {
@@ -268,6 +273,13 @@ class PingPong {
         delay: duration,
       });
     });
+
+    $('.back-arrow').on('click', () => {
+      this.backAnimation();
+    });
+    $('.back-arrow').on('click', () => {
+      this.backAnimation();
+    });
   }
 
   viewVRChooserScreen() {
@@ -283,7 +295,7 @@ class PingPong {
         $("#tilt p").text("Mouse");
       }
 
-      let tl = new TimelineMax();
+      const tl = new TimelineMax();
       tl.set('.vr-mode-chooser', {
         display: 'block',
         opacity: 0,
@@ -322,7 +334,7 @@ class PingPong {
         });
       });
 
-      let tl = new TimelineMax();
+      const tl = new TimelineMax();
       tl.set('.join-room-screen > div > *', {
         opacity: 0,
         y: 10,
@@ -354,6 +366,28 @@ class PingPong {
     });
   }
 
+  backAnimation() {
+    const tl = new TimelineMax();
+    tl.set('.player-mode-chooser', {zIndex: 12});
+    tl.set('.transition-color-screen', {zIndex: 11, left: '100%'});
+    tl.set('.join-room-screen, .open-room-screen', {zIndex: 10});
+    tl.staggerTo([
+      '.join-room-screen, .open-room-screen',
+      '.transition-color-screen.green',
+      '.transition-color-screen.blue',
+      '.transition-color-screen.pink',
+    ], 0.5, {
+      left: '-100%',
+      ease: Power2.easeInOut,
+    }, 0.1);
+    tl.to([
+      '.player-mode-chooser',
+    ], 0.5, {
+      left: '0%',
+      ease: Power2.easeInOut,
+    }, '-=0.5');
+  }
+
   viewOpenRoomScreenAnimation() {
     return new Promise((resolve, reject) => {
 
@@ -373,7 +407,7 @@ class PingPong {
       });
 
       new Clipboard('#room-url');
-      let tl = new TimelineMax();
+      const tl = new TimelineMax();
       tl.set('.open-room-screen > div > *', {
         opacity: 0,
         y: 10,
@@ -409,7 +443,7 @@ class PingPong {
       }, '+=0.5');
 
       const blinkSpeed = 1;
-      let blinkTL = new TimelineMax({repeat: -1, repeatDelay: blinkSpeed});
+      const blinkTL = new TimelineMax({repeat: -1, repeatDelay: blinkSpeed});
       blinkTL.set('.opponent-joined', {
         visibility: 'hidden',
       }, 0);

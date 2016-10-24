@@ -194,8 +194,8 @@ export default class Physics {
   predictCollisions(ball, paddle, net) {
     // predict ball position in the next frame
     this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
-    // TODO find out how much velocity the ball actually has per frame
-    this.raycaster.far = this.ball.velocity.clone().length() / 30;
+    // divide by 50 at 60fps so we dont accidentally miss the frame
+    this.raycaster.far = this.ball.velocity.clone().length() / 50;
 
     let arr = this.raycaster.intersectObjects([paddle, net], true);
     if (arr.length) {

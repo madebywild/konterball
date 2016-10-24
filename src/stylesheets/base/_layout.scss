@@ -75,7 +75,7 @@ $margin: 4vh;
     letter-spacing: 4px;
     font-weight: normal;
   }
-  & > div {
+  .one-player-col, .two-player-col {
     width: 50%;
     position: absolute;
     text-align: center;
@@ -169,14 +169,15 @@ $margin: 4vh;
       display: block;
       position: absolute;
       top: 0;
-      left: 0;
+      left: -10px;
+      padding-left: 10px;
       opacity: 1;
       width: 0%;
       overflow: hidden;
     }
   }
 
-  & > div {
+  .inner {
     @extend .absolute-center;
     & > * {
       transform: translateY(70px);
@@ -206,7 +207,7 @@ $margin: 4vh;
 .join-room-screen {
   left: -100%;
   @extend .screen;
-  & > div {
+  .inner {
     @extend .absolute-center;
     width: 100%;
   }
@@ -249,7 +250,14 @@ button.inactive {
 .opponent-icon {
   opacity: 0.3;
 }
-
+.exit-arrow,
+.back-arrow {
+  padding: 20px;
+  border: 0;
+  left: 0;
+  top: 0;
+  position: absolute;
+}
 .game-over-screen-wrapper {
   display: none;
   .game-over-screen {
@@ -289,7 +297,7 @@ button.inactive {
 .vr-mode-chooser {
   display: none;
   @extend .screen;
-  & > div {
+  .inner {
     @extend .absolute-center;
     width: 100%;
     z-index: 50;

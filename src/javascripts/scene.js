@@ -97,7 +97,6 @@ export default class Scene {
   setup() {
     return new Promise((resolve, reject) => {
       this.setupThree();
-      this.table = Table(this.scene, this.config);
       this.setupVR();
       this.net = Net(this.scene, this.config);
 
@@ -127,24 +126,30 @@ export default class Scene {
       this.hud = new Hud(this.scene, this.config, this.emitter);
 
       document.addEventListener("keydown", e => {
+        // TODO remove for prod
         return;
         if (e.key === 'w') {
-          this.camera.position.z -= 0.1;
+          this.camera.position.z -= 1;
         } else if (e.key === 's') {
-          this.camera.position.z += 0.1;
+          this.camera.position.z += 1;
         } else if (e.key === 'u') {
           this.camera.position.y += 0.1;
         } else if (e.key === 'j') {
           this.camera.position.y -= 0.1;
         } else if (e.key === '+') {
-          this.camera.fov += 1;
+          this.camera.fov += 0.3;
         } else if (e.key === '-') {
-          this.camera.fov -= 1;
+          this.camera.fov -= 0.3;
+        } else if (e.key === 'd') {
+          this.camera.position.x += 1;
+        } else if (e.key === 'a') {
+          this.camera.position.x -= 1;
         } else if (e.key === 'ArrowUp') {
           this.camera.rotation.x += 0.05;
         } else if (e.key === 'ArrowDown') {
           this.camera.rotation.x -= 0.05;
         }
+        this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
         this.camera.updateProjectionMatrix();
         console.log(this.camera.rotation);
         console.log(this.camera.position);
@@ -213,14 +218,13 @@ export default class Scene {
 
     // THREE js basics
     this.scene = new THREE.Scene();
-    this.scene.scale.y = 0.01;
 
-    this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 10000);
+    this.camera = new THREE.PerspectiveCamera(5, window.innerWidth / window.innerHeight, 0.1, 10000);
     // position over the box, will be animated to the final camera position
-    this.camera.position.x = 0;
-    this.camera.position.z = this.config.tablePositionZ;
-    this.camera.position.y = 5;
-    this.camera.up.set(-1, 0, 0);
+    //x: 19, y: 24.300000000000075, z: 18.6,
+    this.camera.position.x = 24;
+    this.camera.position.z = 24;
+    this.camera.position.y = 24;
     this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
   }
 
@@ -363,50 +367,10 @@ export default class Scene {
       table.material.color.set(this.config.colors.PINK_TABLE);
     }
 
-    // set colors
-    // null object for tweening
-    let no = {
-      fov: this.camera.fov,
-      upX: -1,
-      upY: 0,
-      scaleY: 0.01,
-    };
-
-    let tl = new TimelineMax();
-    tl.to('.intro-wrapper', 0.4, {
-      autoAlpha: 0,
-    }, 0);
-
-    /*
-    const panDuration = 1;
-
-    tl.to(no, panDuration, {
-      fov: 47,
-      upX: 0,
-      upY: 1,
-      scaleY: 1,
-      ease: Power3.easeIn,
-      onUpdate: () => {
-        this.scene.scale.y = no.scaleY;
-        this.camera.fov = no.fov;
-        this.camera.up.set(no.upX, no.upY, 0);
-        this.camera.updateProjectionMatrix();
-      },
-    }, 1);
-    tl.to(this.camera.position, panDuration, {
-      x: 0,
-      y: 1.6,
-      z: 0.6,
-      onUpdate: () => {
-        this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
-      },
-      onComplete: () => {
-        this.paddle.visible = true;
-        this.hud.container.visible = true;
-        this.setupVRControls();
-      }
-    }, 1);
-    tl.call(() => {
+    this.introPanAnimation().then(() => {
+      this.paddle.visible = true;
+      this.hud.container.visible = true;
+      this.setupVRControls();
       if (this.config.mode === MODE.SINGLEPLAYER) {
         this.countdown();
       } else {
@@ -415,27 +379,55 @@ export default class Scene {
         this.playerRequestedCountdown = true;
         this.requestCountdown();
       }
-    }, [], null, '+=1');
-    */
+    });
 
-    this.camera.position.x = 0;
-    this.camera.position.y = 1.6;
-    this.camera.position.z = 0.6;
-    this.camera.up.set(0, 1, 0);
-    this.camera.fov = 47;
-    this.scene.scale.y = 1;
-    this.camera.updateProjectionMatrix();
+  }
 
-    this.paddle.visible = true;
-    this.hud.container.visible = true;
-    if (this.config.mode === MODE.SINGLEPLAYER) {
-      this.countdown();
-    } else {
-      this.paddleOpponent.visible = true;
-      this.communication.sendRequestCountdown();
-      this.playerRequestedCountdown = true;
-      this.requestCountdown();
-    }
+  introPanAnimation() {
+    return new Promise((resolve, reject) => {
+      // set colors
+      // null object for tweening
+      let no = {
+        fov: this.camera.fov,
+      };
+
+      let tl = new TimelineMax();
+      tl.set('canvas', {
+        'left': '-100%',
+      });
+      tl.set('.transition-color-screen, .join-room-screen, .intro, .open-room-screen', {
+        display: 'none',
+      });
+      tl.to('.intro-wrapper', 0.4, {
+        'left': '100%',
+      }, 0);
+      tl.to('canvas', 0.4, {
+        'left': '0%',
+      }, 0);
+
+      const panDuration = 1;
+
+      tl.to(no, panDuration, {
+        fov: 47,
+        ease: Power3.easeIn,
+        onUpdate: () => {
+          this.camera.fov = no.fov;
+          this.camera.updateProjectionMatrix();
+        },
+      }, 1);
+      tl.to(this.camera.position, panDuration, {
+        x: 0,
+        y: 1.6,
+        z: 0.6,
+        ease: Power1.easeInOut,
+        onUpdate: () => {
+          this.camera.lookAt(
+            new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ)
+          );
+        },
+      }, 1);
+      tl.call(resolve, [], null, '+=1');
+    });
   }
 
   receivedRequestCountdown() {
@@ -508,6 +500,7 @@ export default class Scene {
   setMultiplayer() {
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
+    this.table = Table(this.scene, this.config);
     this.hud.message.showMessage();
     this.resetTimeoutDuration = 3000;
     this.hud.scoreDisplay.opponentScore.visible = true;
@@ -525,6 +518,9 @@ export default class Scene {
 
   setSingleplayer() {
     this.config.mode = MODE.SINGLEPLAYER;
+    this.table = Table(this.scene, this.config);
+    //this.table.getObjectByName('table').scale.z = 0.5;
+    //this.table.getObjectByName('table').position.z = this.config.tablePositionZ + this.config.tableDepth / 2;
   }
 
   receivedMove(move) {
@@ -762,6 +758,7 @@ export default class Scene {
     this.paddle.position.y = this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
 
     this.paddle.rotation.x = -((this.config.tablePositionZ + this.config.tableDepth / 2) - this.paddle.position.z * 1);
+    // this.paddle.rotation.y = this.ball ? cap(3 * -this.ball.position.x + x, -Math.PI / 3, Math.PI / 3) : x;
     this.paddle.rotation.z = -x;
   }
 
@@ -892,7 +889,7 @@ export default class Scene {
         y: this.ball.position.y,
         z: this.ball.position.z,
       });
-      if (!this.controlMode === 'MOUSE') {
+      if (this.controlMode === 'MOUSE') {
         // in mouse mode we dont care if the user moved while the animation was
         // running because the paddle will smoothly continue the motion after
         // the animation is done
@@ -936,7 +933,6 @@ export default class Scene {
       return;
     }
 
-    this.updateControls();
 
     if (this.ball) {
 
@@ -956,6 +952,7 @@ export default class Scene {
     }
 
     if (this.config.state === STATE.PLAYING || this.config.state === STATE.COUNTDOWN) {
+      this.updateControls();
       if (this.config.mode === MODE.MULTIPLAYER) {
         // send where the paddle has moved, if it has moved
         if (this.frameNumber % 6 === 0) {

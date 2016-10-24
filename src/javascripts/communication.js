@@ -15,7 +15,7 @@ export default class Communication {
     this.pingInterval = null;
     this.availableServers = [
       '138.68.98.41:6020',
-      'localhost:6020',
+      '52.57.135.84:6020',
     ];
 
     this.pings = {};
@@ -29,6 +29,10 @@ export default class Communication {
   pingServer(hostIndex) {
     return new Promise((resolve, reject) => {
       let client = deepstream(this.availableServers[hostIndex]);
+      client.on('error', e => {
+        // in case a server is down it will throw an error
+        // ignore this for now
+      });
       client.on('connectionStateChanged', e => {
         client.close();
         resolve(hostIndex);
@@ -46,8 +50,10 @@ export default class Communication {
         return this.pingServer(index);
       })).then(fastestServer => {
         this.chosenServer = fastestServer;
+        console.log(`fastest response from: ${this.availableServers[fastestServer]}`);
         return this.connectToServer(this.availableServers[fastestServer]);
       }).then(() => {
+        $('.opponent-connected').text('Waiting for opponent');
         resolve();
       }).catch(e => {
         reject(e);
@@ -63,7 +69,6 @@ export default class Communication {
       });
       this.client.login();
       this.client.on('connectionStateChanged', e => {
-        console.log(e);
         if (e === deepstream.CONSTANTS.CONNECTION_STATE.OPEN) {
           resolve();
         }
@@ -71,7 +76,6 @@ export default class Communication {
           reject('error');
         }
       });
-      console.log('settimeout');
       setTimeout(2000, () => {
         reject('timeout');
       });
@@ -135,7 +139,6 @@ export default class Communication {
     this.roundTripTimes.push(rtt);
     this.roundTripTimes.sort((a, b) => a - b);
     this.latency = this.roundTripTimes[Math.floor(this.roundTripTimes.length / 2)] / 2;
-    console.log(this.latency);
   }
 
   startListening() {

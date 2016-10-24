@@ -7,13 +7,14 @@
 {% extends 'layouts/application.html' %}
 
 {% block content %}
+<button class='exit-arrow'>exit</button>
 <div class='intro-wrapper'>
   <div class='transition-color-screen pink'></div>
   <div class='transition-color-screen blue'></div>
   <div class='transition-color-screen green'></div>
   <div class='about-button'>About</div>
   <div class='intro'>
-    <div>
+    <div class='inner'>
       <header>
         <h1>Webpong</h1>
         <span class='loading-text-overlay'>Webpong</span>
@@ -42,19 +43,21 @@
   </div>
 
   <div class='open-room-screen'>
-    <div>
+    <button class='back-arrow'>back</button>
+    <div class='inner'>
       <div class='present-players'>
         <img src='images/icon-person.svg'>
         <img class='opponent-icon' src='images/icon-person.svg'>
       </div>
-      <input type='text' id='room-url' value='Generating Code...' readonly data-clipboard-target="#room-url"><br>
+      <input type='text' id='room-url' value='' readonly data-clipboard-target="#room-url"><br>
       <p class='grey-text'>Send Code to your Opponent</p><br>
-      <p class='opponent-joined'>Waiting for opponent</p><br>
+      <p class='opponent-joined'>Connecting to server</p><br>
     </div>
   </div>
 
   <div class='join-room-screen'>
-    <div>
+    <button class='back-arrow'>back</button>
+    <div class='inner'>
       <div class='present-players'>
         <img src='images/icon-person.svg'>
         <img class='opponent-icon' src='images/icon-person.svg'>
@@ -66,7 +69,7 @@
   </div>
 
   <div class='vr-mode-chooser'>
-    <div>
+    <div class='inner'>
       <h2>Choose Game Mode</h2>
       <div class='options-wrapper'>
         <div class='cardboard' id='cardboard'>
@@ -80,16 +83,11 @@
       </div>
     </div>
   </div>
+
   <div class='about-screen'>
     <div class='about-inner'>
-      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-      <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
     </div>
   </div>
-
 </div>
 
 <div class='game-over-screen-wrapper'>
