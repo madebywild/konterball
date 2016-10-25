@@ -1,0 +1,33 @@
+.open-room-screen,
+.join-room-screen {
+  left: -100%;
+  @extend .screen;
+  .inner {
+    @extend .absolute-center;
+    width: 100%;
+  }
+  width: 100%;
+  font-size: 16px;
+  input {
+    display: block;
+    text-align: center;
+    margin: auto;
+    background-color: transparent;
+    font-family: AntiqueOlive;
+    border: 0;
+    color: #fff;
+    padding: 0;
+    font-size: $font-size-olive;
+    letter-spacing: 0.05em;
+    width: 100%;
+  }
+  #room-code {
+    text-transform: uppercase;
+  }
+}
+.open-room-screen {
+  background-color: $blue-background;
+}
+.join-room-screen {
+  background-color: $green-background;
+}

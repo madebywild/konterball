@@ -1,0 +1,35 @@
+.choose-vr-mode-screen {
+  display: none;
+  @extend .screen;
+  .inner {
+    @extend .absolute-center;
+    width: 100%;
+    z-index: 50;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .options-wrapper {
+    display: flex;
+    align-items: stretch;
+    & > div {
+      cursor: pointer;
+      flex-direction: row;
+      flex: 50%;
+      flex-shrink: 1;
+      position: relative;
+    }
+  }
+  .tilt img {
+    display: block;
+  }
+  p {
+    width: 100%;
+    text-align: center;
+  }
+  img {
+    height: auto;
+    display: block;
+    width: 50%;
+    margin: auto;
+  }
+}

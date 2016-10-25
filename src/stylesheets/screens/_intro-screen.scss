@@ -1,0 +1,54 @@
+.intro-screen {
+  @extend .screen;
+  background: url(/images/intro-background.svg) no-repeat center center fixed; 
+  background-size: cover;
+
+  header {
+    text-transform: uppercase;
+    font-size: $font-size-olive;
+    font-family: AntiqueOlive;
+    font-weight: normal;
+    letter-spacing: 0.05em;
+    position: relative;
+    h1 {
+      opacity: 0.4;
+      font-size: $font-size-olive;
+      font-family: AntiqueOlive;
+      font-weight: normal;
+    }
+    span {
+      font-size: $font-size-olive;
+      font-family: AntiqueOlive;
+      font-weight: normal;
+      display: block;
+      position: absolute;
+      top: 0;
+      left: -10px;
+      padding-left: 10px;
+      opacity: 1;
+      width: 0%;
+      overflow: hidden;
+    }
+  }
+
+  .inner {
+    @extend .absolute-center;
+    & > * {
+      transform: translateY(70px);
+    }
+  }
+  h1 {
+    margin: 0;
+  }
+  p {
+    @extend .futura-italic;
+    opacity: 0;
+    font-size: calc(15px + 0.8vw);
+    letter-spacing: 0.03em;
+    margin-bottom: 50px;
+    margin-top: 10px;
+  }
+  #start {
+    opacity: 0;
+  }
+}

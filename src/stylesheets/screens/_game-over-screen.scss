@@ -1,0 +1,36 @@
+.game-over-screen-wrapper {
+  display: none;
+  .game-over-screen {
+    width: 100%;
+  }
+  #result {
+    font-family: AntiqueOlive;
+    font-size: $font-size-olive;
+    display: block;
+    margin-top: 0;
+  }
+  .share-info-text {
+    @extend .futura-italic;
+    text-transform: uppercase;
+    color: $medium-grey;
+  }
+  #play-again, #exit {
+    width: 200px;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .share-wrapper {
+    margin-top: 50px;
+    button {
+      border: 0;
+      padding: 0;
+      img {
+        width: 50px;
+        filter: invert(100%);
+      }
+    }
+  }
+}
+.game-over-screen {
+  @extend .absolute-center;
+}
