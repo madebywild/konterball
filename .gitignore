@@ -6,3 +6,8 @@ node_modules
 **/generated/_icons.sass
 npm-debug.log
 *.swp
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml
