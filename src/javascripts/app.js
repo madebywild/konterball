@@ -23,10 +23,10 @@ class PingPong {
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
-      TweenMax.to(['.intro > div > *'], 0.5, {
+      TweenMax.to(['.intro-screen > div > *'], 0.5, {
         y: 10,
       });
-      TweenMax.to(['.intro > div > *'], 0.2, {
+      TweenMax.to(['.intro-screen > div > *'], 0.2, {
         opacity: 1,
         delay: 0.3,
       });
@@ -98,26 +98,31 @@ class PingPong {
 
   showModeChooserScreen() {
     const tl = new TimelineMax();
-    tl.set('.player-mode-chooser h3, .player-mode-chooser svg, .buttons', {
+    tl.set('.choose-mode-screen h3, .choose-mode-screen svg, .buttons', {
       opacity: 0,
       y: 10,
     });
-    tl.set('.intro', {zIndex: 10});
+    tl.set('.intro-screen', {zIndex: 10});
     tl.set('.transition-color-screen', {zIndex: 11});
-    tl.set('.player-mode-chooser', {zIndex: 12});
+    tl.set('.choose-mode-screen', {zIndex: 12});
     tl.staggerTo([
-      '.intro button',
-      '.intro p',
-      '.intro h1',
-      '.intro',
+      '.intro-screen h1',
+      '.intro-screen p',
+      '.intro-screen button',
+      '.intro-screen',
+    ], 0.5, {
+      x: $(window).width(),
+    }, 0.1);
+    tl.set('.intro-screen', {display: 'none'});
+    tl.to([
     ], 0.5, {
       left: '100%',
-    }, 0.1);
+    }, 0.5);
     tl.staggerTo([
       '.transition-color-screen.pink',
       '.transition-color-screen.blue',
       '.transition-color-screen.green',
-      '.player-mode-chooser',
+      '.choose-mode-screen',
     ], 0.5, {
       left: '0%',
       ease: Power2.easeInOut,
@@ -177,7 +182,7 @@ class PingPong {
     $('#start-singleplayer').click(e => {
       $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
-      $('.vr-mode-chooser').addClass('pink');
+      $('.choose-vr-mode-screen').addClass('pink');
       // TODO dev
       // this.requestFullscreen();
       this.scene.setSingleplayer();
@@ -190,7 +195,7 @@ class PingPong {
     $('#open-room').click(e => {
       $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
-      $('.vr-mode-chooser').addClass('blue');
+      $('.choose-vr-mode-screen').addClass('blue');
       // this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
@@ -202,7 +207,7 @@ class PingPong {
     $('#join-room').click(e => {
       $('#cardboard img').attr('src', '/images/cardboard-green.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
-      $('.vr-mode-chooser').addClass('green');
+      $('.choose-vr-mode-screen').addClass('green');
       // this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewJoinRoomScreenAnimation().then(() => {
@@ -296,16 +301,16 @@ class PingPong {
       }
 
       const tl = new TimelineMax();
-      tl.set('.vr-mode-chooser', {
+      tl.set('.choose-vr-mode-screen', {
         display: 'block',
         opacity: 0,
       });
 
-      tl.to('.intro, .player-mode-chooser', 0.5, {
+      tl.to('.intro-screen, .choose-mode-screen', 0.5, {
         autoAlpha: 0,
       });
 
-      tl.to('.vr-mode-chooser', 0.5, {
+      tl.to('.choose-vr-mode-screen', 0.5, {
         opacity: 1,
         onComplete: () => {
           resolve();
@@ -339,10 +344,10 @@ class PingPong {
         opacity: 0,
         y: 10,
       });
-      tl.set('.player-mode-chooser', {zIndex: 10});
+      tl.set('.choose-mode-screen', {zIndex: 10});
       tl.set('.transition-color-screen', {zIndex: 11});
       tl.set('.join-room-screen', {zIndex: 12});
-      tl.to('.player-mode-chooser', 0.5, {
+      tl.to('.choose-mode-screen', 0.5, {
         left: '100%',
       });
       tl.staggerTo([
@@ -368,7 +373,7 @@ class PingPong {
 
   backAnimation() {
     const tl = new TimelineMax();
-    tl.set('.player-mode-chooser', {zIndex: 12});
+    tl.set('.choose-mode-screen', {zIndex: 12});
     tl.set('.transition-color-screen', {zIndex: 11, left: '100%'});
     tl.set('.join-room-screen, .open-room-screen', {zIndex: 10});
     tl.staggerTo([
@@ -381,7 +386,7 @@ class PingPong {
       ease: Power2.easeInOut,
     }, 0.1);
     tl.to([
-      '.player-mode-chooser',
+      '.choose-mode-screen',
     ], 0.5, {
       left: '0%',
       ease: Power2.easeInOut,
@@ -423,10 +428,10 @@ class PingPong {
       tl.set(['.open-room-screen .present-players', '.open-room-screen .opponent-joined'], {
         opacity: 0,
       });
-      tl.set('.player-mode-chooser', {zIndex: 10});
+      tl.set('.choose-mode-screen', {zIndex: 10});
       tl.set('.transition-color-screen', {zIndex: 11});
       tl.set('.open-room-screen', {zIndex: 12});
-      tl.to('.player-mode-chooser', 0.5, {
+      tl.to('.choose-mode-screen', 0.5, {
         left: '100%',
       });
       tl.staggerTo([
