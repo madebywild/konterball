@@ -268,7 +268,7 @@ class PingPong {
       this.scene.startGame();
     });
 
-    $('button').on('click', function() {
+    $('button:not(.back-arrow)').on('click', function() {
       const duration = 0.1;
       TweenMax.to($(this), duration, {
         backgroundColor: '#fff',
@@ -399,7 +399,9 @@ class PingPong {
       this.communication.chooseClosestServer().then(() => {
         let id = this.communication.openRoom();
         $('#room-url').val(id);
+        $('.opponent-joined').text('Waiting for opponent...');
       }).catch(e => {
+        console.log(e);
         $('.opponent-joined').text('Cannot connect to server');
         TweenMax.killTweensOf('.opponent-joined');
         TweenMax.set('.opponent-joined', {visibility: 'visible', opacity: 1});

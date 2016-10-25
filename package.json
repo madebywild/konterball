@@ -101,6 +101,7 @@
     "howler": "^2.0.0",
     "jquery": "^3.1.0",
     "json-loader": "^0.5.4",
+    "lodash": "^4.6.1",
     "net": "^1.0.2",
     "normalize.css": "^4.0.0",
     "nosleep": "^1.0.0",

@@ -1,7 +1,11 @@
 import deepstream from 'deepstream.io-client-js';
 import randomstring from 'randomstring';
 import {ACTION, INITIAL_CONFIG, EVENT} from './constants';
+import {rand} from 'util/helpers';
 import $ from 'jquery';
+import _ from 'lodash';
+
+const availableChars = "23456789QWERTZUPASDFGHJKLYXCVBNM";
 
 export default class Communication {
   constructor(emitter) {
@@ -17,6 +21,10 @@ export default class Communication {
       '138.68.98.41:6020',
       '52.57.135.84:6020',
     ];
+    this.availablePrefixes = _.chunk(
+      availableChars,
+      Math.floor(availableChars.length / this.availableServers.length)
+    );
 
     this.pings = {};
     this.roundTripTimes = [];
@@ -29,21 +37,23 @@ export default class Communication {
   pingServer(hostIndex) {
     return new Promise((resolve, reject) => {
       let client = deepstream(this.availableServers[hostIndex]);
+      let timeout = setTimeout(() => {
+        console.log('timeout');
+        client.close();
+        resolve('timeout');
+      }, 3000);
       client.on('error', e => {
         // in case a server is down it will throw an error
-        // ignore this for now
+        // ignore these and use timeout for determining that
       });
       client.on('connectionStateChanged', e => {
         if (e !== deepstream.CONSTANTS.CONNECTION_STATE.ERROR
             && e !== deepstream.CONSTANTS.CONNECTION_STATE.RECONNECTING) {
+          clearTimeout(timeout);
           client.close();
           resolve(hostIndex);
           return;
         }
-      });
-      setTimeout(5000, () => {
-        client.close();
-        resolve('timeout');
       });
     });
   }
@@ -61,7 +71,6 @@ export default class Communication {
         console.log(`fastest response from: ${this.availableServers[fastestServer]}`);
         return this.connectToServer(this.availableServers[fastestServer]);
       }).then(() => {
-        $('.opponent-connected').text('Waiting for opponent');
         resolve();
       }).catch(e => {
         reject(e);
@@ -96,7 +105,15 @@ export default class Communication {
 
   tryConnecting(id) {
     return new Promise((resolve, reject) => {
-      let serverIndex = parseInt(id[0]);
+      let serverIndex = -1;
+      this.availablePrefixes.forEach((prefixes, index) => {
+        if (prefixes.indexOf(id[0]) !== -1) {
+          serverIndex = index;
+        }
+      });
+      if (serverIndex === -1) {
+        reject('Unknown prefix');
+      }
       this.connectToServer(this.availableServers[serverIndex]).then(() => {
         this.GAME_ID = id;
         this.isHost = false;
@@ -113,10 +130,13 @@ export default class Communication {
 
   openRoom() {
     this.isHost = true;
-    this.GAME_ID = this.chosenServer + randomstring.generate({
+    // pick a random prefix which belongs to the available prefixes for this server
+    const prefix = this.availablePrefixes
+      [this.chosenServer]
+      [rand(0, this.availablePrefixes[this.chosenServer].length)];
+    this.GAME_ID = prefix + randomstring.generate({
       length: 3,
-      capitalization: 'uppercase',
-      readable: true,
+      charset: availableChars,
     });
     this.setRecords();
     this.startListening();

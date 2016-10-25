@@ -83,11 +83,8 @@ export default class Scene {
     };
 
     this.config = Object.assign({}, INITIAL_CONFIG);
-    this.physics = new Physics(
-      this.config,
-      this.emitter
-    );
-    this.sound = new SoundManager();
+    this.physics = new Physics(this.config, this.emitter);
+    this.sound = new SoundManager(this.config);
 
     this.frameNumber = 0;
     this.totaltime = 0;
@@ -177,6 +174,7 @@ export default class Scene {
   setupEventListeners() {
     this.emitter.on(EVENT.GAME_OVER, e => {
       this.config.state = STATE.GAME_OVER;
+      this.time.clearTimeout(this.resetBallTimeout);
     });
     this.emitter.on(EVENT.BALL_PADDLE_COLLISION, this.ballPaddleCollision.bind(this));
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
@@ -504,9 +502,7 @@ export default class Scene {
     this.hud.message.showMessage();
     this.resetTimeoutDuration = 3000;
     this.hud.scoreDisplay.opponentScore.visible = true;
-    // setup communication channels,
     // add callbacks for received actions
-    // TODO throw exception on connection failure
     this.communication.setCallbacks({
       move: this.receivedMove.bind(this),
       hit: this.receivedHit.bind(this),
@@ -568,6 +564,8 @@ export default class Scene {
     if (data.addBall) {
       // this doesnt add a ball if it already exists so were safe to call it
       this.addBall();
+    } else {
+      this.sound.paddle(data.point);
     }
     this.physicsTimeStep = 1000;
     // the received position will sometimes be slightly off from the position
@@ -697,7 +695,7 @@ export default class Scene {
     this.restartPingpongTimeout();
     this.paddleCollisionAnimation();
     this.ballHasHitEnemyTable = false;
-    this.sound.hit(body.position);
+    this.sound.paddle(body.position);
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.score.self++;
       this.hud.scoreDisplay.setSelfScore(this.score.self);
@@ -722,6 +720,7 @@ export default class Scene {
   }
 
   ballTableCollision(point) {
+    this.sound.table(point, this.physics.ball.velocity);
     if (point.z < this.config.tablePositionZ) {
       this.ballHasHitEnemyTable = true;
     }
