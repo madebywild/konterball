@@ -23,14 +23,49 @@ class PingPong {
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
-      TweenMax.to(['.intro-screen > div > *'], 0.5, {
-        y: 10,
-      });
-      TweenMax.to(['.intro-screen > div > *'], 0.2, {
-        opacity: 1,
-        delay: 0.3,
-      });
+      this.introAnimation();
     });
+  }
+
+  introAnimation() {
+    TweenMax.to(['.intro-screen > div > *'], 0.5, {
+      y: 10,
+    });
+    TweenMax.to(['.intro-screen > div > *'], 0.2, {
+      opacity: 1,
+      delay: 0.3,
+    });
+    this.startBallTween();
+  }
+
+  startBallTween() {
+    const ballRadius = parseInt($('#svg-ball').attr('r'));
+    const no = {
+      x: Math.random() > 0.5 ? -ballRadius : 1920 + ballRadius,
+      y: Math.random() * 500,
+    };
+    const ballBounce = new TimelineMax({
+      onComplete: this.startBallTween.bind(this),
+    });
+    const $ball = $('svg #svg-ball');
+    const $shadow = $('svg #svg-ball-shadow');
+    const width = $('.intro-screen svg').width();
+    ballBounce.to(no, 1, {
+      x: no.x > 0 ? -ballRadius : 1920 + ballRadius,
+      ease: Power0.easeNone,
+      onUpdate: () => {
+        $ball.attr('cx', no.x);
+        $shadow.attr('cx', no.x);
+        $shadow.attr('cy', 800);
+      },
+    }, 0);
+    ballBounce.to(no, 1.7, {
+      y: 800,
+      ease: Bounce.easeOut,
+      onUpdate: () => {
+        $ball.attr('cy', no.y);
+      },
+    }, 0);
   }
 
   loadingAnimation() {
