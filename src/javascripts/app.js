@@ -394,6 +394,10 @@ class PingPong {
       this.communication.chooseClosestServer().then(() => {
         let id = this.communication.openRoom();
         $('#room-url').val(id);
+      }).catch(e => {
+        $('.opponent-joined').text('Cannot connect to server');
+        TweenMax.killTweensOf('.opponent-joined');
+        TweenMax.set('.opponent-joined', {visibility: 'visible', opacity: 1});
       });
 
       // TODO annoying during development

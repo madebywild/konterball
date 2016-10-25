@@ -28,6 +28,10 @@ module.exports = function(env) {
       root: jsSrc,
       extensions: [''].concat(extensions)
     },
+    node: {
+      fs: 'empty',
+      child_process: 'empty',
+    },
     module: {
       loaders: [
         {
@@ -35,6 +39,9 @@ module.exports = function(env) {
           loader: 'babel-loader',
           exclude: /node_modules/,
           query: config.tasks.js.babel
+        },
+        { 
+          test: /\.json$/, loader: "json-loader" 
         }
       ],
       preLoaders: [

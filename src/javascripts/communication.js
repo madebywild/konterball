@@ -34,12 +34,16 @@ export default class Communication {
         // ignore this for now
       });
       client.on('connectionStateChanged', e => {
-        client.close();
-        resolve(hostIndex);
-        return;
+        if (e !== deepstream.CONSTANTS.CONNECTION_STATE.ERROR
+            && e !== deepstream.CONSTANTS.CONNECTION_STATE.RECONNECTING) {
+          client.close();
+          resolve(hostIndex);
+          return;
+        }
       });
       setTimeout(5000, () => {
-        reject('timeout');
+        client.close();
+        resolve('timeout');
       });
     });
   }
@@ -49,6 +53,10 @@ export default class Communication {
       Promise.race(this.availableServers.map((server, index) => {
         return this.pingServer(index);
       })).then(fastestServer => {
+        if (fastestServer === 'timeout') {
+          reject(fastestServer);
+          return;
+        }
         this.chosenServer = fastestServer;
         console.log(`fastest response from: ${this.availableServers[fastestServer]}`);
         return this.connectToServer(this.availableServers[fastestServer]);
@@ -64,10 +72,14 @@ export default class Communication {
   connectToServer(host) {
     // connect to the deepstream server
     return new Promise((resolve, reject) => {
+      console.log('connecting to server...');
       this.client = deepstream(host, {
         mergeStrategy: deepstream.MERGE_STRATEGIES.REMOTE_WINS
       });
       this.client.login();
+      this.client.on('error', e => {
+        reject(e);
+      });
       this.client.on('connectionStateChanged', e => {
         if (e === deepstream.CONSTANTS.CONNECTION_STATE.OPEN) {
           resolve();
