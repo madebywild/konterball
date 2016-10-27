@@ -73,6 +73,7 @@ export default class Communication {
       }).then(() => {
         resolve();
       }).catch(e => {
+        console.log('error:  ' + e);
         reject(e);
       });
     });

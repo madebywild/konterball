@@ -16,7 +16,7 @@ import Ball from './models/ball';
 import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 
 export default class Scene {
   constructor(emitter, communication) {
@@ -390,18 +390,30 @@ export default class Scene {
       };
 
       let tl = new TimelineMax();
-      tl.set('canvas', {
+      tl.set('canvas, .transition-color-screen', {
         'left': '-100%',
       });
-      tl.set('.transition-color-screen, .join-room-screen, .intro, .open-room-screen', {
-        display: 'none',
+      tl.set('.intro', {zIndex: 10});
+      tl.set('.transition-color-screen', {zIndex: 11});
+      tl.set('canvas', {zIndex: 12});
+      tl.to([
+        '.open-room-screen',
+        '.join-room-screen',
+        '.choose-mode-screen',
+      ], 0.5, {
+        left: '100%',
+        ease: Power2.easeInOut,
       });
-      tl.to('.intro-wrapper', 0.4, {
-        'left': '100%',
-      }, 0);
-      tl.to('canvas', 0.4, {
-        'left': '0%',
-      }, 0);
+      tl.staggerTo([
+        '.transition-color-screen.pink',
+        '.transition-color-screen.blue',
+        '.transition-color-screen.green',
+        'canvas',
+      ], 0.5, {
+        left: '0%',
+        ease: Power2.easeInOut,
+      }, 0.1, '-=0.6');
+
 
       const panDuration = 1;
 
@@ -498,6 +510,7 @@ export default class Scene {
   setMultiplayer() {
     // prepare multiplayer mode
     this.config.mode = MODE.MULTIPLAYER;
+    this.scene.remove(this.table);
     this.table = Table(this.scene, this.config);
     this.hud.message.showMessage();
     this.resetTimeoutDuration = 3000;
@@ -514,7 +527,11 @@ export default class Scene {
 
   setSingleplayer() {
     this.config.mode = MODE.SINGLEPLAYER;
+    this.scene.remove(this.table);
     this.table = Table(this.scene, this.config);
+    this.hud.message.hideMessage();
+    this.resetTimeoutDuration = 1500;
+    this.hud.scoreDisplay.opponentScore.visible = false;
     //this.table.getObjectByName('table').scale.z = 0.5;
     //this.table.getObjectByName('table').position.z = this.config.tablePositionZ + this.config.tableDepth / 2;
   }
@@ -566,19 +583,19 @@ export default class Scene {
       this.addBall();
     } else {
       this.sound.paddle(data.point);
+      // the received position will sometimes be slightly off from the position
+      // of this players ball due to changes in latency. save the difference and
+      // interpolate it until the ball is at our side again. this way the user
+      // shouldnt notice any hard position changes
+      this.ballPositionDifference = new THREE.Vector3().subVectors(
+        this.physics.ball.position,
+        this.mirrorPosition(data.point)
+      );
+      this.lastOpponentHitPosition = new THREE.Vector3().copy(
+        this.mirrorPosition(data.point)
+      );
     }
     this.physicsTimeStep = 1000;
-    // the received position will sometimes be slightly off from the position
-    // of this players ball due to changes in latency. save the difference and
-    // interpolate it until the ball is at our side again. this way the user
-    // shouldnt notice any hard position changes
-    this.ballPositionDifference = new THREE.Vector3().subVectors(
-      this.physics.ball.position,
-      this.mirrorPosition(data.point)
-    );
-    this.lastOpponentHitPosition = new THREE.Vector3().copy(
-      this.mirrorPosition(data.point)
-    );
     // received vectors are in the other users space
     // invert x and z velocity and mirror the point across the center of the box
     this.physics.ball.position.copy(this.mirrorPosition(data.point));
@@ -856,6 +873,7 @@ export default class Scene {
 
   updateBall() {
     if (this.ballPositionDifference) {
+      console.log('interpolating');
       // we interpolate between the actual (received) position and the position
       // the user would expect. as closer the ball comes to our paddle, the
       // closer the shown ball will come to the actual position. when it hits
@@ -934,7 +952,6 @@ export default class Scene {
 
 
     if (this.ball) {
-
       let dist = new THREE.Vector3();
       dist.subVectors(this.ball.position, this.paddle.position);
       if (dist.length() < 0.4 && Math.abs(dist.x) < 0.2 && Math.abs(dist.z) < 0.1

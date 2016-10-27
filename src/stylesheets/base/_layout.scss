@@ -1,6 +1,12 @@
 html {
   font-size: $font-size;
 }
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}
 body {
   font-family: Futura;
   overflow: hidden;
@@ -41,10 +47,14 @@ button.inactive {
   color: $medium-grey;
   border-color: $medium-grey;
 }
-.game-over-wrapper,
+.game-over-screen-wrapper,
 .intro-wrapper {
   background-color: $blue-background;
   @extend .screen;
+  z-index: 2;
+}
+.game-over-screen-wrapper {
+  z-index: 20;
 }
 .absolute-center {
   position: absolute;
@@ -105,6 +115,11 @@ button.inactive {
   left: 0;
   top: 0;
   position: absolute;
+  img {
+    filter: invert(100%);
+    width: 30px;
+    height: auto;
+  }
 }
 .transition-color-screen {
   z-index: 3;

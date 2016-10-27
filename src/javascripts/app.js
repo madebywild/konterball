@@ -39,7 +39,7 @@ class PingPong {
   }
 
   startBallTween() {
-    const ballRadius = parseInt($('#svg-ball').attr('r'));
+    const ballRadius = parseInt($('#ball').attr('r'));
     const no = {
       x: Math.random() > 0.5 ? -ballRadius : 1920 + ballRadius,
       y: Math.random() * 500,
@@ -47,9 +47,10 @@ class PingPong {
     const ballBounce = new TimelineMax({
       onComplete: this.startBallTween.bind(this),
     });
-    const $ball = $('svg #svg-ball');
-    const $shadow = $('svg #svg-ball-shadow');
+    const $ball = $('#ball');
+    const $shadow = $('#ball-shadow');
     const width = $('.intro-screen svg').width();
+    const startY = no.y;
     ballBounce.to(no, 1, {
       x: no.x > 0 ? -ballRadius : 1920 + ballRadius,
       ease: Power0.easeNone,
@@ -59,13 +60,20 @@ class PingPong {
         $shadow.attr('cy', 800);
       },
     }, 0);
-    ballBounce.to(no, 1.7, {
+    ballBounce.to(no, 0.6, {
       y: 800,
-      ease: Bounce.easeOut,
+      ease: Power1.easeIn,
       onUpdate: () => {
         $ball.attr('cy', no.y);
       },
     }, 0);
+    ballBounce.to(no, 0.8, {
+      y: startY + 150,
+      ease: Power1.easeOut,
+      onUpdate: () => {
+        $ball.attr('cy', no.y);
+      },
+    }, 0.6);
   }
 
   loadingAnimation() {
@@ -133,6 +141,7 @@ class PingPong {
 
   showModeChooserScreen() {
     const tl = new TimelineMax();
+
     tl.set('.choose-mode-screen h3, .choose-mode-screen svg, .buttons', {
       opacity: 0,
       y: 10,
@@ -147,7 +156,8 @@ class PingPong {
       '.intro-screen',
     ], 0.5, {
       x: $(window).width(),
-    }, 0.1);
+      ease: Power2.easeInOut,
+    }, 0.05);
     tl.set('.intro-screen', {display: 'none'});
     tl.to([
     ], 0.5, {
@@ -430,7 +440,6 @@ class PingPong {
 
   viewOpenRoomScreenAnimation() {
     return new Promise((resolve, reject) => {
-
       this.communication.chooseClosestServer().then(() => {
         let id = this.communication.openRoom();
         $('#room-url').val(id);

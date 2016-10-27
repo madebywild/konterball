@@ -4,6 +4,12 @@
     width: 100vw;
     height: 100vh;
     object-fit: cover;
+    #ball {
+      fill: $ball;
+    }
+    #ball-shadow {
+      fill: rgba(0, 0, 0, 0.3);
+    }
   }
 
   header {
