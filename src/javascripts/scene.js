@@ -16,7 +16,7 @@ import Ball from './models/ball';
 import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 export default class Scene {
   constructor(emitter, communication) {
@@ -217,12 +217,11 @@ export default class Scene {
     // THREE js basics
     this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera(5, window.innerWidth / window.innerHeight, 0.1, 10000);
+    this.camera = new THREE.PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 10000);
     // position over the box, will be animated to the final camera position
-    //x: 19, y: 24.300000000000075, z: 18.6,
-    this.camera.position.x = 24;
-    this.camera.position.z = 24;
-    this.camera.position.y = 24;
+    this.camera.position.x = 2;
+    this.camera.position.z = 2;
+    this.camera.position.y = 4;
     this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
   }
 
@@ -389,7 +388,8 @@ export default class Scene {
         fov: this.camera.fov,
       };
 
-      let tl = new TimelineMax();
+      const tl = new TimelineMax();
+      /*
       tl.set('canvas, .transition-color-screen', {
         'left': '-100%',
       });
@@ -413,7 +413,8 @@ export default class Scene {
         left: '0%',
         ease: Power2.easeInOut,
       }, 0.1, '-=0.6');
-
+      */
+      tl.to('.intro-wrapper', 0.5, {autoAlpha: 0});
 
       const panDuration = 1;
 
@@ -575,7 +576,7 @@ export default class Scene {
     this.restartGame();
   }
 
-  receivedHit(data) {
+  receivedHit(data, wasMiss=false) {
     // we might not have a ball yet
     this.time.clearTimeout(this.resetBallTimeout);
     if (data.addBall) {
@@ -583,6 +584,8 @@ export default class Scene {
       this.addBall();
     } else {
       this.sound.paddle(data.point);
+    }
+    if (!wasMiss) {
       // the received position will sometimes be slightly off from the position
       // of this players ball due to changes in latency. save the difference and
       // interpolate it until the ball is at our side again. this way the user
@@ -621,6 +624,7 @@ export default class Scene {
   }
 
   receivedMiss(data) {
+    this.ballPositionDifference = null;
     this.physicsTimeStep = 1000;
     this.time.clearTimeout(this.resetBallTimeout);
     // opponent missed, update player score
@@ -638,7 +642,7 @@ export default class Scene {
     } else {
       // otherwise, the opponent that missed also resets the ball
       // and sends along its new position
-      this.receivedHit(data);
+      this.receivedHit(data, true);
     }
   }
 
@@ -819,6 +823,14 @@ export default class Scene {
       });
       this.mouseMoveSinceLastFrame.x = 0;
       this.mouseMoveSinceLastFrame.y = 0;
+    } else if (this.controls) {
+    // Update VR headset position and apply to camera.
+      this.controls.update();
+      if (this.camera.position.x === 0
+        && this.camera.position.z === 0) {
+          // no position sensor in the device, put it behind the table
+          this.camera.position.z = 1;
+      }
     }
   }
 
@@ -873,7 +885,6 @@ export default class Scene {
 
   updateBall() {
     if (this.ballPositionDifference) {
-      console.log('interpolating');
       // we interpolate between the actual (received) position and the position
       // the user would expect. as closer the ball comes to our paddle, the
       // closer the shown ball will come to the actual position. when it hits
@@ -988,16 +999,6 @@ export default class Scene {
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer.update();
-    }
-
-    // Update VR headset position and apply to camera.
-    if (this.controls) {
-      this.controls.update();
-      if (this.camera.position.x === 0
-        && this.camera.position.z === 0) {
-          // no position sensor in the device, put it behind the table
-          this.camera.position.z = 1;
-      }
     }
 
     this.time.step();

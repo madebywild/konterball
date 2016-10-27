@@ -227,6 +227,7 @@ class PingPong {
     $('#start-singleplayer').click(e => {
       $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
+      $('.choose-vr-mode-screen').removeClass('blue green');
       $('.choose-vr-mode-screen').addClass('pink');
       // TODO dev
       // this.requestFullscreen();
@@ -240,6 +241,7 @@ class PingPong {
     $('#open-room').click(e => {
       $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
+      $('.choose-vr-mode-screen').removeClass('pink green');
       $('.choose-vr-mode-screen').addClass('blue');
       // this.requestFullscreen();
       this.scene.setMultiplayer();
@@ -252,6 +254,7 @@ class PingPong {
     $('#join-room').click(e => {
       $('#cardboard img').attr('src', '/images/cardboard-green.gif');
       $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
+      $('.choose-vr-mode-screen').removeClass('pink blue');
       $('.choose-vr-mode-screen').addClass('green');
       // this.requestFullscreen();
       this.scene.setMultiplayer();
@@ -346,21 +349,33 @@ class PingPong {
       }
 
       const tl = new TimelineMax();
-      tl.set('.choose-vr-mode-screen', {
-        display: 'block',
-        opacity: 0,
+      tl.set('.choose-vr-mode-screen, .transition-color-screen', {
+        'left': '-100%',
       });
-
-      tl.to('.intro-screen, .choose-mode-screen', 0.5, {
-        autoAlpha: 0,
+      tl.set([
+        '.open-room-screen',
+        '.join-room-screen',
+        '.choose-mode-screen',
+      ], {zIndex: 10});
+      tl.set('.transition-color-screen', {zIndex: 11});
+      tl.set('.choose-vr-mode-screen', {zIndex: 12, display: 'block'});
+      tl.to([
+        '.open-room-screen',
+        '.join-room-screen',
+        '.choose-mode-screen',
+      ], 0.5, {
+        left: '100%',
+        ease: Power2.easeInOut,
       });
-
-      tl.to('.choose-vr-mode-screen', 0.5, {
-        opacity: 1,
-        onComplete: () => {
-          resolve();
-        },
-      });
+      tl.staggerTo([
+        '.transition-color-screen.pink',
+        '.transition-color-screen.blue',
+        '.transition-color-screen.green',
+        '.choose-vr-mode-screen',
+      ], 0.5, {
+        left: '0%',
+        ease: Power2.easeInOut,
+      }, 0.1, '-=0.6');
     });
   }
 
