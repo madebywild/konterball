@@ -95,6 +95,7 @@ class PingPong {
       return;
     }
     document.addEventListener("fullscreenchange", function(event) {
+      return;
       if (document.fullscreen) {
         screen.lockOrientationUniversal
           = screen.lockOrientation
@@ -140,8 +141,8 @@ class PingPong {
   }
 
   showModeChooserScreen() {
+    this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
-
     tl.set('.choose-mode-screen h3, .choose-mode-screen svg, .buttons', {
       opacity: 0,
       y: 10,
@@ -316,6 +317,10 @@ class PingPong {
       this.scene.startGame();
     });
 
+    $('button').on('click', () => {
+      this.scene.sound.playUI('button');
+    });
+
     $('button:not(.back-arrow)').on('click', function() {
       const duration = 0.1;
       TweenMax.to($(this), duration, {
@@ -348,6 +353,7 @@ class PingPong {
         $("#tilt p").text("Mouse");
       }
 
+      this.scene.sound.playUI('transition');
       const tl = new TimelineMax();
       tl.set('.choose-vr-mode-screen, .transition-color-screen', {
         'left': '-100%',
@@ -399,6 +405,7 @@ class PingPong {
         });
       });
 
+      this.scene.sound.playUI('transition');
       const tl = new TimelineMax();
       tl.set('.join-room-screen > div > *', {
         opacity: 0,
@@ -432,6 +439,7 @@ class PingPong {
   }
 
   backAnimation() {
+    this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
     tl.set('.choose-mode-screen', {zIndex: 12});
     tl.set('.transition-color-screen', {zIndex: 11, left: '100%'});
@@ -468,6 +476,7 @@ class PingPong {
 
       // TODO annoying during development
       this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
+        this.scene.sound.playUI('joined');
         $('.opponent-joined').text('Opponent joined');
         TweenMax.set('.opponent-icon', {opacity: 1});
         $('#join-waiting-room').hide();

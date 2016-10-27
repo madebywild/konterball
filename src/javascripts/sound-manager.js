@@ -2,27 +2,48 @@ import {Howler} from 'howler';
 import {rand, cap} from 'util/helpers';
 import {MODE} from './constants';
 
+const url = `https://s3.eu-central-1.amazonaws.com/pingpongsound/`;
+
 export default class SoundManager {
   constructor(config) {
     this.config = config;
     this.paddleSounds = [];
     this.tableSounds = [];
-    this.floorSounds = [
-      new Howl({
-        src: `/audio/floor0.ogg`,
-      }),
-      new Howl({
-        src: `/audio/floor1.ogg`,
-      }),
-    ];
-    for (let i = 0; i <= 5; i++) {
+    for (let i = 1; i <= 3; i++) {
       this.paddleSounds.push(new Howl({
-        src: `/audio/paddle${i}.ogg`,
+        src: `${url}racket0${i}.mp3`,
       }));
       this.tableSounds.push(new Howl({
-        src: `/audio/table${i}.ogg`,
+        src: `${url}table0${i}.mp3`,
       }));
     }
+    this.uiSounds = new Map();
+    this.uiSounds.set('button', new Howl({src: `${url}button.mp3`}));
+    this.uiSounds.set('joined', new Howl({src: `${url}joined.mp3`}));
+    this.uiSounds.set('lose', new Howl({src: `${url}lose.mp3`}));
+    this.uiSounds.set('touch', new Howl({src: `${url}touch.mp3`}));
+    this.uiSounds.set('transition', new Howl({src: `${url}transition.mp3`}));
+    this.uiSounds.set('win', new Howl({src: `${url}win.mp3`}));
+
+    this.loopSounds = new Map();
+    this.loopSounds.set('game1', new Howl({loop: true, src: `${url}music_game01.mp3`}));
+    this.loopSounds.set('game2', new Howl({loop: true, src: `${url}music_game02.mp3`}));
+    this.loopSounds.set('menu', new Howl({loop: true, src: `${url}music_menu.mp3`}));
+    this.loopSounds.set('waiting', new Howl({loop: true, src: `${url}waiting.mp3`}));
+    this.loopSounds.get('menu').play();
+  }
+
+  playLoop(keyLoop) {
+    let key = '';
+    for (key of this.loopSounds.keys()) {
+      this.loopSounds.get(key).stop();
+    }
+    this.loopSounds.get(keyLoop).play();
+  }
+
+  playUI(id) {
+    console.log(id);
+    this.uiSounds.get(id).play();
   }
 
   paddle(point={x: 0, y: 0, z: 0}) {

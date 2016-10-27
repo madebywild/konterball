@@ -54,6 +54,8 @@ export default class Scene {
     this.resetTimeoutDuration = 1500;
     this.physicsTimeStep = 1000;
     this.lastOpponentHitPosition = null;
+    this.lastHitPosition = null;
+    this.interpolationAlpha = 0;
 
     this.mouseMoveSinceLastFrame = {
       x: 0,
@@ -164,9 +166,6 @@ export default class Scene {
   }
 
   mousemove(e) {
-    if (this.hitTween && this.hitTween.isActive()) {
-      return;
-    }
     this.mouseMoveSinceLastFrame.x += e.movementX;
     this.mouseMoveSinceLastFrame.y += e.movementY;
   }
@@ -175,8 +174,13 @@ export default class Scene {
     this.emitter.on(EVENT.GAME_OVER, e => {
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
+      if (this.score.self > this.score.opponent) {
+        this.sound.playUI('win');
+      } else {
+        this.sound.playUI('lose');
+      }
+      
     });
-    this.emitter.on(EVENT.BALL_PADDLE_COLLISION, this.ballPaddleCollision.bind(this));
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
   }
 
@@ -368,6 +372,7 @@ export default class Scene {
       this.paddle.visible = true;
       this.hud.container.visible = true;
       this.setupVRControls();
+      this.sound.playLoop('game1');
       if (this.config.mode === MODE.SINGLEPLAYER) {
         this.countdown();
       } else {
@@ -710,34 +715,32 @@ export default class Scene {
         && ball.position.z + E >= -4;
   }
 
-  ballPaddleCollision(body) {
+  ballPaddleCollision(point) {
+    if (this.hitTween && this.hitTween.isActive()) {
+      return;
+    }
+    this.physics.paddleCollision({body: this.physics.ball, target: this.paddle});
+    this.ballHitAnimation();
     this.ballPositionDifference = null;
     // the ball collided with the players paddle
     this.restartPingpongTimeout();
-    this.paddleCollisionAnimation();
     this.ballHasHitEnemyTable = false;
-    this.sound.paddle(body.position);
+    this.sound.paddle(point);
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.score.self++;
       this.hud.scoreDisplay.setSelfScore(this.score.self);
       return;
     }
-    // mode is multiplayer, send the hit with a small timeout
-    // to make sure the collision is done and the ball is not
-    // somewhere in the opponents paddle with a weird velocity
-    // TODO tweak and test this timeout
-    this.time.setTimeout(() => {
-      this.slowdownBall();
-      this.communication.sendHit({
-        x: body.position.x,
-        y: body.position.y,
-        z: body.position.z,
-      }, {
-        x: body.velocity.x,
-        y: body.velocity.y,
-        z: body.velocity.z,
-      });
-    }, 10);
+    this.slowdownBall();
+    this.communication.sendHit({
+      x: point.x,
+      y: point.y,
+      z: point.z,
+    }, {
+      x: point.x,
+      y: point.y,
+      z: point.z,
+    });
   }
 
   ballTableCollision(point) {
@@ -745,18 +748,6 @@ export default class Scene {
     if (point.z < this.config.tablePositionZ) {
       this.ballHasHitEnemyTable = true;
     }
-  }
-
-  paddleCollisionAnimation() {
-    // blink the paddle interior
-    if (!this.paddle.getObjectByName('paddleHitHighlight')) {
-      return;
-    }
-    this.paddle.getObjectByName('paddleHitHighlight').material.opacity = 1;
-    TweenMax.to(this.paddle.getObjectByName('paddleHitHighlight').material, 0.5, {
-      opacity: 0,
-      ease: Power2.easeOut,
-    });
   }
 
   addBall() {
@@ -783,10 +774,6 @@ export default class Scene {
   }
 
   updateControls() {
-    if (this.hitTween && this.hitTween.isActive()) {
-      return;
-    }
-
     let pos = this.computePaddlePosition();
     if (pos) {
       this.setPaddlePosition(pos.x, pos.y, pos.z);
@@ -821,16 +808,24 @@ export default class Scene {
         z: endRotation.z,
         ease: Power4.easeOut,
       });
-      this.mouseMoveSinceLastFrame.x = 0;
-      this.mouseMoveSinceLastFrame.y = 0;
     } else if (this.controls) {
-    // Update VR headset position and apply to camera.
+      // Update VR headset position and apply to camera.
       this.controls.update();
       if (this.camera.position.x === 0
         && this.camera.position.z === 0) {
           // no position sensor in the device, put it behind the table
           this.camera.position.z = 1;
       }
+    }
+    if (this.hitTween && this.hitTween.isActive()) {
+      /*
+      let newPos = new THREE.Vector3().lerpVectors(
+        this.paddle.position,
+        this.lastHitPosition,
+        this.interpolationAlpha
+      );
+      */
+      //this.setPaddlePosition(newPos.x, newPos.y, newPos.z);
     }
   }
 
@@ -909,22 +904,25 @@ export default class Scene {
   }
 
   ballHitAnimation() {
-    if (!this.hitTween || !this.hitTween.isActive() && this.hitAvailable) {
-      this.physics.paddleCollision({body: this.physics.ball, target: this.paddle});
-      this.hitTween = new TimelineMax();
+    if (!(this.hitTween && this.hitTween.isActive()) && this.hitAvailable) {
+      this.hitAvailable = false;
+      this.hitTween = new TimelineMax({
+        onComplete: () => {this.hitAvailable = true;},
+      });
+      const lastPos = this.paddle.position;
       this.hitTween.to(this.paddle.position, 0.1, {
         x: this.ball.position.x,
         y: this.ball.position.y,
         z: this.ball.position.z,
       });
-      if (this.controlMode === 'MOUSE') {
+      if (this.controlMode === 'MOUSE' && !this.isMobile) {
         // in mouse mode we dont care if the user moved while the animation was
         // running because the paddle will smoothly continue the motion after
         // the animation is done
         this.hitTween.to(this.paddle.position, 0.2, {
-          x: this.paddle.position.x,
-          y: this.paddle.position.y,
-          z: this.paddle.position.z,
+          x: lastPos.x,
+          y: lastPos.y,
+          z: lastPos.z,
         });
       } else {
         // in vr mode, we have to interpolate the paddle position between the
@@ -935,19 +933,33 @@ export default class Scene {
           alpha: 0,
         };
         const fromPosition = this.ball.position.clone();
-        this.hitTween.to(no, 0.3, {
-          alpha: 1,
-          onUpdate: () => {
-            let newPos = new THREE.Vector3().lerpVectors(
-              fromPosition,
-              this.computePaddlePosition(), no.alpha
-            );
-            this.setPaddlePosition(newPos.x, newPos.y, newPos.z);
-          },
-        });
+        if (this.computePaddlePosition()) {
+          this.hitTween.to(no, 0.3, {
+            alpha: 1,
+            onUpdate: () => {
+              let newPos = new THREE.Vector3().lerpVectors(
+                fromPosition,
+                this.computePaddlePosition(),
+                no.alpha
+              );
+              this.setPaddlePosition(newPos.x, newPos.y, newPos.z);
+            },
+          });
+        }
       }
-      this.hitAvailable = false;
-      this.time.setTimeout(() => {this.hitAvailable = true;}, 300);
+      /*
+      this.hitTween = new TimelineMax({
+        onComplete: () => {this.hitAvailable = true;},
+      });
+      console.log('start tween');
+      this.lastHitPosition = this.ball.position.clone();
+      this.hitTween.to(this, 0.1, {
+        interpolationAlpha: 1,
+      });
+      this.hitTween.to(this, 0.1, {
+        interpolationAlpha: 0,
+      });
+      */
     }
   }
 
@@ -960,6 +972,7 @@ export default class Scene {
       requestAnimationFrame(this.animate.bind(this));
       return;
     }
+    console.log(this.computePaddlePosition().x);
 
 
     if (this.ball) {
@@ -967,7 +980,7 @@ export default class Scene {
       dist.subVectors(this.ball.position, this.paddle.position);
       if (dist.length() < 0.4 && Math.abs(dist.x) < 0.2 && Math.abs(dist.z) < 0.1
         || this.isMobile && dist.length() < 0.8 && Math.abs(dist.x) < 0.3 && Math.abs(dist.z) < 0.1) {
-        this.ballHitAnimation();
+        this.ballPaddleCollision(this.ball.position);
       } else {
         // this.paddle.position.y = this.config.tableHeight + 0.2;
       }
@@ -1005,11 +1018,11 @@ export default class Scene {
 
     // Render the scene through the manager.
     this.lastRender = timestamp;
+    this.frameNumber++;
+    this.mouseMoveSinceLastFrame.x = 0;
+    this.mouseMoveSinceLastFrame.y = 0;
 
     this.manager.render(this.scene, this.camera, this.timestamp);
-    // this.paddle.rotation.y += 0.01;
-
-    this.frameNumber++;
     requestAnimationFrame(this.animate.bind(this));
   }
 
