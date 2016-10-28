@@ -29,6 +29,7 @@ h2 {
   text-transform: uppercase;
   font-size: $font-size-large;
   margin-bottom: 40px;
+  font-weight: normal;
 }
 button {
   text-transform: uppercase;
@@ -49,9 +50,11 @@ button.inactive {
 }
 .game-over-screen-wrapper,
 .intro-wrapper {
-  background-color: $blue-background;
   @extend .screen;
   z-index: 2;
+}
+.intro-wrapper {
+  background-color: $blue-background;
 }
 .game-over-screen-wrapper {
   z-index: 20;

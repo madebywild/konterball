@@ -3,9 +3,10 @@ import ScoreDisplay from './score-display';
 import Countdown from './countdown';
 import Message from './message';
 import {MODE, EVENT} from '../constants';
+import Arrows from './arrows';
 
 export default class Hud {
-  constructor(scene, config, emitter) {
+  constructor(scene, config, emitter, loader) {
     this.config = config;
     this.emitter = emitter;
     this.scene = scene;
@@ -17,6 +18,7 @@ export default class Hud {
     this.paddleModel = 'box';
     this.activateTween = null;
 
+    this.loader = loader;
     this.font = null;
     this.container = null;
     this.initialized = false;
@@ -43,7 +45,11 @@ export default class Hud {
         this.scoreDisplay = new ScoreDisplay(this.scene, this.config, this.font);
         this.countdown = new Countdown(this.scene, this.config, this.font);
         this.countdown.hideCountdown();
-        resolve();
+        Arrows(this.font, this.loader).then(arrow => {
+          this.arrows = arrow;
+          this.scene.add(arrow);
+          resolve();
+        });
       });
     });
   }

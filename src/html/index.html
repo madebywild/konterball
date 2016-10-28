@@ -85,9 +85,11 @@
         <img src='images/icon-person.svg'>
         <img class='opponent-icon' src='images/icon-person.svg'>
       </div>
-      <input type='text' id='room-code' placeholder='____' maxlength='4'><br>
-      <p class='grey-text'>Type in your Code</p><br>
-      <button id='join-room-button' class='inactive'>Join Game</button>
+      <form id='room-form' action='javascript:void(0)'>
+        <input type='text' id='room-code' placeholder='____' maxlength='4'><br>
+        <p class='grey-text'>Type in your Code</p><br>
+        <button id='join-room-button' role='submit' class='inactive'>Join Game</button>
+      </form>
     </div>
   </div>
 

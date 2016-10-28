@@ -8,6 +8,7 @@ export default class ScoreDisplay {
     this.parent = parent;
     this.font = font;
     this.config = config;
+    this.lives = [];
 
     this.setupText();
   }
@@ -38,6 +39,28 @@ export default class ScoreDisplay {
     this.setSelfScore(0);
     this.setOpponentScore(0);
     this.opponentScore.visible = this.config.mode === MODE.MULTIPLAYER;
+
+    this.lifeGroup = new THREE.Group();
+    for (let i = 0; i < this.config.startLives; i++) {
+      geometry = new THREE.CircleGeometry(.03, 32);
+      material = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        side: THREE.DoubleSide,
+        opacity: 0.4,
+      });
+      let life = new THREE.Mesh(geometry, material);
+      life.position.x = i * 0.1;
+      this.lives.push(life);
+      this.lifeGroup.add(life);
+    }
+    this.lifeGroup.position.z = -1.3;
+    this.lifeGroup.position.y = 1;
+    this.lifeGroup.position.x = this.config.tableWidth / 2;
+    this.lifeGroup.rotation.y = Math.PI / 2;
+    this.lifeGroup.visible = this.config.mode === MODE.SINGLEPLAYER;
+
+    this.parent.add(this.lifeGroup);
   }
 
   setSelfScore(value) {
@@ -74,5 +97,11 @@ export default class ScoreDisplay {
     this.opponentScore.position.z = this.config.tablePositionZ
       - this.config.tableDepth / 4
       - this.opponentScore.geometry.boundingBox.max.x / 2;
+  }
+
+  setLives(value) {
+    this.lives.forEach((life, index) => {
+      life.material.visible = value > index;
+    });
   }
 }

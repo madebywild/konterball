@@ -17,6 +17,7 @@ class PingPong {
     this.setupHandlers();
     this.setupListeners();
     this.aboutScreenOpen = false;
+    this.introBallTween = null;
 
     Promise.all([
       this.scene.setup(), 
@@ -44,14 +45,14 @@ class PingPong {
       x: Math.random() > 0.5 ? -ballRadius : 1920 + ballRadius,
       y: Math.random() * 500,
     };
-    const ballBounce = new TimelineMax({
+    this.introBallTween = new TimelineMax({
       onComplete: this.startBallTween.bind(this),
     });
     const $ball = $('#ball');
     const $shadow = $('#ball-shadow');
     const width = $('.intro-screen svg').width();
     const startY = no.y;
-    ballBounce.to(no, 1, {
+    this.introBallTween.to(no, 1, {
       x: no.x > 0 ? -ballRadius : 1920 + ballRadius,
       ease: Power0.easeNone,
       onUpdate: () => {
@@ -60,14 +61,14 @@ class PingPong {
         $shadow.attr('cy', 800);
       },
     }, 0);
-    ballBounce.to(no, 0.6, {
+    this.introBallTween.to(no, 0.6, {
       y: 800,
       ease: Power1.easeIn,
       onUpdate: () => {
         $ball.attr('cy', no.y);
       },
     }, 0);
-    ballBounce.to(no, 0.8, {
+    this.introBallTween.to(no, 0.8, {
       y: startY + 150,
       ease: Power1.easeOut,
       onUpdate: () => {
@@ -124,14 +125,22 @@ class PingPong {
       $('#play-again').text('Play again');
     });
 
-    this.emitter.on(EVENT.GAME_OVER, score => {
+    this.emitter.on(EVENT.GAME_OVER, (score, mode) => {
+
+      let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
+      $('.game-over-screen-wrapper').addClass(className);
       $('.game-over-screen-wrapper').show();
       document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
       document.exitPointerLock();
-      if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
-        $('#result').text('You won!');
-      } else {
-        $('#result').text('Your opponent won!');
+      if (mode === MODE.MULTIPLAYER) {
+        if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
+          $('#result').text('You won!');
+        } else {
+          $('#result').text('Your opponent won!');
+        }
+      } else {
+          $('#result').text('Game Over');
+          //alert('Your highscore this game: ' + score.highest);
       }
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
@@ -160,6 +169,9 @@ class PingPong {
       ease: Power2.easeInOut,
     }, 0.05);
     tl.set('.intro-screen', {display: 'none'});
+    tl.call(() => {
+      this.introBallTween.kill();
+    });
     tl.to([
     ], 0.5, {
       left: '100%',
@@ -226,8 +238,13 @@ class PingPong {
     });
 
     $('#start-singleplayer').click(e => {
-      $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
-      $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
+      if (Util.isMobile()) {
+        $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
+        $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
+      } else {
+        $('#cardboard img').attr('src', '/images/vive-pink.gif');
+        $('#tilt img').attr('src', '/images/desktop-pink.gif');
+      }
       $('.choose-vr-mode-screen').removeClass('blue green');
       $('.choose-vr-mode-screen').addClass('pink');
       // TODO dev
@@ -240,8 +257,13 @@ class PingPong {
     });
 
     $('#open-room').click(e => {
-      $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
-      $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
+      if (Util.isMobile()) {
+        $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
+        $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
+      } else {
+        $('#cardboard img').attr('src', '/images/vive-blue.gif');
+        $('#tilt img').attr('src', '/images/desktop-blue.gif');
+      }
       $('.choose-vr-mode-screen').removeClass('pink green');
       $('.choose-vr-mode-screen').addClass('blue');
       // this.requestFullscreen();
@@ -253,8 +275,13 @@ class PingPong {
     });
 
     $('#join-room').click(e => {
-      $('#cardboard img').attr('src', '/images/cardboard-green.gif');
-      $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
+      if (Util.isMobile()) {
+        $('#cardboard img').attr('src', '/images/cardboard-green.gif');
+        $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
+      } else {
+        $('#cardboard img').attr('src', '/images/vive-green.gif');
+        $('#tilt img').attr('src', '/images/desktop-green.gif');
+      }
       $('.choose-vr-mode-screen').removeClass('pink blue');
       $('.choose-vr-mode-screen').addClass('green');
       // this.requestFullscreen();
@@ -266,9 +293,11 @@ class PingPong {
     });
 
     $('#play-again').click(() => {
-      this.communication.sendRestartGame();
-      $('#play-again').text('Waiting for opponent to restart...');
-      this.scene.playerRequestedRestart = true;
+      if (this.scene.config.mode === MODE.MULTIPLAYER) {
+        $('#play-again').text('Waiting for opponent to restart...');
+        this.scene.playerRequestedRestart = true;
+        this.communication.sendRestartGame();
+      }
       this.scene.restartGame();
     });
 
@@ -397,7 +426,8 @@ class PingPong {
           $('#join-room-button').css('pointer-events', 'none');
         }
       });
-      $('#join-room-button').click(() => {
+      $('#room-form').on('submit', e => {
+        e.preventDefault();
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
           this.viewVRChooserScreen();
         }).catch(e => {
@@ -407,7 +437,7 @@ class PingPong {
 
       this.scene.sound.playUI('transition');
       const tl = new TimelineMax();
-      tl.set('.join-room-screen > div > *', {
+      tl.set('.join-room-screen > div > .present-players, .join-room-screen > div > form > *', {
         opacity: 0,
         y: 10,
       });

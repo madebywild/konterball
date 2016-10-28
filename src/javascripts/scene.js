@@ -13,13 +13,13 @@ import Table from './models/table';
 import Paddle from './models/paddle';
 import Net from './models/net';
 import Ball from './models/ball';
-import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
 const DEBUG_MODE = false;
 
 export default class Scene {
   constructor(emitter, communication) {
+
     this.emitter = emitter;
     this.time = new Time();
     this.controlMode = 'MOUSE';
@@ -56,6 +56,7 @@ export default class Scene {
     this.lastOpponentHitPosition = null;
     this.lastHitPosition = null;
     this.interpolationAlpha = 0;
+    this.ghostPaddlePosition = new THREE.Vector3();
 
     this.mouseMoveSinceLastFrame = {
       x: 0,
@@ -79,12 +80,15 @@ export default class Scene {
       height: $(document).height(),
     };
 
+    this.config = Object.assign({}, INITIAL_CONFIG);
+
     this.score = {
       self: 0,
       opponent: 0,
+      lives: this.config.startLives,
+      highest: 0,
     };
 
-    this.config = Object.assign({}, INITIAL_CONFIG);
     this.physics = new Physics(this.config, this.emitter);
     this.sound = new SoundManager(this.config);
 
@@ -109,7 +113,7 @@ export default class Scene {
           document.addEventListener("mousemove", this.mousemove, false);
         } else {
           document.removeEventListener("mousemove", this.mousemove);
-          this.setPaddlePosition(0, 1.3, this.config.paddlePositionZ);
+          this.setPaddlePosition({x: 0, y: 1.3, z: this.config.paddlePositionZ});
         }
       }, false);
 
@@ -122,11 +126,10 @@ export default class Scene {
       this.setupEventListeners();
       this.setupTablePlane();
       this.setupLights();
-      this.hud = new Hud(this.scene, this.config, this.emitter);
+      this.hud = new Hud(this.scene, this.config, this.emitter, this.objLoader);
 
       document.addEventListener("keydown", e => {
         // TODO remove for prod
-        return;
         if (e.key === 'w') {
           this.camera.position.z -= 1;
         } else if (e.key === 's') {
@@ -174,12 +177,7 @@ export default class Scene {
     this.emitter.on(EVENT.GAME_OVER, e => {
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
-      if (this.score.self > this.score.opponent) {
-        this.sound.playUI('win');
-      } else {
-        this.sound.playUI('lose');
-      }
-      
+      console.log('game over');
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
   }
@@ -307,7 +305,6 @@ export default class Scene {
       this.objLoader.load('paddle.obj', object => {
         const scale = 0.024;
         object.scale.set(scale, scale, scale);
-
         let redMaterial = new THREE.MeshLambertMaterial({
           color: this.config.colors.PADDLE_COLOR,
           side: THREE.DoubleSide,
@@ -332,6 +329,7 @@ export default class Scene {
         this.paddle.castShadow = true;
         this.paddle.position.y = this.config.tableHeight + 0.3;
         this.paddle.position.z = this.config.paddlePositionZ;
+        this.ghostPaddlePosition.copy(this.paddle.position);
         this.scene.add(this.paddle);
 
         this.paddleOpponent = object.clone();
@@ -347,7 +345,6 @@ export default class Scene {
 
   startGame() {
     // prepare the scene
-    this.paddle.visible = false;
     this.hud.container.visible = false;
     let table = this.scene.getObjectByName('table');
     if (this.config.mode === MODE.MULTIPLAYER) {
@@ -494,6 +491,13 @@ export default class Scene {
 
   restartGame() {
     // only restart if both players requested it
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.resetScore();
+      this.countdown();
+      this.emitter.emit(EVENT.RESTART_GAME, this.score);
+      return;
+    }
+
     if (this.opponentRequestedRestart && this.playerRequestedRestart) {
       this.emitter.emit(EVENT.RESTART_GAME, this.score);
       // TODO reset mode?
@@ -509,9 +513,12 @@ export default class Scene {
   resetScore() {
     this.score.self = 0;
     this.score.opponent = 0;
+    this.score.highest = 0;
+    this.score.lives = this.config.startLives;
     // propagate to HUD
     this.hud.scoreDisplay.setSelfScore(0);
     this.hud.scoreDisplay.setOpponentScore(0);
+    this.hud.scoreDisplay.setLives(this.score.lives);
   }
 
   setMultiplayer() {
@@ -522,6 +529,7 @@ export default class Scene {
     this.hud.message.showMessage();
     this.resetTimeoutDuration = 3000;
     this.hud.scoreDisplay.opponentScore.visible = true;
+    this.hud.scoreDisplay.lifeGroup.visible = false;
     // add callbacks for received actions
     this.communication.setCallbacks({
       move: this.receivedMove.bind(this),
@@ -539,6 +547,7 @@ export default class Scene {
     this.hud.message.hideMessage();
     this.resetTimeoutDuration = 1500;
     this.hud.scoreDisplay.opponentScore.visible = false;
+    this.hud.scoreDisplay.lifeGroup.visible = true;
     //this.table.getObjectByName('table').scale.z = 0.5;
     //this.table.getObjectByName('table').position.z = this.config.tablePositionZ + this.config.tableDepth / 2;
   }
@@ -644,7 +653,7 @@ export default class Scene {
     }
     if (this.score.self >= this.config.POINTS_FOR_WIN
       || this.score.opponent >= this.config.POINTS_FOR_WIN) {
-        this.emitter.emit(EVENT.GAME_OVER, this.score);
+        this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
     } else {
       // otherwise, the opponent that missed also resets the ball
       // and sends along its new position
@@ -671,6 +680,9 @@ export default class Scene {
     // reset the ball position in case the ball is stuck at the net
     // or fallen to the floor
     this.time.clearTimeout(this.resetBallTimeout);
+    if (this.config.state === STATE.GAME_OVER) {
+      return;
+    }
     this.resetBallTimeout = this.time.setTimeout(() => {
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.physicsTimeStep = 1000;
@@ -685,10 +697,11 @@ export default class Scene {
             || this.score.self >= this.config.POINTS_FOR_WIN) {
           // game is over
           // TODO maybe wait a little with this so players can enjoy their 11 points
-          this.emitter.emit(EVENT.GAME_OVER, this.score);
+          this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
         } else {
           // the game goes on
           this.physics.initBallPosition();
+          // remove a life
         }
         this.communication.sendMiss({
           x: this.physics.ball.position.x,
@@ -700,9 +713,15 @@ export default class Scene {
           z: this.physics.ball.velocity.z,
         }, this.ballHasHitEnemyTable);
       } else {
+        this.score.highest = Math.max(this.score.self, this.score.highest);
         this.score.self = 0;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
         this.physics.initBallPosition();
+        this.score.lives--;
+        this.hud.scoreDisplay.setLives(this.score.lives);
+        if (this.score.lives < 1) {
+          this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
+        }
       }
       this.restartPingpongTimeout();
     }, this.resetTimeoutDuration);
@@ -764,20 +783,20 @@ export default class Scene {
     return ball.physicsReference;
   }
 
-  setPaddlePosition(x, y, z) {
-    this.paddle.position.x = cap(x, this.config.tableWidth, -this.config.tableWidth),
-    this.paddle.position.z = cap(z || this.config.paddlePositionZ, 0, this.config.tablePositionZ + 0.5);
-    this.paddle.position.y = this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
+  setPaddlePosition(pos) {
+    this.paddle.position.x = cap(pos.x, this.config.tableWidth, -this.config.tableWidth),
+    this.paddle.position.z = cap(pos.z || this.config.paddlePositionZ, 0, this.config.tablePositionZ + 0.5);
+    this.paddle.position.y = pos.y ? pos.y : this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
 
     this.paddle.rotation.x = -((this.config.tablePositionZ + this.config.tableDepth / 2) - this.paddle.position.z * 1);
     // this.paddle.rotation.y = this.ball ? cap(3 * -this.ball.position.x + x, -Math.PI / 3, Math.PI / 3) : x;
-    this.paddle.rotation.z = -x;
+    this.paddle.rotation.z = -pos.x;
   }
 
   updateControls() {
     let pos = this.computePaddlePosition();
     if (pos) {
-      this.setPaddlePosition(pos.x, pos.y, pos.z);
+      this.ghostPaddlePosition.copy(pos);
     }
     if (!this.display || this.controlMode === 'MOUSE') {
       // MOUSE controls
@@ -787,7 +806,7 @@ export default class Scene {
       // look at the point at the middle position betwee the table center and paddle position
       this.camera.lookAt(
         new THREE.Vector3().lerpVectors(
-          this.paddle.position,
+          pos,
           new THREE.Vector3(
             this.table.position.x,
             this.config.tableHeight + 0.3,
@@ -819,14 +838,14 @@ export default class Scene {
       }
     }
     if (this.hitTween && this.hitTween.isActive()) {
-      /*
       let newPos = new THREE.Vector3().lerpVectors(
-        this.paddle.position,
+        this.ghostPaddlePosition,
         this.lastHitPosition,
         this.interpolationAlpha
       );
-      */
-      //this.setPaddlePosition(newPos.x, newPos.y, newPos.z);
+      this.setPaddlePosition(newPos);
+    } else if (pos) {
+      this.setPaddlePosition({x: pos.x, z: pos.z});
     }
   }
 
@@ -870,11 +889,10 @@ export default class Scene {
       }
     } else {
       // MOUSE
-      let y = this.ball ? this.ball.position.y : 1;
       return {
-        x: this.paddle.position.x + 0.001 * this.mouseMoveSinceLastFrame.x,
-        y: y,
-        z: this.paddle.position.z + 0.001 * this.mouseMoveSinceLastFrame.y,
+        x: this.ghostPaddlePosition.x + 0.001 * this.mouseMoveSinceLastFrame.x,
+        y: 1,
+        z: this.ghostPaddlePosition.z + 0.001 * this.mouseMoveSinceLastFrame.y,
       };
     }
   }
@@ -884,7 +902,7 @@ export default class Scene {
       // we interpolate between the actual (received) position and the position
       // the user would expect. as closer the ball comes to our paddle, the
       // closer the shown ball will come to the actual position. when it hits
-      // the paddle, both positions will be the same.
+      // the paddle, both positions will be the approximately the same.
       let wayLeftToTravel = this.physics.ball.position.distanceTo(this.paddle.position);
       let totalWayToTravel = this.lastOpponentHitPosition.distanceTo(this.paddle.position);
       let interpolationAlpha = wayLeftToTravel / totalWayToTravel;
@@ -910,57 +928,14 @@ export default class Scene {
       this.hitTween = new TimelineMax({
         onComplete: () => {this.hitAvailable = true;},
       });
-      const lastPos = this.paddle.position;
-      this.hitTween.to(this.paddle.position, 0.1, {
-        x: this.ball.position.x,
-        y: this.ball.position.y,
-        z: this.ball.position.z,
-      });
-      if (this.controlMode === 'MOUSE' && !this.isMobile) {
-        // in mouse mode we dont care if the user moved while the animation was
-        // running because the paddle will smoothly continue the motion after
-        // the animation is done
-        this.hitTween.to(this.paddle.position, 0.2, {
-          x: lastPos.x,
-          y: lastPos.y,
-          z: lastPos.z,
-        });
-      } else {
-        // in vr mode, we have to interpolate the paddle position between the
-        // hit position and the position that the player is looking at,
-        // otherwise the paddle would 'teleport' to the new position after the
-        // tween
-        let no = {
-          alpha: 0,
-        };
-        const fromPosition = this.ball.position.clone();
-        if (this.computePaddlePosition()) {
-          this.hitTween.to(no, 0.3, {
-            alpha: 1,
-            onUpdate: () => {
-              let newPos = new THREE.Vector3().lerpVectors(
-                fromPosition,
-                this.computePaddlePosition(),
-                no.alpha
-              );
-              this.setPaddlePosition(newPos.x, newPos.y, newPos.z);
-            },
-          });
-        }
-      }
-      /*
-      this.hitTween = new TimelineMax({
-        onComplete: () => {this.hitAvailable = true;},
-      });
-      console.log('start tween');
       this.lastHitPosition = this.ball.position.clone();
-      this.hitTween.to(this, 0.1, {
+      const tweenTime = this.paddle.position.distanceTo(this.ball.position);
+      this.hitTween.to(this, 0.05, {
         interpolationAlpha: 1,
       });
-      this.hitTween.to(this, 0.1, {
+      this.hitTween.to(this, 0.2, {
         interpolationAlpha: 0,
       });
-      */
     }
   }
 
@@ -968,13 +943,10 @@ export default class Scene {
     let delta = Math.min(timestamp - this.lastRender, 500);
     this.totaltime += delta;
 
-    // TODO proper managment for inactive tabs
     if (!this.tabActive) {
       requestAnimationFrame(this.animate.bind(this));
       return;
     }
-    console.log(this.computePaddlePosition().x);
-
 
     if (this.ball) {
       let dist = new THREE.Vector3();
@@ -982,8 +954,6 @@ export default class Scene {
       if (dist.length() < 0.4 && Math.abs(dist.x) < 0.2 && Math.abs(dist.z) < 0.1
         || this.isMobile && dist.length() < 0.8 && Math.abs(dist.x) < 0.3 && Math.abs(dist.z) < 0.1) {
         this.ballPaddleCollision(this.ball.position);
-      } else {
-        // this.paddle.position.y = this.config.tableHeight + 0.2;
       }
     }
     if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
