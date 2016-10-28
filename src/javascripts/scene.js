@@ -16,7 +16,7 @@ import Ball from './models/ball';
 import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 
 export default class Scene {
   constructor(emitter, communication) {
@@ -372,10 +372,11 @@ export default class Scene {
       this.paddle.visible = true;
       this.hud.container.visible = true;
       this.setupVRControls();
-      this.sound.playLoop('game1');
       if (this.config.mode === MODE.SINGLEPLAYER) {
+        this.sound.playLoop('game1');
         this.countdown();
       } else {
+        this.sound.playLoop('game2');
         this.paddleOpponent.visible = true;
         this.communication.sendRequestCountdown();
         this.playerRequestedCountdown = true;
@@ -737,9 +738,9 @@ export default class Scene {
       y: point.y,
       z: point.z,
     }, {
-      x: point.x,
-      y: point.y,
-      z: point.z,
+      x: this.physics.ball.velocity.x,
+      y: this.physics.ball.velocity.y,
+      z: this.physics.ball.velocity.z,
     });
   }
 
