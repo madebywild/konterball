@@ -16,7 +16,7 @@ import Ball from './models/ball';
 import BiggerBalls from './powerup/bigger-balls';
 import Time from './util/time';
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 export default class Scene {
   constructor(emitter, communication) {
