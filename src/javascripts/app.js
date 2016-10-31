@@ -144,7 +144,9 @@ class PingPong {
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
       // TODO
-      console.log('Your opponent has disconnected');
+      this.scene.hud.message.setMessage('Opponent disconnected');
+      this.scene.hud.message.showMessage();
+      this.scene.paddleOpponent.visible = false;
     });
   }
 

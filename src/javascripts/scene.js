@@ -829,7 +829,7 @@ export default class Scene {
     // backup original rotation
     const startRotation = new THREE.Euler().copy(this.camera.rotation);
 
-    // look at the point at the middle position betwee the table center and paddle position
+    // look at the point at the middle position between the table center and paddle
     this.camera.lookAt(
       new THREE.Vector3().lerpVectors(
         this.ghostPaddlePosition,
@@ -843,7 +843,7 @@ export default class Scene {
     );
     // the rotation we want to end up with
     const endRotation = new THREE.Euler().copy(this.camera.rotation);
-    // revert to original rotation and the we can tween it
+    // revert to original rotation and then we can tween it
     this.camera.rotation.copy(startRotation);
     if (this.cameraTween) {
       this.cameraTween.kill();

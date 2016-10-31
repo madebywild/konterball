@@ -30,6 +30,27 @@ export default class Communication {
 
     this.pings = {};
     this.roundTripTimes = [];
+
+    $(window).on('beforeunload', () => {
+      if (this.opponentConnected) {
+        // tell opponent we disconnected
+        this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {action: ACTION.DISCONNECT});
+      } else {
+        // delete all records
+        this.statusRecord.discard();
+        this.statusRecord.delete();
+        this.paddle1Record.discard();
+        this.paddle1Record.delete();
+        this.paddle2Record.discard();
+        this.paddle2Record.delete();
+        this.hitRecord.discard();
+        this.hitRecord.delete();
+        this.missRecord.discard();
+        this.missRecord.delete();
+        this.pingRecord.discard();
+        this.pingRecord.delete();
+      }
+    });
   }
 
   setCallbacks(callbacks) {
@@ -125,6 +146,7 @@ export default class Communication {
           if (value) {
             this.startListening();
             this.statusRecord.set('player-2', {action: ACTION.CONNECT});
+            this.opponentConnected = true;
             setTimeout(this.sendPings.bind(this), 1000);
             resolve();
           } else {
@@ -189,9 +211,11 @@ export default class Communication {
         case ACTION.CONNECT:
           setTimeout(this.sendPings.bind(this), 1000);
           this.statusRecord.set(`room-is-open`, false);
+          this.opponentConnected = true;
           this.emitter.emit(EVENT.OPPONENT_CONNECTED);
           break;
         case ACTION.DISCONNECT:
+          this.opponentConnected = false;
           this.emitter.emit(EVENT.OPPONENT_DISCONNECTED);
           break;
         case ACTION.REQUEST_COUNTDOWN:
@@ -240,7 +264,8 @@ export default class Communication {
   }
 
   sendHit(point, velocity) {
-    this.hitRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity});
+    // TODO remove date testing in prod
+    this.hitRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, time: Date.now()});
   }
 
   sendMiss(point, velocity, ballHasHitEnemyTable) {
