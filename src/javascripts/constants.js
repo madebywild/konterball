@@ -76,6 +76,5 @@ export const INITIAL_CONFIG = {
     PADDLE_COLOR: 0XD21515,
     PADDLE_WOOD_COLOR: 0xf0ede7,
     BALL: 0XF9FC56,
-
   },
 };

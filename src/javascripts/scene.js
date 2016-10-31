@@ -129,6 +129,7 @@ export default class Scene {
       this.hud = new Hud(this.scene, this.config, this.emitter, this.objLoader);
 
       document.addEventListener("keydown", e => {
+        return;
         // TODO remove for prod
         if (e.key === 'w') {
           this.camera.position.z -= 1;
@@ -153,9 +154,6 @@ export default class Scene {
         }
         this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
         this.camera.updateProjectionMatrix();
-        console.log(this.camera.rotation);
-        console.log(this.camera.position);
-        console.log(this.camera.fov);
       });
 
       Promise.all([
@@ -177,7 +175,6 @@ export default class Scene {
     this.emitter.on(EVENT.GAME_OVER, e => {
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
-      console.log('game over');
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
   }
@@ -472,10 +469,9 @@ export default class Scene {
           this.physics.initBallPosition();
         } else if (this.config.mode === MODE.MULTIPLAYER
             && !this.communication.isHost) {
-          let physicsBody = this.addBall();
-          this.physics.initBallPosition();
+          this.addBall();
           // if multiplayer, also send the other player a hit so the ball is synced
-          this.communication.sendHit({
+          this.communication.sendMiss({
             x: this.physics.ball.position.x,
             y: this.physics.ball.position.y,
             z: this.physics.ball.position.z,
@@ -594,7 +590,7 @@ export default class Scene {
   receivedHit(data, wasMiss=false) {
     // we might not have a ball yet
     this.time.clearTimeout(this.resetBallTimeout);
-    if (data.addBall) {
+    if (!this.ball) {
       // this doesnt add a ball if it already exists so were safe to call it
       this.addBall();
     } else {
@@ -644,12 +640,16 @@ export default class Scene {
     this.time.clearTimeout(this.resetBallTimeout);
     // opponent missed, update player score
     // and set game to be over if the score is high enough
-    if (data.ballHasHitEnemyTable) {
-      this.score.opponent++;
-      this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
-    } else {
-      this.score.self++;
-      this.hud.scoreDisplay.setSelfScore(this.score.self);
+    // (only do this if theres a ball already, otherwise
+    // the miss is just the first position reset)
+    if (this.ball) {
+      if (data.ballHasHitEnemyTable) {
+        this.score.opponent++;
+        this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
+      } else {
+        this.score.self++;
+        this.hud.scoreDisplay.setSelfScore(this.score.self);
+      }
     }
     if (this.score.self >= this.config.POINTS_FOR_WIN
       || this.score.opponent >= this.config.POINTS_FOR_WIN) {
@@ -775,12 +775,9 @@ export default class Scene {
     if (this.ball) {
       return;
     }
-    let ball = new Ball(this.scene, this.config);
-    let physicsBall = this.physics.addBall(ball);
-    this.ball = ball;
-    this.ball.physicsReference = physicsBall;
+    this.ball = new Ball(this.scene, this.config);
+    this.physics.addBall();
     this.restartPingpongTimeout();
-    return ball.physicsReference;
   }
 
   setPaddlePosition(pos) {
@@ -794,14 +791,14 @@ export default class Scene {
   }
 
   updateControls() {
-    let pos = this.computePaddlePosition();
+    const pos = this.computePaddlePosition();
     if (pos) {
       this.ghostPaddlePosition.copy(pos);
     }
     if (!this.display || this.controlMode === 'MOUSE') {
       // MOUSE controls
       // backup original rotation
-      let startRotation = new THREE.Euler().copy(this.camera.rotation);
+      const startRotation = new THREE.Euler().copy(this.camera.rotation);
 
       // look at the point at the middle position betwee the table center and paddle position
       this.camera.lookAt(
@@ -816,7 +813,7 @@ export default class Scene {
         )
       );
       // the rotation we want to end up with
-      let endRotation = new THREE.Euler().copy(this.camera.rotation);
+      const endRotation = new THREE.Euler().copy(this.camera.rotation);
       // revert to original rotation and the we can tween it
       this.camera.rotation.copy(startRotation);
       if (this.cameraTween) {
@@ -838,12 +835,12 @@ export default class Scene {
       }
     }
     if (this.hitTween && this.hitTween.isActive()) {
-      let newPos = new THREE.Vector3().lerpVectors(
+      const newPos = new THREE.Vector3().lerpVectors(
         this.ghostPaddlePosition,
         this.lastHitPosition,
         this.interpolationAlpha
       );
-      this.setPaddlePosition(newPos);
+      this.paddle.position.copy(newPos);
     } else if (pos) {
       this.setPaddlePosition({x: pos.x, z: pos.z});
     }
@@ -929,7 +926,6 @@ export default class Scene {
         onComplete: () => {this.hitAvailable = true;},
       });
       this.lastHitPosition = this.ball.position.clone();
-      const tweenTime = this.paddle.position.distanceTo(this.ball.position);
       this.hitTween.to(this, 0.05, {
         interpolationAlpha: 1,
       });
@@ -977,7 +973,7 @@ export default class Scene {
 
     if (this.config.state === STATE.PLAYING) {
       this.physics.step(delta / this.physicsTimeStep);
-      this.updateBall(this.ball);
+      this.updateBall();
       this.physics.predictCollisions(this.physics.ball, this.paddle, this.scene.getObjectByName('net-collider'));
     }
 

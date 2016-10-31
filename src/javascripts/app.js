@@ -126,7 +126,6 @@ class PingPong {
     });
 
     this.emitter.on(EVENT.GAME_OVER, (score, mode) => {
-
       let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
       $('.game-over-screen-wrapper').addClass(className);
       $('.game-over-screen-wrapper').show();

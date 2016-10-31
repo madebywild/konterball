@@ -121,15 +121,13 @@ export default class Physics {
     this.world.add(this.upwardsTable);
   }
 
-  addBall(threeReference) {
+  addBall() {
     let ball = new CANNON.Body({
       mass: this.config.ballMass,
       shape: new CANNON.Sphere(this.config.ballRadius),
       material: new CANNON.Material(),
     });
 
-    ball.threeReference = threeReference;
-    ball._name = threeReference.name;
     ball.linearDamping = 0.1;
 
     this.addContactMaterial(ball.material, this.table.material, 0.7, 0.3);
@@ -155,7 +153,7 @@ export default class Physics {
     if (this.config.mode === MODE.MULTIPLAYER) {
       e.body.velocity.z = -3.5;
       e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.1;
-      e.body.velocity.y = 1.8;
+      e.body.velocity.y = 2;
     } else {
       let distFromCenter = e.target.position.x / this.config.tableWidth * 0.5;
       e.body.velocity.z = -3.5;

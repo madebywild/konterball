@@ -20,6 +20,7 @@ export default class Communication {
     this.availableServers = [
       '138.68.98.41:6020',
       '52.57.135.84:6020',
+      '192.168.1.5:6020',
     ];
     this.availablePrefixes = _.chunk(
       availableChars,
@@ -229,8 +230,8 @@ export default class Communication {
     }
   }
 
-  sendHit(point, velocity, addBall=false) {
-    this.hitRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, addBall});
+  sendHit(point, velocity) {
+    this.hitRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity});
   }
 
   sendMiss(point, velocity, ballHasHitEnemyTable) {
