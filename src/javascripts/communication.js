@@ -17,6 +17,7 @@ export default class Communication {
     this.isHost = undefined;
     this.pingNumber = 0;
     this.pingInterval = null;
+    this.opponentConnected = false;
     this.availableServers = [
       '138.68.98.41:6020',
       '52.57.135.84:6020',
@@ -39,7 +40,6 @@ export default class Communication {
     return new Promise((resolve, reject) => {
       let client = deepstream(this.availableServers[hostIndex]);
       let timeout = setTimeout(() => {
-        console.log('timeout');
         client.close();
         resolve('timeout');
       }, 3000);
@@ -106,6 +106,7 @@ export default class Communication {
   }
 
   tryConnecting(id) {
+    this.isHost = false;
     return new Promise((resolve, reject) => {
       let serverIndex = -1;
       this.availablePrefixes.forEach((prefixes, index) => {
@@ -120,10 +121,16 @@ export default class Communication {
         this.GAME_ID = id;
         this.isHost = false;
         this.setRecords();
-        this.startListening();
-        this.statusRecord.set('player-2', {action: ACTION.CONNECT});
-        setTimeout(this.sendPings.bind(this), 1000);
-        resolve();
+        this.statusRecord.subscribe('room-is-open', value => {
+          if (value) {
+            this.startListening();
+            this.statusRecord.set('player-2', {action: ACTION.CONNECT});
+            setTimeout(this.sendPings.bind(this), 1000);
+            resolve();
+          } else {
+            reject('Room already full.');
+          }
+        });
       }).catch(e => {
         reject(e);
       });
@@ -141,6 +148,7 @@ export default class Communication {
       charset: availableChars,
     });
     this.setRecords();
+    this.statusRecord.set('room-is-open', true);
     this.startListening();
     return this.GAME_ID;
   }
@@ -180,6 +188,7 @@ export default class Communication {
       switch (value.action) {
         case ACTION.CONNECT:
           setTimeout(this.sendPings.bind(this), 1000);
+          this.statusRecord.set(`room-is-open`, false);
           this.emitter.emit(EVENT.OPPONENT_CONNECTED);
           break;
         case ACTION.DISCONNECT:

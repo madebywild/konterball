@@ -167,6 +167,10 @@ export default class Scene {
   }
 
   mousemove(e) {
+    if (this.paddle.position.x > this.config.tableWidth || this.paddle.position.x < -this.config.tableWidth) {
+    }
+    if (this.paddle.position.z < this.config.tablePositionZ + 0.5 && this.paddle.position.x > 0) {
+    }
     this.mouseMoveSinceLastFrame.x += e.movementX;
     this.mouseMoveSinceLastFrame.y += e.movementY;
   }
@@ -786,8 +790,7 @@ export default class Scene {
     this.paddle.position.y = pos.y ? pos.y : this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
 
     this.paddle.rotation.x = -((this.config.tablePositionZ + this.config.tableDepth / 2) - this.paddle.position.z * 1);
-    // this.paddle.rotation.y = this.ball ? cap(3 * -this.ball.position.x + x, -Math.PI / 3, Math.PI / 3) : x;
-    this.paddle.rotation.z = -pos.x;
+    this.paddle.rotation.z = cap(-pos.x, -Math.PI / 2, Math.PI / 2);
   }
 
   updateControls() {
@@ -795,37 +798,7 @@ export default class Scene {
     if (pos) {
       this.ghostPaddlePosition.copy(pos);
     }
-    if (!this.display || this.controlMode === 'MOUSE') {
-      // MOUSE controls
-      // backup original rotation
-      const startRotation = new THREE.Euler().copy(this.camera.rotation);
-
-      // look at the point at the middle position betwee the table center and paddle position
-      this.camera.lookAt(
-        new THREE.Vector3().lerpVectors(
-          pos,
-          new THREE.Vector3(
-            this.table.position.x,
-            this.config.tableHeight + 0.3,
-            this.table.position.z
-          ),
-          0.5
-        )
-      );
-      // the rotation we want to end up with
-      const endRotation = new THREE.Euler().copy(this.camera.rotation);
-      // revert to original rotation and the we can tween it
-      this.camera.rotation.copy(startRotation);
-      if (this.cameraTween) {
-        this.cameraTween.kill();
-      }
-      this.cameraTween = TweenMax.to(this.camera.rotation, 0.5, {
-        x: endRotation.x,
-        y: endRotation.y,
-        z: endRotation.z,
-        ease: Power4.easeOut,
-      });
-    } else if (this.controls) {
+    if (this.controls) {
       // Update VR headset position and apply to camera.
       this.controls.update();
       if (this.camera.position.x === 0
@@ -835,15 +808,52 @@ export default class Scene {
       }
     }
     if (this.hitTween && this.hitTween.isActive()) {
+      // interpolate between ball and paddle position during hit animation
       const newPos = new THREE.Vector3().lerpVectors(
         this.ghostPaddlePosition,
         this.lastHitPosition,
         this.interpolationAlpha
       );
-      this.paddle.position.copy(newPos);
+      this.setPaddlePosition(newPos);
     } else if (pos) {
       this.setPaddlePosition({x: pos.x, z: pos.z});
     }
+    this.updateCamera();
+  }
+
+  updateCamera() {
+    if (this.display && this.controlMode !== 'MOUSE') {
+      // user controls camera with headset in vr mode
+      return;
+    }
+    // backup original rotation
+    const startRotation = new THREE.Euler().copy(this.camera.rotation);
+
+    // look at the point at the middle position betwee the table center and paddle position
+    this.camera.lookAt(
+      new THREE.Vector3().lerpVectors(
+        this.ghostPaddlePosition,
+        new THREE.Vector3(
+          this.table.position.x,
+          this.config.tableHeight + 0.3,
+          this.table.position.z
+        ),
+        0.5
+      )
+    );
+    // the rotation we want to end up with
+    const endRotation = new THREE.Euler().copy(this.camera.rotation);
+    // revert to original rotation and the we can tween it
+    this.camera.rotation.copy(startRotation);
+    if (this.cameraTween) {
+      this.cameraTween.kill();
+    }
+    this.cameraTween = TweenMax.to(this.camera.rotation, 0.5, {
+      x: endRotation.x,
+      y: endRotation.y,
+      z: endRotation.z,
+      ease: Power4.easeOut,
+    });
   }
 
   computePaddlePosition() {
