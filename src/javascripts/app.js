@@ -239,15 +239,17 @@ class PingPong {
     });
 
     $('#start-singleplayer').click(e => {
-      if (Util.isMobile()) {
-        $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
-        $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
-      } else {
-        $('#cardboard img').attr('src', '/images/vive-pink.gif');
-        $('#tilt img').attr('src', '/images/desktop-pink.gif');
+      if (this.scene.manager.isVRCompatible) {
+        if (Util.isMobile()) {
+          $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
+          $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
+        } else {
+          $('#cardboard img').attr('src', '/images/vive-pink.gif');
+          $('#tilt img').attr('src', '/images/desktop-pink.gif');
+        }
+        $('.choose-vr-mode-screen').removeClass('blue green');
+        $('.choose-vr-mode-screen').addClass('pink');
       }
-      $('.choose-vr-mode-screen').removeClass('blue green');
-      $('.choose-vr-mode-screen').addClass('pink');
       // TODO dev
       // this.requestFullscreen();
       this.scene.setSingleplayer();
@@ -258,15 +260,17 @@ class PingPong {
     });
 
     $('#open-room').click(e => {
-      if (Util.isMobile()) {
-        $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
-        $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
-      } else {
-        $('#cardboard img').attr('src', '/images/vive-blue.gif');
-        $('#tilt img').attr('src', '/images/desktop-blue.gif');
+      if (this.scene.manager.isVRCompatible) {
+        if (Util.isMobile()) {
+          $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
+          $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
+        } else {
+          $('#cardboard img').attr('src', '/images/vive-blue.gif');
+          $('#tilt img').attr('src', '/images/desktop-blue.gif');
+        }
+        $('.choose-vr-mode-screen').removeClass('pink green');
+        $('.choose-vr-mode-screen').addClass('blue');
       }
-      $('.choose-vr-mode-screen').removeClass('pink green');
-      $('.choose-vr-mode-screen').addClass('blue');
       // this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
@@ -276,15 +280,17 @@ class PingPong {
     });
 
     $('#join-room').click(e => {
-      if (Util.isMobile()) {
-        $('#cardboard img').attr('src', '/images/cardboard-green.gif');
-        $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
-      } else {
-        $('#cardboard img').attr('src', '/images/vive-green.gif');
-        $('#tilt img').attr('src', '/images/desktop-green.gif');
+      if (this.scene.manager.isVRCompatible) {
+        if (Util.isMobile()) {
+          $('#cardboard img').attr('src', '/images/cardboard-green.gif');
+          $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
+        } else {
+          $('#cardboard img').attr('src', '/images/vive-green.gif');
+          $('#tilt img').attr('src', '/images/desktop-green.gif');
+        }
+        $('.choose-vr-mode-screen').removeClass('pink blue');
+        $('.choose-vr-mode-screen').addClass('green');
       }
-      $('.choose-vr-mode-screen').removeClass('pink blue');
-      $('.choose-vr-mode-screen').addClass('green');
       // this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewJoinRoomScreenAnimation().then(() => {
@@ -365,6 +371,7 @@ class PingPong {
     $('.back-arrow').on('click', () => {
       this.backAnimation();
     });
+
     $('.back-arrow').on('click', () => {
       this.backAnimation();
     });

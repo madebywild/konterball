@@ -42,22 +42,23 @@ export default class ScoreDisplay {
 
     this.lifeGroup = new THREE.Group();
     for (let i = 0; i < this.config.startLives; i++) {
-      geometry = new THREE.CircleGeometry(.03, 32);
+      geometry = new THREE.CircleGeometry(.025, 32);
       material = new THREE.MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
         side: THREE.DoubleSide,
-        opacity: 0.4,
+        opacity: 1,
       });
       let life = new THREE.Mesh(geometry, material);
-      life.position.x = i * 0.1;
+      life.position.x = i * 0.12;
       this.lives.push(life);
       this.lifeGroup.add(life);
     }
-    this.lifeGroup.position.z = -1;
-    this.lifeGroup.position.y = 1.1;
+    this.lifeGroup.position.z = -1.4;
+    this.lifeGroup.position.y = 1;
     this.lifeGroup.position.x = this.config.tableWidth / 2;
     this.lifeGroup.rotation.y = Math.PI / 2;
+    this.lifeGroup.rotation.x = Math.PI;
     this.lifeGroup.visible = this.config.mode === MODE.SINGLEPLAYER;
 
     this.parent.add(this.lifeGroup);
@@ -101,7 +102,7 @@ export default class ScoreDisplay {
 
   setLives(value) {
     this.lives.forEach((life, index) => {
-      life.material.visible = value > index;
+      life.material.opacity = value > index ? 1 : 0.3;
     });
   }
 }

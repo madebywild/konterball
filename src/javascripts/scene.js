@@ -131,6 +131,9 @@ export default class Scene {
       document.addEventListener("keydown", e => {
         return;
         // TODO remove for prod
+        if (e.key === 'g') {
+          // requestAnimationFrame(this.animate.bind(this));
+        }
         if (e.key === 'w') {
           this.camera.position.z -= 1;
         } else if (e.key === 's') {
@@ -167,9 +170,11 @@ export default class Scene {
   }
 
   mousemove(e) {
-    if (this.paddle.position.x > this.config.tableWidth || this.paddle.position.x < -this.config.tableWidth) {
+    if (this.paddle.position.x > this.config.tableWidth 
+      || this.paddle.position.x < -this.config.tableWidth) {
     }
-    if (this.paddle.position.z < this.config.tablePositionZ + 0.5 && this.paddle.position.x > 0) {
+    if (this.paddle.position.z < this.config.tablePositionZ + 0.5
+      && this.paddle.position.x > 0) {
     }
     this.mouseMoveSinceLastFrame.x += e.movementX;
     this.mouseMoveSinceLastFrame.y += e.movementY;
@@ -366,6 +371,7 @@ export default class Scene {
       table.material.color.set(this.config.colors.PINK_TABLE);
     }
 
+    TweenMax.set('.intro-wrapper', {display: 'none'});
     this.introPanAnimation().then(() => {
       this.paddle.visible = true;
       this.hud.container.visible = true;
@@ -381,7 +387,6 @@ export default class Scene {
         this.requestCountdown();
       }
     });
-
   }
 
   introPanAnimation() {
@@ -422,14 +427,6 @@ export default class Scene {
 
       const panDuration = 1;
 
-      tl.to(no, panDuration, {
-        fov: 47,
-        ease: Power3.easeIn,
-        onUpdate: () => {
-          this.camera.fov = no.fov;
-          this.camera.updateProjectionMatrix();
-        },
-      }, 1);
       tl.to(this.camera.position, panDuration, {
         x: 0,
         y: 1.6,
@@ -440,7 +437,7 @@ export default class Scene {
             new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ)
           );
         },
-      }, 1);
+      }, 0);
       tl.call(resolve, [], null, '+=1');
     });
   }
