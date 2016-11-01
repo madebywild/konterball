@@ -230,7 +230,6 @@ export default class Scene {
     this.camera.position.x = 2;
     this.camera.position.z = 2;
     this.camera.position.y = 4;
-    this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
   }
 
   setupLights() {
@@ -333,8 +332,10 @@ export default class Scene {
         this.paddle.name = 'paddle';
         this.paddle.visible = true;
         this.paddle.castShadow = true;
-        this.paddle.position.y = this.config.tableHeight + 0.3;
-        this.paddle.position.z = this.config.paddlePositionZ;
+        this.setPaddlePosition({
+          x: 0,
+          z: this.config.paddlePositionZ
+        });
         this.ghostPaddlePosition.copy(this.paddle.position);
         this.scene.add(this.paddle);
 
@@ -391,12 +392,6 @@ export default class Scene {
 
   introPanAnimation() {
     return new Promise((resolve, reject) => {
-      // set colors
-      // null object for tweening
-      let no = {
-        fov: this.camera.fov,
-      };
-
       const tl = new TimelineMax();
       /*
       tl.set('canvas, .transition-color-screen', {
@@ -423,6 +418,17 @@ export default class Scene {
         ease: Power2.easeInOut,
       }, 0.1, '-=0.6');
       */
+      this.camera.lookAt(
+        new THREE.Vector3().lerpVectors(
+          this.ghostPaddlePosition,
+          new THREE.Vector3(
+            this.table.position.x,
+            this.config.tableHeight + 0.3,
+            this.table.position.z
+          ),
+          0.5
+        )
+      );
       tl.to('.intro-wrapper', 0.5, {autoAlpha: 0});
 
       const panDuration = 1;
@@ -434,10 +440,18 @@ export default class Scene {
         ease: Power1.easeInOut,
         onUpdate: () => {
           this.camera.lookAt(
-            new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ)
+            new THREE.Vector3().lerpVectors(
+              this.ghostPaddlePosition,
+              new THREE.Vector3(
+                this.table.position.x,
+                this.config.tableHeight + 0.3,
+                this.table.position.z
+              ),
+              0.5
+            )
           );
         },
-      }, 0);
+      }, 2);
       tl.call(resolve, [], null, '+=1');
     });
   }

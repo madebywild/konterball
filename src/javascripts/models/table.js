@@ -62,23 +62,27 @@ export default (parent, config) => {
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableHeight / 2 + epsilon;
   mesh.position.x = config.tableWidth / 2 - lineWidth / 2;
+  mesh.receiveShadow = true;
   lineGroup.add(mesh);
 
   geometry = new THREE.BoxGeometry(config.tableWidth - lineWidth * 2, epsilon, lineWidth);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableHeight / 2 + epsilon;
   mesh.position.z = tableDepth / 2 - lineWidth / 2;
+  mesh.receiveShadow = true;
   lineGroup.add(mesh);
 
   geometry = new THREE.BoxGeometry(config.tableWidth - lineWidth * 2, epsilon, lineWidth);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableHeight / 2 + epsilon;
   mesh.position.z = -tableDepth / 2 + lineWidth / 2;
+  mesh.receiveShadow = true;
   lineGroup.add(mesh);
 
   geometry = new THREE.BoxGeometry(lineWidth, 0.001, tableDepth - lineWidth * 2);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableHeight / 2 + epsilon;
+  mesh.receiveShadow = true;
   lineGroup.add(mesh);
 
   if (config.mode === MODE.SINGLEPLAYER) {
@@ -95,6 +99,7 @@ export default (parent, config) => {
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;
   mesh.position.z = -upwardsTableHeight / 2 + lineWidth / 2;
+  mesh.receiveShadow = true;
   upwardsTableGroup.add(mesh);
 
   geometry = new THREE.BoxGeometry(lineWidth, epsilon, upwardsTableHeight);
@@ -108,12 +113,14 @@ export default (parent, config) => {
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;
   mesh.position.x = config.tableWidth / 2 - lineWidth / 2;
+  mesh.receiveShadow = true;
   upwardsTableGroup.add(mesh);
 
   geometry = new THREE.BoxGeometry(lineWidth, 0.001, upwardsTableHeight - lineWidth);
   mesh = new THREE.Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;
   mesh.position.z = lineWidth / 2;
+  mesh.receiveShadow = true;
   upwardsTableGroup.add(mesh);
 
   parent.add(group);
