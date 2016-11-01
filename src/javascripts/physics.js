@@ -1,9 +1,9 @@
 import {MODE, EVENT} from './constants';
 import {cap} from './util/helpers';
+import Util from './webvr-manager/util';
 
 export default class Physics {
   constructor(config, emitter) {
-
     // config
     this.config = config;
     this.emitter = emitter;
@@ -17,6 +17,7 @@ export default class Physics {
     this.ballGroundContact = null;
     this.ballPaddleContact = null;
     this.raycaster = new THREE.Raycaster();
+    this.isMobile = Util.isMobile();
   }
 
   setupWorld() {
@@ -65,12 +66,16 @@ export default class Physics {
     return;
     this.paddle = new CANNON.Body({
       mass: 0,
-      shape: new CANNON.Cylinder(this.config.paddleSize, this.config.paddleSize, this.config.paddleThickness, 10),
+      shape: new CANNON.Cylinder(
+        this.config.paddleSize,
+        this.config.paddleSize,
+        this.config.paddleThickness,
+        10
+      ),
       material: new CANNON.Material(),
     });
     this.paddle._name = 'PADDLE';
     this.paddle.position.set(0, 1, this.config.paddlePositionZ);
-    // this.paddle.addEventListener('collide', this.paddleCollision.bind(this));
     this.paddle.collisionResponse = 0;
     this.world.add(this.paddle);
   }
@@ -122,6 +127,7 @@ export default class Physics {
   }
 
   addBall() {
+    if (this.ball) return;
     let ball = new CANNON.Body({
       mass: this.config.ballMass,
       shape: new CANNON.Sphere(this.config.ballRadius),
@@ -137,8 +143,7 @@ export default class Physics {
     ball.position.z = this.config.tablePositionZ;
     this.ball = ball;
     this.world.add(ball);
-    this.initBallPosition(ball);
-    return ball;
+    this.initBallPosition();
   }
 
   paddleCollision(e) {
@@ -152,12 +157,22 @@ export default class Physics {
 
     if (this.config.mode === MODE.MULTIPLAYER) {
       e.body.velocity.z = -3.5;
-      e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.1;
+      // make aiming a little easier on mobile
+      if (this.isMobile) {
+        e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.1;
+      } else {
+        e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.4;
+      }
       e.body.velocity.y = 2;
     } else {
       let distFromCenter = e.target.position.x / this.config.tableWidth * 0.5;
       e.body.velocity.z = -3.5;
-      e.body.velocity.x = (-distFromCenter * 0.8) - (hitpointX * e.body.velocity.z * 0.2);
+      // make aiming a little easier on mobile
+      if (this.isMobile) {
+        e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.2);
+      } else {
+        e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.4);
+      }
       e.body.velocity.y = 2;
     }
   }

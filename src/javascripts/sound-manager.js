@@ -80,4 +80,14 @@ export default class SoundManager {
     this.muted = !this.muted;
     Howler.mute(this.muted);
   }
+
+  mute() {
+    Howler.mute(true);
+    this.muted = true;
+  }
+
+  unmute() {
+    Howler.mute(false);
+    this.muted = false;
+  }
 }

@@ -9,6 +9,8 @@ import Util from 'webvr-manager/util';
 import NoSleep from 'nosleep';
 import Communication from './communication';
 
+document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
+
 class PingPong {
   constructor() {
     this.emitter = EventEmitter({});
@@ -19,6 +21,30 @@ class PingPong {
     this.aboutScreenOpen = false;
     this.introBallTween = null;
 
+    console.log(window.orientation);
+    if (Util.isMobile() && 'orientation' in window && $(window).width() < $(window).height()) {
+      $('.rotate-phone-screen').css('display', 'block');
+      $(window).on('orientationchange', () => {
+        $(window).off('orientationchange');
+        setTimeout(() => {
+          if ($(window).width() > $(window).height()) {
+            TweenMax.to('.rotate-phone-screen', 0.3, {
+              autoAlpha: 0,
+            });
+            this.startLoading();
+          } else {
+            TweenMax.to('.rotate-phone-screen', 0.3, {
+              autoAlpha: 1,
+            });
+          }
+        }, 100);
+      });
+    } else {
+      this.startLoading();
+    }
+  }
+
+  startLoading() {
     Promise.all([
       this.scene.setup(), 
       this.loadModeChooserAnimation(),
@@ -43,10 +69,14 @@ class PingPong {
     const ballRadius = parseInt($('#ball').attr('r'));
     const no = {
       x: Math.random() > 0.5 ? -ballRadius : 1920 + ballRadius,
-      y: Math.random() * 500,
+      y: Math.random() * 800 - 400,
     };
     this.introBallTween = new TimelineMax({
-      onComplete: this.startBallTween.bind(this),
+      onComplete: () => {
+        setTimeout(() => {
+          this.startBallTween();
+        }, Math.random() * 2000);
+      },
     });
     const $ball = $('#ball');
     const $shadow = $('#ball-shadow');
@@ -129,8 +159,9 @@ class PingPong {
       let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
       $('.game-over-screen-wrapper').addClass(className);
       $('.game-over-screen-wrapper').show();
-      document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
-      document.exitPointerLock();
+      if (document.exitPointerLock) {
+        document.exitPointerLock();
+      }
       if (mode === MODE.MULTIPLAYER) {
         if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
           $('#result').text('You won!');
@@ -138,8 +169,7 @@ class PingPong {
           $('#result').text('Your opponent won!');
         }
       } else {
-          $('#result').text('Game Over');
-          //alert('Your highscore this game: ' + score.highest);
+        $('#result').text('Game Over');
       }
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {

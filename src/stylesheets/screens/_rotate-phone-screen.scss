@@ -1,0 +1,12 @@
+.rotate-phone-screen {
+  @extend .screen;
+  background-color: $blue-background;
+  z-index: 10;
+  display: none;
+  img {
+    @extend .absolute-center;
+    max-height: 90vh;
+    max-width: 90vw;
+  }
+
+}

@@ -268,12 +268,16 @@ export default class Communication {
     this.hitRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, time: Date.now()});
   }
 
-  sendMiss(point, velocity, ballHasHitEnemyTable) {
-    this.missRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, ballHasHitEnemyTable});
+  sendMiss(point, velocity, ballHasHitEnemyTable, isInit=false) {
+    this.missRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, ballHasHitEnemyTable, isInit});
   }
 
   sendRestartGame() {
-    this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {action: ACTION.RESTART_GAME});
+    // insert random value so the record is actually updated
+    this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {
+      action: ACTION.RESTART_GAME,
+      v: Math.random(),
+    });
   }
 
   sendRequestCountdown() {

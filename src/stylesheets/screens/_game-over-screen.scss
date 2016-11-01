@@ -26,7 +26,11 @@
       padding: 0;
       img {
         width: 50px;
-        filter: invert(100%);
+      }
+      &:hover {
+        img {
+          opacity: 0.8;
+        }
       }
     }
   }

@@ -49,13 +49,13 @@ export default class Scene {
     this.ball = null;
     this.physicsDebugRenderer = null;
     this.resetBallTimeout = null;
-    this.state = STATE.PRELOADER;
     this.ballHasHitEnemyTable = false;
     this.resetTimeoutDuration = 1500;
     this.physicsTimeStep = 1000;
     this.lastOpponentHitPosition = null;
     this.lastHitPosition = null;
-    this.interpolationAlpha = 0;
+    this.paddleInterpolationAlpha = 0;
+    this.ballInterpolationAlpha = 0;
     this.ghostPaddlePosition = new THREE.Vector3();
     this.pointerIsLocked = false;
 
@@ -128,6 +128,16 @@ export default class Scene {
         }
       }, false);
 
+      $(window).on('blur', () => {
+        this.tabActive = false;
+        this.sound.mute();
+      });
+
+      $(window).on('focus', () => {
+        this.tabActive = true;
+        this.sound.unmute();
+      });
+
       this.physics.setupWorld();
 
       if (DEBUG_MODE) {
@@ -181,6 +191,9 @@ export default class Scene {
   }
 
   mousemove(e) {
+    if (!this.paddle) {
+      return;
+    }
     if (this.paddle.position.x > this.config.tableWidth 
       || this.paddle.position.x < -this.config.tableWidth) {
     }
@@ -232,7 +245,6 @@ export default class Scene {
   setupThree() {
     this.renderer = new THREE.WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    this.renderer.setClearColor(this.config.colors.BLUE_BACKGROUND, 1);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -372,10 +384,10 @@ export default class Scene {
     let table = this.scene.getObjectByName('table');
     if (this.config.mode === MODE.MULTIPLAYER) {
       if (this.communication.isHost) {
-        this.renderer.setClearColor(this.config.colors.BLUE_BACKGROUND, 1);
+        this.renderer.setClearColor(this.config.colors.BLUE_CLEARCOLOR, 1);
         table.material.color.set(this.config.colors.BLUE_TABLE);
       } else {
-        this.renderer.setClearColor(this.config.colors.GREEN_BACKGROUND, 1);
+        this.renderer.setClearColor(this.config.colors.GREEN_CLEARCOLOR, 1);
         table.material.color.set(this.config.colors.GREEN_TABLE);
       }
     } else {
@@ -384,7 +396,7 @@ export default class Scene {
       this.net.visible = false;
       this.physics.net.collisionResponse = 0;
       this.physics.upwardsTable.collisionResponse = 1;
-      this.renderer.setClearColor(this.config.colors.PINK_BACKGROUND, 1);
+      this.renderer.setClearColor(this.config.colors.PINK_CLEARCOLOR, 1);
       table.material.color.set(this.config.colors.PINK_TABLE);
     }
 
@@ -510,14 +522,13 @@ export default class Scene {
             x: this.physics.ball.velocity.x,
             y: this.physics.ball.velocity.y,
             z: this.physics.ball.velocity.z,
-          }, true);
+          }, true, true);
         }
       }
     }, 1000);
   }
 
   restartGame() {
-    // only restart if both players requested it
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.resetScore();
       this.countdown();
@@ -525,7 +536,10 @@ export default class Scene {
       return;
     }
 
+    // only restart if both players requested it
+    console.log('restart req');
     if (this.opponentRequestedRestart && this.playerRequestedRestart) {
+      console.log('restart!');
       this.emitter.emit(EVENT.RESTART_GAME, this.score);
       // TODO reset mode?
 
@@ -619,8 +633,8 @@ export default class Scene {
   }
 
   receivedHit(data, wasMiss=false) {
-    // we might not have a ball yet
     this.time.clearTimeout(this.resetBallTimeout);
+    // we might not have a ball yet
     if (!this.ball) {
       // this doesnt add a ball if it already exists so were safe to call it
       this.addBall();
@@ -639,6 +653,11 @@ export default class Scene {
       this.lastOpponentHitPosition = new THREE.Vector3().copy(
         this.mirrorPosition(data.point)
       );
+      this.ballInterpolationAlpha = 1;
+      TweenMax.to(this, 0.5, {
+        ease: Power0.easeNone,
+        ballInterpolationAlpha: 0,
+      });
     }
     this.physicsTimeStep = 1000;
     // received vectors are in the other users space
@@ -671,9 +690,7 @@ export default class Scene {
     this.time.clearTimeout(this.resetBallTimeout);
     // opponent missed, update player score
     // and set game to be over if the score is high enough
-    // (only do this if theres a ball already, otherwise
-    // the miss is just the first position reset)
-    if (this.ball) {
+    if (!data.isInit) {
       if (data.ballHasHitEnemyTable) {
         this.score.opponent++;
         this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
@@ -689,6 +706,7 @@ export default class Scene {
       // otherwise, the opponent that missed also resets the ball
       // and sends along its new position
       this.receivedHit(data, true);
+      this.config.state = STATE.PLAYING;
     }
   }
 
@@ -804,6 +822,8 @@ export default class Scene {
   addBall() {
     this.config.state = STATE.PLAYING;
     if (this.ball) {
+      this.physics.initBallPosition();
+      this.restartPingpongTimeout();
       return;
     }
     this.ball = new Ball(this.scene, this.config);
@@ -814,7 +834,7 @@ export default class Scene {
   setPaddlePosition(pos) {
     this.paddle.position.x = cap(pos.x, this.config.tableWidth, -this.config.tableWidth),
     this.paddle.position.z = cap(pos.z || this.config.paddlePositionZ, 0, this.config.tablePositionZ + 0.5);
-    this.paddle.position.y = pos.y ? pos.y : this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
+    this.paddle.position.y = pos.y || this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
 
     this.paddle.rotation.x = -((this.config.tablePositionZ + this.config.tableDepth / 2) - this.paddle.position.z * 1);
     this.paddle.rotation.z = cap(-pos.x, -Math.PI / 2, Math.PI / 2);
@@ -839,7 +859,7 @@ export default class Scene {
       const newPos = new THREE.Vector3().lerpVectors(
         this.ghostPaddlePosition,
         this.lastHitPosition,
-        this.interpolationAlpha
+        this.paddleInterpolationAlpha
       );
       this.setPaddlePosition(newPos);
     } else if (pos) {
@@ -945,16 +965,13 @@ export default class Scene {
       // the user would expect. as closer the ball comes to our paddle, the
       // closer the shown ball will come to the actual position. when it hits
       // the paddle, both positions will be the approximately the same.
-      let wayLeftToTravel = this.physics.ball.position.distanceTo(this.paddle.position);
-      let totalWayToTravel = this.lastOpponentHitPosition.distanceTo(this.paddle.position);
-      let interpolationAlpha = wayLeftToTravel / totalWayToTravel;
       let fauxPosition = new THREE.Vector3().lerpVectors(
         this.physics.ball.position,
         new THREE.Vector3().addVectors(
           this.physics.ball.position,
           this.ballPositionDifference
         ),
-        interpolationAlpha
+        this.ballInterpolationAlpha
       );
       this.ball.position.copy(fauxPosition);
       this.ball.quaternion.copy(this.physics.ball.quaternion);
@@ -971,11 +988,12 @@ export default class Scene {
         onComplete: () => {this.hitAvailable = true;},
       });
       this.lastHitPosition = this.ball.position.clone();
+      this.lastHitPosition.y = Math.max(this.lastHitPosition.y, this.tableHeight + 0.15);
       this.hitTween.to(this, 0.05, {
-        interpolationAlpha: 1,
+        paddleInterpolationAlpha: 1,
       });
       this.hitTween.to(this, 0.2, {
-        interpolationAlpha: 0,
+        paddleInterpolationAlpha: 0,
       });
     }
   }
@@ -985,8 +1003,8 @@ export default class Scene {
     this.totaltime += delta;
 
     if (!this.tabActive) {
-      requestAnimationFrame(this.animate.bind(this));
-      return;
+      // requestAnimationFrame(this.animate.bind(this));
+      // return;
     }
 
     if (this.ball) {
