@@ -8,6 +8,7 @@
 
 {% block content %}
 <button class='exit-arrow'>exit</button>
+<button class='mute'><img src='images/icon-mute.svg'></button>
 <div class='intro-wrapper'>
   <div class='transition-color-screen pink'></div>
   <div class='transition-color-screen blue'></div>
@@ -43,7 +44,7 @@
         <span class='loading-text-overlay'>Webpong</span>
       </header>
       <p>A 2-player virtual reality game, built for the web</p>
-      <button id='start'>Let’s Go</button>
+      <button class='btn' id='start'>Let’s Go</button>
     </div>
   </div>
 
@@ -52,15 +53,15 @@
       <h3>One Player</h3>
       <div id='singleplayer-animation'></div>
       <div class='buttons'>
-        <button id='start-singleplayer'>Start Game</button>
+        <button class='btn' id='start-singleplayer'>Start Game</button>
       </div>
     </div>
     <div class='two-player-col'>
       <h3>Two Player</h3>
       <div id='multiplayer-animation'></div>
       <div class='buttons'>
-        <button id='join-room'>Join Game</button>
-        <button id='open-room'>New Game</button>
+        <button class='btn' id='join-room'>Join Game</button>
+        <button class='btn' id='open-room'>New Game</button>
       </div>
     </div>
   </div>
@@ -88,7 +89,7 @@
       <form id='room-form' action='javascript:void(0)'>
         <input type='text' id='room-code' placeholder='____' maxlength='4'><br>
         <p class='grey-text'>Type in your Code</p><br>
-        <button id='join-room-button' role='submit' class='inactive'>Join Game</button>
+        <button class='btn' id='join-room-button' role='submit' class='inactive'>Join Game</button>
       </form>
     </div>
   </div>
@@ -118,8 +119,8 @@
 <div class='game-over-screen-wrapper'>
   <div class='game-over-screen'>
     <h2 id='result'>Your opponent won!</h2>
-    <button id='play-again'>Play again</button>
-    <button id='exit'>Exit</button>
+    <button class='btn' id='play-again'>Play again</button>
+    <button class='btn' id='exit'>Exit</button>
     <div class='share-wrapper'>
       <button id='share-gplus'><img src='images/icon-googleplus.svg'></button>
       <button id='share-fb'><img src='images/icon-facebook.svg'></button>

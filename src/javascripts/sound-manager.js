@@ -7,6 +7,7 @@ const url = `https://s3.eu-central-1.amazonaws.com/pingpongsound/`;
 export default class SoundManager {
   constructor(config) {
     this.config = config;
+    this.muted = false;
     this.paddleSounds = [];
     this.tableSounds = [];
     for (let i = 1; i <= 3; i++) {
@@ -73,5 +74,10 @@ export default class SoundManager {
   gameOver() {
     return;
     this.gameOverSound.play();
+  }
+
+  toggleMute() {
+    this.muted = !this.muted;
+    Howler.mute(this.muted);
   }
 }

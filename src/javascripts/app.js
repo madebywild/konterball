@@ -353,11 +353,11 @@ class PingPong {
       this.scene.startGame();
     });
 
-    $('button').on('click', () => {
+    $('button.btn').click(() => {
       this.scene.sound.playUI('button');
     });
 
-    $('button:not(.back-arrow)').on('click', function() {
+    $('button.btn').click(function() {
       const duration = 0.1;
       TweenMax.to($(this), duration, {
         backgroundColor: '#fff',
@@ -368,12 +368,21 @@ class PingPong {
       });
     });
 
-    $('.back-arrow').on('click', () => {
+    $('.back-arrow').click(() => {
       this.backAnimation();
     });
 
-    $('.back-arrow').on('click', () => {
+    $('.back-arrow').click(() => {
       this.backAnimation();
+    });
+
+    $('.mute').click(() => {
+      this.scene.sound.toggleMute();
+      if (this.scene.sound.muted) {
+        $('.mute img').attr('src', 'images/icon-unmute.svg');
+      } else {
+        $('.mute img').attr('src', 'images/icon-mute.svg');
+      }
     });
   }
 

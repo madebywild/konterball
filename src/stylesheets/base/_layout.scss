@@ -32,11 +32,13 @@ h2 {
   font-weight: normal;
 }
 button {
+  background-color: transparent;
+  cursor: pointer;
+}
+button.btn {
   text-transform: uppercase;
   font-size: 12px;
-  cursor: pointer;
   padding: 15px 30px;
-  background-color: transparent;
   border: 2px solid #fff;
   letter-spacing: 0.15em;
   color: #fff;
@@ -103,13 +105,24 @@ button.inactive {
   @extend .futura-italic;
 }
 .present-players img {
-  filter: invert(100%);
   width: 30px;
   height: auto;
   margin: 40px 10px;
 }
 .opponent-icon {
   opacity: 0.3;
+}
+.mute {
+  padding: 20px;
+  border: 0;
+  left: 0;
+  bottom: 0;
+  position: absolute;
+  z-index: 100;
+  img {
+    width: 30px;
+    height: auto;
+  }
 }
 .exit-arrow,
 .back-arrow {
@@ -119,7 +132,6 @@ button.inactive {
   top: 0;
   position: absolute;
   img {
-    filter: invert(100%);
     width: 30px;
     height: auto;
   }

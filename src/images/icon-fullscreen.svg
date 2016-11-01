@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 20.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 46.7 33.4" style="enable-background:new 0 0 46.7 33.4;" xml:space="preserve">
+	 viewBox="0 0 53.2 53.2" style="enable-background:new 0 0 53.2 53.2;" xml:space="preserve">
 <style type="text/css">
 	.st0{fill:#EA6F4E;}
 	.st1{fill:#271A56;}
@@ -103,16 +103,26 @@
 	.st97{clip-path:url(#SVGID_94_);enable-background:new    ;}
 	.st98{clip-path:url(#SVGID_96_);enable-background:new    ;}
 	.st99{clip-path:url(#SVGID_98_);enable-background:new    ;}
-	.st100{fill:none;stroke:#FFFFFF;stroke-width:5;stroke-miterlimit:10;}
-	.st101{fill:none;stroke:#FFFFFF;stroke-width:5;stroke-linejoin:bevel;stroke-miterlimit:10;}
-	.st102{fill:#FFFFFF;}
+	.st100{fill:none;stroke:#231F20;stroke-width:5;stroke-miterlimit:10;}
+	.st101{fill:none;stroke:#231F20;stroke-width:5;stroke-linejoin:bevel;stroke-miterlimit:10;}
+	.st102{fill:#231F20;}
 </style>
 <g id="Layer_2">
 </g>
 <g id="Layer_1">
 	<g>
-		<line class="st101" x1="46.7" y1="16.7" x2="3.5" y2="16.7"/>
-		<polyline class="st100" points="18.5,31.6 3.5,16.7 18.5,1.8 		"/>
+		<g>
+			<polyline class="st100" points="17.8,2.5 2.5,2.5 2.5,16.9 			"/>
+		</g>
+		<g>
+			<polyline class="st100" points="2.5,36.2 2.5,50.7 17.8,50.7 			"/>
+		</g>
+		<g>
+			<polyline class="st100" points="35.3,50.7 50.7,50.7 50.7,36.2 			"/>
+		</g>
+		<g>
+			<polyline class="st100" points="50.7,16.9 50.7,2.5 35.3,2.5 			"/>
+		</g>
 	</g>
 </g>
 <g id="Isolation_Mode">

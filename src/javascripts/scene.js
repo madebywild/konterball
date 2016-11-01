@@ -57,8 +57,13 @@ export default class Scene {
     this.lastHitPosition = null;
     this.interpolationAlpha = 0;
     this.ghostPaddlePosition = new THREE.Vector3();
+    this.pointerIsLocked = false;
 
     this.mouseMoveSinceLastFrame = {
+      x: 0,
+      y: 0,
+    };
+    this.mousePosition = {
       x: 0,
       y: 0,
     };
@@ -103,17 +108,23 @@ export default class Scene {
       this.setupVR();
       this.net = Net(this.scene, this.config);
 
-      this.renderer.domElement.requestPointerLock = this.renderer.domElement.requestPointerLock
+      this.renderer.domElement.requestPointerLock 
+        = this.renderer.domElement.requestPointerLock
         || this.renderer.domElement.mozRequestPointerLock;
+
       this.renderer.domElement.onclick = () => {
-        this.renderer.domElement.requestPointerLock();
+        if (this.renderer.domElement.requestPointerLock) {
+          this.renderer.domElement.requestPointerLock();
+        }
       };
+
+      document.addEventListener("mousemove", this.mousemove, false);
       document.addEventListener('pointerlockchange', () => {
         if (document.pointerLockElement === this.renderer.domElement) {
-          document.addEventListener("mousemove", this.mousemove, false);
+          this.pointerIsLocked = true;
         } else {
-          document.removeEventListener("mousemove", this.mousemove);
-          this.setPaddlePosition({x: 0, y: 1.3, z: this.config.paddlePositionZ});
+          this.pointerIsLocked = false;
+          // this.setPaddlePosition({x: 0, y: 1.3, z: this.config.paddlePositionZ});
         }
       }, false);
 
@@ -176,8 +187,13 @@ export default class Scene {
     if (this.paddle.position.z < this.config.tablePositionZ + 0.5
       && this.paddle.position.x > 0) {
     }
-    this.mouseMoveSinceLastFrame.x += e.movementX;
-    this.mouseMoveSinceLastFrame.y += e.movementY;
+    if (this.pointerIsLocked) {
+      this.mouseMoveSinceLastFrame.x += e.movementX;
+      this.mouseMoveSinceLastFrame.y += e.movementY;
+    } else {
+      this.mousePosition.x = e.clientX / this.viewport.width - 0.5;
+      this.mousePosition.y = -(e.clientY / this.viewport.height - 0.5);
+    }
   }
 
   setupEventListeners() {
@@ -907,11 +923,19 @@ export default class Scene {
       }
     } else {
       // MOUSE
-      return {
-        x: this.ghostPaddlePosition.x + 0.001 * this.mouseMoveSinceLastFrame.x,
-        y: 1,
-        z: this.ghostPaddlePosition.z + 0.001 * this.mouseMoveSinceLastFrame.y,
-      };
+      if (this.pointerIsLocked) {
+        return {
+          x: this.ghostPaddlePosition.x + 0.001 * this.mouseMoveSinceLastFrame.x,
+          y: 1,
+          z: this.ghostPaddlePosition.z + 0.001 * this.mouseMoveSinceLastFrame.y,
+        };
+      } else {
+        return {
+          x: 1.4 * this.mousePosition.x * this.config.tableWidth,
+          y: 1,
+          z: -this.config.tableDepth * 0.5 * (this.mousePosition.y + 0.5),
+        };
+      }
     }
   }
 
@@ -1018,5 +1042,9 @@ export default class Scene {
     this.effect.setSize(window.innerWidth, window.innerHeight);
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
+    this.viewport = {
+      width: $(document).width(),
+      height: $(document).height(),
+    };
   }
 }
