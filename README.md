@@ -1,9 +1,11 @@
 # Development
 
 * Run `gulp`
+
+Depending on whether you want to host a local deepstream server too:
+
 * Run `node deepstream.js`
-* ???
-* Profit
+* Update `availableServers` in `src/javascripts/communication.js`, add localhost
 
 # Production
 
@@ -13,5 +15,4 @@
 
 ## TODO
 
-* automatic pointer lock, maybe not possible
 * [update webvr api use](https://github.com/w3c/webvr/blob/gh-pages/migration.md)
