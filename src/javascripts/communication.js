@@ -19,9 +19,8 @@ export default class Communication {
     this.pingInterval = null;
     this.opponentConnected = false;
     this.availableServers = [
-      '138.68.98.41:6020',
-      '52.57.135.84:6020',
-      '192.168.1.5:6020',
+      '138.68.98.41:6020', // frankfurt
+      '104.236.73.94:6020', // new york
     ];
     this.availablePrefixes = _.chunk(
       availableChars,

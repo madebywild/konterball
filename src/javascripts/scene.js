@@ -479,7 +479,7 @@ export default class Scene {
             )
           );
         },
-      }, 2);
+      }, 0.3);
       tl.call(resolve, [], null, '+=1');
     });
   }
@@ -962,9 +962,7 @@ export default class Scene {
   updateBall() {
     if (this.ballPositionDifference) {
       // we interpolate between the actual (received) position and the position
-      // the user would expect. as closer the ball comes to our paddle, the
-      // closer the shown ball will come to the actual position. when it hits
-      // the paddle, both positions will be the approximately the same.
+      // the user would expect. after 500ms both positions are the same.
       let fauxPosition = new THREE.Vector3().lerpVectors(
         this.physics.ball.position,
         new THREE.Vector3().addVectors(
@@ -1046,12 +1044,12 @@ export default class Scene {
 
     this.time.step();
 
-    // Render the scene through the manager.
     this.lastRender = timestamp;
     this.frameNumber++;
     this.mouseMoveSinceLastFrame.x = 0;
     this.mouseMoveSinceLastFrame.y = 0;
 
+    // Render the scene through the manager.
     this.manager.render(this.scene, this.camera, this.timestamp);
     requestAnimationFrame(this.animate.bind(this));
   }
