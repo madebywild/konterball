@@ -168,8 +168,10 @@ class PingPong {
         } else {
           $('#result').text('Your opponent won!');
         }
+        $('#score').text(`You ${score.self} : ${score.opponent} Opponent`);
       } else {
         $('#result').text('Game Over');
+        $('#score').text(`Your highscore this round: ${score.highest}`);
       }
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {

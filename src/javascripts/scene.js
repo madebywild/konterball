@@ -845,7 +845,7 @@ export default class Scene {
     if (pos) {
       this.ghostPaddlePosition.copy(pos);
     }
-    if (this.controls) {
+    if (this.controls && this.controlMode === 'VR') {
       // Update VR headset position and apply to camera.
       this.controls.update();
       if (this.camera.position.x === 0
