@@ -124,7 +124,6 @@ export default class Scene {
           this.pointerIsLocked = true;
         } else {
           this.pointerIsLocked = false;
-          // this.setPaddlePosition({x: 0, y: 1.3, z: this.config.paddlePositionZ});
         }
       }, false);
 
@@ -148,37 +147,6 @@ export default class Scene {
       this.setupTablePlane();
       this.setupLights();
       this.hud = new Hud(this.scene, this.config, this.emitter, this.objLoader);
-
-      document.addEventListener("keydown", e => {
-        return;
-        // TODO remove for prod
-        if (e.key === 'g') {
-          // requestAnimationFrame(this.animate.bind(this));
-        }
-        if (e.key === 'w') {
-          this.camera.position.z -= 1;
-        } else if (e.key === 's') {
-          this.camera.position.z += 1;
-        } else if (e.key === 'u') {
-          this.camera.position.y += 0.1;
-        } else if (e.key === 'j') {
-          this.camera.position.y -= 0.1;
-        } else if (e.key === '+') {
-          this.camera.fov += 0.3;
-        } else if (e.key === '-') {
-          this.camera.fov -= 0.3;
-        } else if (e.key === 'd') {
-          this.camera.position.x += 1;
-        } else if (e.key === 'a') {
-          this.camera.position.x -= 1;
-        } else if (e.key === 'ArrowUp') {
-          this.camera.rotation.x += 0.05;
-        } else if (e.key === 'ArrowDown') {
-          this.camera.rotation.x -= 0.05;
-        }
-        this.camera.lookAt(new THREE.Vector3(0, this.config.tableHeight, this.config.tablePositionZ));
-        this.camera.updateProjectionMatrix();
-      });
 
       Promise.all([
         this.hud.setup(),
@@ -231,7 +199,7 @@ export default class Scene {
     this.effect.setSize(window.innerWidth, window.innerHeight);
 
     // Create a VR manager helper to enter and exit VR mode.
-    let params = {
+    const params = {
       hideButton: false, // Default: false.
       isUndistorted: false // Default: false.
     };
@@ -281,8 +249,8 @@ export default class Scene {
 
   setupTablePlane() {
     this.raycaster = new THREE.Raycaster();
-    let geometry = new THREE.PlaneGeometry(40, 40, 5, 5);
-    let material = new THREE.MeshBasicMaterial({color: 0xffff00, wireframe: true});
+    const geometry = new THREE.PlaneGeometry(40, 40, 5, 5);
+    const material = new THREE.MeshBasicMaterial({color: 0xffff00, wireframe: true});
     this.tablePlane = new THREE.Mesh(geometry, material);
     this.tablePlane.rotation.x = -Math.PI * 0.45;
     this.tablePlane.position.y = this.config.tableHeight + 0.2;
@@ -338,11 +306,11 @@ export default class Scene {
       this.objLoader.load('paddle.obj', object => {
         const scale = 0.024;
         object.scale.set(scale, scale, scale);
-        let redMaterial = new THREE.MeshLambertMaterial({
+        const redMaterial = new THREE.MeshLambertMaterial({
           color: this.config.colors.PADDLE_COLOR,
           side: THREE.DoubleSide,
         });
-        let woodMaterial = new THREE.MeshLambertMaterial({
+        const woodMaterial = new THREE.MeshLambertMaterial({
           color: this.config.colors.PADDLE_WOOD_COLOR,
           side: THREE.DoubleSide,
         });
@@ -381,7 +349,7 @@ export default class Scene {
   startGame() {
     // prepare the scene
     this.hud.container.visible = false;
-    let table = this.scene.getObjectByName('table');
+    const table = this.scene.getObjectByName('table');
     if (this.config.mode === MODE.MULTIPLAYER) {
       if (this.communication.isHost) {
         this.renderer.setClearColor(this.config.colors.BLUE_CLEARCOLOR, 1);
@@ -391,7 +359,7 @@ export default class Scene {
         table.material.color.set(this.config.colors.GREEN_TABLE);
       }
     } else {
-      let upwardsTableGroup = this.scene.getObjectByName('upwardsTableGroup');
+      const upwardsTableGroup = this.scene.getObjectByName('upwardsTableGroup');
       upwardsTableGroup.visible = true;
       this.net.visible = false;
       this.physics.net.collisionResponse = 0;
@@ -501,7 +469,7 @@ export default class Scene {
     // countdown from 3, start game afterwards
     this.hud.countdown.showCountdown();
     let n = 2;
-    let countdown = this.time.setInterval(() => {
+    const countdown = this.time.setInterval(() => {
       this.hud.countdown.setCountdown(n);
       n--;
       if (n < 0) {
@@ -537,16 +505,13 @@ export default class Scene {
     }
 
     // only restart if both players requested it
-    console.log('restart req');
     if (this.opponentRequestedRestart && this.playerRequestedRestart) {
-      console.log('restart!');
       this.emitter.emit(EVENT.RESTART_GAME, this.score);
-      // TODO reset mode?
-
       // reset
       this.playerRequestedRestart = false;
       this.opponentRequestedRestart = false;
       this.resetScore();
+      this.physics.speed = 1;
       this.countdown();
     }
   }
@@ -596,8 +561,8 @@ export default class Scene {
   receivedMove(move) {
     // received a move from the opponent,
     // set his paddle to the position received
-    let pos = this.mirrorPosition(move.position);
-    let no = {
+    const pos = this.mirrorPosition(move.position);
+    const no = {
       x: this.paddleOpponent.position.x,
       y: this.paddleOpponent.position.y,
       z: this.paddleOpponent.position.z,
@@ -668,7 +633,7 @@ export default class Scene {
 
   mirrorPosition(pos) {
     let z = pos.z;
-    z = z - Math.sign(z - this.config.tablePositionZ) * Math.abs(z - this.config.tablePositionZ) * 2;
+    z -= (z - this.config.tablePositionZ) * 2;
     return {
       x: -pos.x, 
       y: pos.y,
@@ -736,7 +701,6 @@ export default class Scene {
     }
     this.resetBallTimeout = this.time.setTimeout(() => {
       if (this.config.mode === MODE.MULTIPLAYER) {
-        console.log('timeout, ballhashit: ' + this.ballHasHitEnemyTable);
         this.physicsTimeStep = 1000;
         if (this.ballHasHitEnemyTable) {
           this.score.self++;
@@ -754,6 +718,9 @@ export default class Scene {
           // the game goes on
           this.physics.initBallPosition();
         }
+        // speed will be 1 at 0 points and 1.5 at 11:11
+        this.physics.speed = 1 + (this.score.opponent + this.score.self) / 44;
+
         this.communication.sendMiss({
           x: this.physics.ball.position.x,
           y: this.physics.ball.position.y,
@@ -765,12 +732,14 @@ export default class Scene {
         }, this.ballHasHitEnemyTable);
         this.ballHasHitEnemyTable = false;
       } else {
+        // singleplayer
         this.score.highest = Math.max(this.score.self, this.score.highest);
         this.score.self = 0;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
         this.physics.initBallPosition();
         this.score.lives--;
         this.hud.scoreDisplay.setLives(this.score.lives);
+        this.physics.speed = 1 + (5 - this.score.lives) * 0.1;
         if (this.score.lives < 1) {
           this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
         }
@@ -918,7 +887,7 @@ export default class Scene {
       if (controller) {
         // VIVE ETC
         // if we do have a controller, intersect the table with where the controller is facing
-        let direction = new THREE.Vector3(0, 0, -1);
+        const direction = new THREE.Vector3(0, 0, -1);
         direction.applyQuaternion(controller.getWorldQuaternion());
         direction.normalize();
         this.raycaster.set(controller.getWorldPosition(), direction);
@@ -930,7 +899,7 @@ export default class Scene {
         // with where the camera is looking and place the paddle there
         // if we are in vr, position paddle below looking direction so we dont have
         // to look down at all times
-        let rayYDirection = this.manager.mode === VR_MODES.VR ? -0.7 : -0.3;
+        const rayYDirection = this.manager.mode === VR_MODES.VR ? -0.7 : -0.3;
         this.raycaster.setFromCamera(new THREE.Vector2(0, rayYDirection), this.camera);
         this.raycaster.far = 5;
         intersects = this.raycaster.intersectObject(this.tablePlane, false);
@@ -939,8 +908,7 @@ export default class Scene {
         }
       }
       if (intersects.length > 0) {
-        let point = intersects[0].point;
-        return point;
+        return intersects[0].point;
       } else {
         return null;
       }
@@ -966,7 +934,7 @@ export default class Scene {
     if (this.ballPositionDifference) {
       // we interpolate between the actual (received) position and the position
       // the user would expect. after 500ms both positions are the same.
-      let fauxPosition = new THREE.Vector3().lerpVectors(
+      const fauxPosition = new THREE.Vector3().lerpVectors(
         this.physics.ball.position,
         new THREE.Vector3().addVectors(
           this.physics.ball.position,
@@ -1000,7 +968,7 @@ export default class Scene {
   }
 
   animate(timestamp) {
-    let delta = Math.min(timestamp - this.lastRender, 500);
+    const delta = Math.min(timestamp - this.lastRender, 500);
     this.totaltime += delta;
 
     if (!this.tabActive) {
@@ -1009,24 +977,36 @@ export default class Scene {
     }
 
     if (this.ball) {
-      let dist = new THREE.Vector3();
+      const dist = new THREE.Vector3();
       dist.subVectors(this.ball.position, this.paddle.position);
-      if (dist.length() < 0.4 && Math.abs(dist.x) < 0.2 && Math.abs(dist.z) < 0.1
-        || this.isMobile && dist.length() < 0.8 && Math.abs(dist.x) < 0.3 && Math.abs(dist.z) < 0.1) {
+      if (
+        // ball is close enough to the paddle for a hit
+        (dist.length() < 0.4
+          && Math.abs(dist.x) < 0.2
+          && Math.abs(dist.z) < 0.1
+        || this.isMobile && dist.length() < 0.8
+          && Math.abs(dist.x) < 0.3 
+          && Math.abs(dist.z) < 0.1)
+        // and ball is moving towards us, it could move away from us
+        // immediately after the opponent reset the ball and it that case
+        // we wouldnt want a hit
+        && this.physics.ball.velocity.z > 0) {
         this.ballPaddleCollision(this.ball.position);
       }
-    }
-    if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-      // for multiplayer testing
-      // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
-      // this.paddle.position.x = this.ball.position.x;
     }
 
     if (this.config.state === STATE.PLAYING || this.config.state === STATE.COUNTDOWN) {
       this.updateControls();
+
+      if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
+        // for multiplayer testing
+        // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
+        // this.paddle.position.x = this.ball.position.x;
+      }
       if (this.config.mode === MODE.MULTIPLAYER) {
         // send where the paddle has moved, if it has moved
-        if (this.frameNumber % 6 === 0) {
+        // every 5th frame is enough, this way we send less bytes down the line
+        if (this.frameNumber % 5 === 0) {
           this.communication.sendMove(
             this.paddle.position,
             this.paddle.rotation

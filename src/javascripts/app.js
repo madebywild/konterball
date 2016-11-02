@@ -21,7 +21,6 @@ class PingPong {
     this.aboutScreenOpen = false;
     this.introBallTween = null;
 
-    console.log(window.orientation);
     if (Util.isMobile() && 'orientation' in window && $(window).width() < $(window).height()) {
       $('.rotate-phone-screen').css('display', 'block');
       $(window).on('orientationchange', () => {

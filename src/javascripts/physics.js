@@ -18,6 +18,7 @@ export default class Physics {
     this.ballPaddleContact = null;
     this.raycaster = new THREE.Raycaster();
     this.isMobile = Util.isMobile();
+    this.speed = 1;
   }
 
   setupWorld() {
@@ -81,7 +82,7 @@ export default class Physics {
   }
 
   addContactMaterial(mat1, mat2, bounce, friction) {
-     let contact = new CANNON.ContactMaterial(
+     const contact = new CANNON.ContactMaterial(
       mat1,
       mat2,
       {friction: friction, restitution: bounce}
@@ -129,7 +130,7 @@ export default class Physics {
 
   addBall() {
     if (this.ball) return;
-    let ball = new CANNON.Body({
+    const ball = new CANNON.Body({
       mass: this.config.ballMass,
       shape: new CANNON.Sphere(this.config.ballRadius),
       material: new CANNON.Material(),
@@ -156,25 +157,28 @@ export default class Physics {
     hitpointX = cap(hitpointX / this.config.paddleSize, -1, 1);
     hitpointY = cap(hitpointY / this.config.paddleSize, -1, 1);
 
+    const distFromRim = e.body.position.z - (this.config.tablePositionZ + this.config.tableDepth / 2);
+    console.log(distFromRim);
     if (this.config.mode === MODE.MULTIPLAYER) {
-      e.body.velocity.z = -3.5;
+      e.body.velocity.z = -3.5 * this.speed + distFromRim * 1.2;
       // make aiming a little easier on mobile
       if (this.isMobile) {
         e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.1;
       } else {
         e.body.velocity.x = -hitpointX * e.body.velocity.z * 0.4;
       }
-      e.body.velocity.y = 2;
+      e.body.velocity.y = 2 * (1 / this.speed) + distFromRim * 1.2;
     } else {
-      let distFromCenter = e.target.position.x / this.config.tableWidth * 0.5;
-      e.body.velocity.z = -3.5;
+      const distFromCenter = e.target.position.x / this.config.tableWidth * 0.5;
+
+      e.body.velocity.z = -3.5 * this.speed + distFromRim * 1.2;
       // make aiming a little easier on mobile
       if (this.isMobile) {
         e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.2);
       } else {
         e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.3);
       }
-      e.body.velocity.y = 2;
+      e.body.velocity.y = 2 * (1 / this.speed) + distFromRim * 1.2;
     }
   }
 
@@ -189,17 +193,20 @@ export default class Physics {
   initBallPosition() {
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.ball.position.set(0, 1.4, this.config.tablePositionZ + 0.1);
-      this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
-      this.ball.velocity.y = this.config.ballInitVelocity * 0.0;
-      this.ball.velocity.z = this.config.ballInitVelocity * 2;
+      this.ball.velocity.x = (0.5 - Math.random()) * 0.5;
+      this.ball.velocity.y = 0;
+      this.ball.velocity.z = 2;
       this.ball.angularVelocity.x = 0;
       this.ball.angularVelocity.y = 0;
       this.ball.angularVelocity.z = 0;
     } else {
-      this.ball.position.set(0, 1.6, this.config.tablePositionZ - this.config.tableDepth * 0.3);
-      this.ball.velocity.x = this.config.ballInitVelocity * (0.5 - Math.random()) * 0.5;
-      this.ball.velocity.y = this.config.ballInitVelocity * 0.7;
-      this.ball.velocity.z = this.config.ballInitVelocity * 2.5;
+      this.ball.velocity.z = 3.0 * this.speed;
+      this.ball.velocity.x = (Math.random() - 0.5) * 0.5;
+      this.ball.velocity.y = 2 * (1 / this.speed);
+      this.ball.position.set(0, this.config.tableHeight + 0.2, this.config.tablePositionZ - this.config.tableDepth * 0.4);
+      // this.ball.velocity.x = (0.5 - Math.random()) * 0.5;
+      // this.ball.velocity.y = 0.3 * (1 / this.speed);
+      // this.ball.velocity.z = 2.5 * this.speed;
       this.ball.angularVelocity.x = 0;
       this.ball.angularVelocity.y = 0;
       this.ball.angularVelocity.z = 0;
@@ -212,15 +219,10 @@ export default class Physics {
     // divide by 50 at 60fps so we dont accidentally miss the frame
     this.raycaster.far = this.ball.velocity.clone().length() / 50;
 
-    let arr = this.raycaster.intersectObjects([paddle, net], true);
+    const arr = this.raycaster.intersectObjects([paddle, net], true);
     if (arr.length) {
       if (arr[0].object.name === 'net-collider') {
         this.ball.position.copy(arr[0].point);
-      } else {
-        // this.paddleCollision({
-        //   body: this.ball,
-        //   target: this.paddle,
-        // });
       }
     }
   }
