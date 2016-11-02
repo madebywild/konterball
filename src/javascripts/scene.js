@@ -15,7 +15,7 @@ import Net from './models/net';
 import Ball from './models/ball';
 import Time from './util/time';
 
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 
 export default class Scene {
   constructor(emitter, communication) {
@@ -686,7 +686,6 @@ export default class Scene {
 
   receivedMiss(data) {
     this.ballPositionDifference = null;
-    this.physicsTimeStep = 1000;
     this.time.clearTimeout(this.resetBallTimeout);
     // opponent missed, update player score
     // and set game to be over if the score is high enough
@@ -703,6 +702,9 @@ export default class Scene {
       || this.score.opponent >= this.config.POINTS_FOR_WIN) {
         this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
     } else {
+      this.physics.ball.angularVelocity.x = 0;
+      this.physics.ball.angularVelocity.y = 0;
+      this.physics.ball.angularVelocity.z = 0;
       // otherwise, the opponent that missed also resets the ball
       // and sends along its new position
       this.receivedHit(data, true);
@@ -987,7 +989,7 @@ export default class Scene {
         onComplete: () => {this.hitAvailable = true;},
       });
       this.lastHitPosition = this.ball.position.clone();
-      this.lastHitPosition.y = Math.max(this.lastHitPosition.y, this.tableHeight + 0.15);
+      this.lastHitPosition.y = Math.max(this.lastHitPosition.y, this.config.tableHeight + 0.15);
       this.hitTween.to(this, 0.05, {
         paddleInterpolationAlpha: 1,
       });

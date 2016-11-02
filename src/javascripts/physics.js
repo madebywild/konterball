@@ -172,7 +172,7 @@ export default class Physics {
       if (this.isMobile) {
         e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.2);
       } else {
-        e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.4);
+        e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.3);
       }
       e.body.velocity.y = 2;
     }
