@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import TweenMax from 'gsap';
 
 const FONT_SIZE = 0.7;

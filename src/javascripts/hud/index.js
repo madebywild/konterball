@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import TweenMax from 'gsap';
 import ScoreDisplay from './score-display';
 import Countdown from './countdown';

@@ -88,7 +88,6 @@
   "dependencies": {
     "bodymovin": "^4.4.14",
     "cannon": "^0.6.2",
-    "child_process": "^1.0.2",
     "clipboard": "^1.5.12",
     "deepstream.io": "^1.1.1",
     "deepstream.io-client-js": "^1.1.1",
@@ -96,18 +95,15 @@
     "event-emitter": "^0.3.4",
     "express": "^4.13.4",
     "express-history-api-fallback": "^2.0.0",
-    "fs": "0.0.1-security",
     "gsap": "^1.19.0",
     "howler": "^2.0.0",
     "jquery": "^3.1.1",
     "json-loader": "^0.5.4",
     "lodash": "^4.6.1",
-    "net": "^1.0.2",
     "normalize.css": "^4.0.0",
     "nosleep": "^1.0.0",
     "randomstring": "^1.1.5",
-    "three": "^0.80.1",
-    "tls": "0.0.1",
+    "three": "^0.82.1",
     "webvr-polyfill": "^0.9.20",
     "wordwrap": "^1.0.0"
   }

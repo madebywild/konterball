@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export default (parent, config) => {
   let group = new THREE.Group();
 

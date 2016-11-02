@@ -31,6 +31,8 @@ module.exports = function(env) {
     node: {
       fs: 'empty',
       child_process: 'empty',
+      tls: 'empty',
+      net: 'empty',
     },
     module: {
       loaders: [

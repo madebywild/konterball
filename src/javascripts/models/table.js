@@ -1,4 +1,5 @@
 import {MODE} from '../constants';
+import * as THREE from 'three';
 
 export default (parent, config) => {
   let geometry = null;

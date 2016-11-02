@@ -1,4 +1,10 @@
 import TweenMax from 'gsap';
+import * as THREE from 'three';
+import OBJLoader from 'imports?THREE=THREE!three/OBJLoader.js';
+import VREffect from 'imports?THREE=THREE!three/VREffect.js';
+import VRControls from 'imports?THREE=THREE!three/VRControls.js';
+import ViveController from 'imports?THREE=THREE!three/ViveController.js';
+
 import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
 import {cap} from './util/helpers';
 import VR_MODES from './webvr-manager/modes';
@@ -10,7 +16,6 @@ import WebVRManager from './webvr-manager';
 import Util from './webvr-manager/util';
 
 import Table from './models/table';
-import Paddle from './models/paddle';
 import Net from './models/net';
 import Ball from './models/ball';
 import Time from './util/time';
@@ -33,7 +38,7 @@ export default class Scene {
     this.effect = null;
     this.textureLoader = new THREE.TextureLoader();
     this.textureLoader.setPath('/models/');
-    this.objLoader = new THREE.OBJLoader();
+    this.objLoader = new OBJLoader();
     this.objLoader.setPath('/models/');
     this.table = null;
     this.display = null;
@@ -152,7 +157,7 @@ export default class Scene {
         this.hud.setup(),
         this.setupPaddles(),
       ]).then(() => {
-        requestAnimationFrame(this.animate.bind(this));
+        this.animate();
         resolve('loaded');
       });
     });
@@ -187,7 +192,7 @@ export default class Scene {
 
   setupVRControls() {
     // apply VR headset positional data to camera.
-    this.controls = new THREE.VRControls(this.camera);
+    this.controls = new VRControls(this.camera);
     this.controls.standing = true;
     this.controls.userHeight = this.config.cameraHeight;
     this.setupControllers();
@@ -195,7 +200,7 @@ export default class Scene {
 
   setupVR() {
     // apply VR stereo rendering to renderer.
-    this.effect = new THREE.VREffect(this.renderer);
+    this.effect = new VREffect(this.renderer);
     this.effect.setSize(window.innerWidth, window.innerHeight);
 
     // Create a VR manager helper to enter and exit VR mode.
@@ -214,7 +219,7 @@ export default class Scene {
     this.renderer = new THREE.WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.BasicShadowMap;
 
     document.body.appendChild(this.renderer.domElement);
 
@@ -267,10 +272,10 @@ export default class Scene {
         this.display = displays[0];
         if (displays[0].capabilities && displays[0].capabilities.hasPosition) {
           // also check gamepads
-          this.controller1 = new THREE.ViveController(0);
+          this.controller1 = new ViveController(0);
           this.controller1.standingMatrix = this.controls.getStandingMatrix();
           this.scene.add(this.controller1);
-          this.controller2 = new THREE.ViveController(1);
+          this.controller2 = new ViveController(1);
           this.controller2.standingMatrix = this.controls.getStandingMatrix();
           this.scene.add(this.controller2);
 
@@ -280,7 +285,7 @@ export default class Scene {
             this.controller.material.specularMap = this.textureLoader.load('onepointfive_spec.png');
 
             this.controller1.add(object.clone());
-            this.controller2.add(object.clone());
+            // this.controller2.add(object.clone());
           });
         }
       }
@@ -315,14 +320,14 @@ export default class Scene {
           side: THREE.DoubleSide,
         });
         object.traverse(function(child) {
-          if (child instanceof THREE.Mesh) {
+          if (child.isMesh) {
             if (child.name === 'Cap_1' || child.name === 'Cap_2' || child.name === 'Extrude') {
               child.material = redMaterial;
             } else {
               child.material = woodMaterial;
             }
-            child.castShadow = true;
           }
+          child.castShadow = true;
         });
         this.paddle = object.clone();
         this.paddle.name = 'paddle';
@@ -812,6 +817,10 @@ export default class Scene {
   }
 
   updateControls() {
+    if (this.controller1 && this.controller2) {
+      this.controller1.update();
+      this.controller2.update();
+    }
     const pos = this.computePaddlePosition();
     if (pos) {
       this.ghostPaddlePosition.copy(pos);
@@ -966,7 +975,8 @@ export default class Scene {
     }
   }
 
-  animate(timestamp) {
+  animate() {
+    const timestamp = Date.now();
     const delta = Math.min(timestamp - this.lastRender, 500);
     this.totaltime += delta;
 
@@ -1033,7 +1043,11 @@ export default class Scene {
 
     // Render the scene through the manager.
     this.manager.render(this.scene, this.camera, this.timestamp);
-    requestAnimationFrame(this.animate.bind(this));
+    if (this.display && 'requestAnimationFrame' in this.display && this.controlMode === 'VR') {
+      this.display.requestAnimationFrame(this.animate.bind(this));
+    } else {
+      requestAnimationFrame(this.animate.bind(this));
+    }
   }
 
   onResize(e) {

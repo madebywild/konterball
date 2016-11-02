@@ -1,4 +1,5 @@
 import TweenMax from 'gsap';
+import * as THREE from 'three';
 import {MODE} from '../constants';
 
 const scoreSpacing = 0.3;

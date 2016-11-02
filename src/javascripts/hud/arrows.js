@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export default (font, loader) => {
   return new Promise((resolve, reject) => {
     loader.load('arrows.obj', object => {

@@ -1,4 +1,5 @@
 import wrap from 'wordwrap';
+import * as THREE from 'three';
 
 const CHAR_LIMIT = 16;
 const FONT_SIZE = 0.07;
@@ -12,7 +13,7 @@ export default class Message {
     this.wrap = wrap(CHAR_LIMIT);
     this.messageGroup = new THREE.Group();
     this.messageGroup.position.z = this.config.tablePositionZ;
-    this.setMessage('waiting...');
+    this.setMessage('waiting');
     this.scene.add(this.messageGroup);
   }
 

@@ -1,4 +1,5 @@
 import {MODE, EVENT} from './constants';
+import * as THREE from 'three';
 import {cap} from './util/helpers';
 import Util from './webvr-manager/util';
 
