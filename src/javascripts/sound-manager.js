@@ -81,6 +81,16 @@ export default class SoundManager {
     Howler.mute(this.muted);
   }
 
+  blur() {
+    Howler.mute(true);
+  }
+  
+  focus() {
+    if (!this.muted) {
+      Howler.mute(false);
+    }
+  }
+
   mute() {
     Howler.mute(true);
     this.muted = true;

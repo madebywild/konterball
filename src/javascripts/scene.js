@@ -129,12 +129,12 @@ export default class Scene {
 
       $(window).on('blur', () => {
         this.tabActive = false;
-        this.sound.mute();
+        this.sound.blur();
       });
 
       $(window).on('focus', () => {
         this.tabActive = true;
-        this.sound.unmute();
+        this.sound.focus();
       });
 
       this.physics.setupWorld();
@@ -497,8 +497,9 @@ export default class Scene {
   }
 
   restartGame() {
+    this.physics.speed = 1;
+    this.resetScore();
     if (this.config.mode === MODE.SINGLEPLAYER) {
-      this.resetScore();
       this.countdown();
       this.emitter.emit(EVENT.RESTART_GAME, this.score);
       return;
@@ -510,8 +511,6 @@ export default class Scene {
       // reset
       this.playerRequestedRestart = false;
       this.opponentRequestedRestart = false;
-      this.resetScore();
-      this.physics.speed = 1;
       this.countdown();
     }
   }
