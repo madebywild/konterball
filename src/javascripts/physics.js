@@ -104,6 +104,7 @@ export default class Physics {
     });
     this.table.position.y = this.config.tableHeight / 2;
     this.table.position.z = this.config.tablePositionZ;
+    this.table._name = 'table-2-player';
     this.table.addEventListener('collide', this.tableCollision.bind(this));
     this.world.add(this.table);
 
@@ -178,7 +179,7 @@ export default class Physics {
   }
 
   tableCollision(e) {
-    this.emitter.emit(EVENT.BALL_TABLE_COLLISION, e.body.position);
+    this.emitter.emit(EVENT.BALL_TABLE_COLLISION, e.body, e.target);
   }
 
   setPaddlePosition(x, y, z) {

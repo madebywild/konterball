@@ -15,7 +15,7 @@ import Net from './models/net';
 import Ball from './models/ball';
 import Time from './util/time';
 
-const DEBUG_MODE = false;
+const DEBUG_MODE = true;
 
 export default class Scene {
   constructor(emitter, communication) {
@@ -734,6 +734,7 @@ export default class Scene {
     }
     this.resetBallTimeout = this.time.setTimeout(() => {
       if (this.config.mode === MODE.MULTIPLAYER) {
+        console.log('timeout, ballhashit: ' + this.ballHasHitEnemyTable);
         this.physicsTimeStep = 1000;
         if (this.ballHasHitEnemyTable) {
           this.score.self++;
@@ -750,7 +751,6 @@ export default class Scene {
         } else {
           // the game goes on
           this.physics.initBallPosition();
-          // remove a life
         }
         this.communication.sendMiss({
           x: this.physics.ball.position.x,
@@ -761,6 +761,7 @@ export default class Scene {
           y: this.physics.ball.velocity.y,
           z: this.physics.ball.velocity.z,
         }, this.ballHasHitEnemyTable);
+        this.ballHasHitEnemyTable = false;
       } else {
         this.score.highest = Math.max(this.score.self, this.score.highest);
         this.score.self = 0;
@@ -812,9 +813,9 @@ export default class Scene {
     });
   }
 
-  ballTableCollision(point) {
-    this.sound.table(point, this.physics.ball.velocity);
-    if (point.z < this.config.tablePositionZ) {
+  ballTableCollision(body, target) {
+    this.sound.table(body.position, this.physics.ball.velocity);
+    if (target._name === 'table-2-player' && body.position.z < this.config.tablePositionZ) {
       this.ballHasHitEnemyTable = true;
     }
   }
