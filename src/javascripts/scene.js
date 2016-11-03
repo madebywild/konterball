@@ -1,10 +1,29 @@
 import TweenMax from 'gsap';
 import $ from 'jquery';
-import * as THREE from 'three';
-import OBJLoader from 'imports?THREE=three!three/OBJLoader.js';
-import VREffect from 'imports?THREE=three!three/VREffect.js';
-import VRControls from 'imports?THREE=three!three/VRControls.js';
-import ViveController from 'imports?THREE=three!three/ViveController.js';
+import {
+  Scene as ThreeScene,
+  WebGLRenderer,
+  TextureLoader,
+  BasicShadowMap,
+  PerspectiveCamera,
+  DirectionalLight,
+  CameraHelper,
+  AmbientLight,
+  Raycaster,
+  PlaneGeometry,
+  Mesh,
+  MeshBasicMaterial,
+  LineBasicMaterial,
+  Geometry,
+  Vector3,
+  Vector2,
+  Line,
+  Euler,
+} from 'three';
+import OBJLoader from 'three/OBJLoader.js';
+import VREffect from 'three/VREffect.js';
+import VRControls from 'three/VRControls.js';
+import ViveController from 'three/ViveController.js';
 
 import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
 import {cap, mirrorPosition, mirrorVelocity} from './util/helpers';
@@ -37,7 +56,7 @@ export default class Scene {
     this.controls = null;
     this.controller = null;
     this.effect = null;
-    this.textureLoader = new THREE.TextureLoader();
+    this.textureLoader = new TextureLoader();
     this.textureLoader.setPath('/models/');
     this.objLoader = new OBJLoader();
     this.objLoader.setPath('/models/');
@@ -62,7 +81,7 @@ export default class Scene {
     this.lastHitPosition = null;
     this.paddleInterpolationAlpha = 0;
     this.ballInterpolationAlpha = 0;
-    this.ghostPaddlePosition = new THREE.Vector3();
+    this.ghostPaddlePosition = new Vector3();
     this.pointerIsLocked = false;
 
     this.mouseMoveSinceLastFrame = {
@@ -126,7 +145,7 @@ export default class Scene {
       this.physics.setupWorld();
 
       if (DEBUG_MODE) {
-        this.physicsDebugRenderer = new THREE.CannonDebugRenderer(this.scene, this.physics.world);
+        this.physicsDebugRenderer = new CannonDebugRenderer(this.scene, this.physics.world);
       }
 
       this.setupEventListeners();
@@ -140,7 +159,7 @@ export default class Scene {
       ]).then(response => {
         this.paddle = response[0].paddle;
         this.paddleOpponent = response[0].paddleOpponent;
-        this.paddle.position.copy(this.computePaddlePosition() || new THREE.Vector3());
+        this.paddle.position.copy(this.computePaddlePosition() || new Vector3());
         this.ghostPaddlePosition.copy(this.paddle.position);
         this.animate();
         resolve('loaded');
@@ -220,17 +239,17 @@ export default class Scene {
   }
 
   setupThree() {
-    this.renderer = new THREE.WebGLRenderer({antialias: true});
+    this.renderer = new WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.BasicShadowMap;
+    this.renderer.shadowMap.type = BasicShadowMap;
 
     document.body.appendChild(this.renderer.domElement);
 
-    // THREE js basics
-    this.scene = new THREE.Scene();
+    // js basics
+    this.scene = new ThreeScene();
 
-    this.camera = new THREE.PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 10000);
+    this.camera = new PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 10000);
     // position over the box, will be animated to the final camera position
     this.camera.position.x = 2;
     this.camera.position.z = 2;
@@ -238,7 +257,7 @@ export default class Scene {
   }
 
   setupLights() {
-    let light = new THREE.DirectionalLight(0xffffff, 0.3, 0);
+    let light = new DirectionalLight(0xffffff, 0.3, 0);
     light.position.z = this.config.tablePositionZ;
     light.position.z = 2;
     light.position.y = 4;
@@ -250,17 +269,17 @@ export default class Scene {
     light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
     light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
     this.scene.add(light);
-    //this.scene.add(new THREE.CameraHelper(light.shadow.camera));
+    //this.scene.add(new CameraHelper(light.shadow.camera));
 
-    light = new THREE.AmbientLight(0xFFFFFF, 0.9);
+    light = new AmbientLight(0xFFFFFF, 0.9);
     this.scene.add(light);
   }
 
   setupTablePlane() {
-    this.raycaster = new THREE.Raycaster();
-    const geometry = new THREE.PlaneGeometry(40, 40, 5, 5);
-    const material = new THREE.MeshBasicMaterial({color: 0xffff00, wireframe: true});
-    this.tablePlane = new THREE.Mesh(geometry, material);
+    this.raycaster = new Raycaster();
+    const geometry = new PlaneGeometry(40, 40, 5, 5);
+    const material = new MeshBasicMaterial({color: 0xffff00, wireframe: true});
+    this.tablePlane = new Mesh(geometry, material);
     this.tablePlane.rotation.x = -Math.PI * 0.45;
     this.tablePlane.position.y = this.config.tableHeight + 0.2;
     this.tablePlane.position.z = this.config.tablePositionZ + this.config.tableDepth / 2;
@@ -294,15 +313,15 @@ export default class Scene {
     });
 
     if (DEBUG_MODE) {
-      var material = new THREE.LineBasicMaterial({
+      var material = new LineBasicMaterial({
         color: 0x00ffff,
       });
-      var geometry = new THREE.Geometry();
+      var geometry = new Geometry();
       geometry.vertices.push(
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, 0)
+        new Vector3(0, 0, 0),
+        new Vector3(0, 0, 0)
       );
-      this.controllerRay = new THREE.Line(geometry, material);
+      this.controllerRay = new Line(geometry, material);
       this.controllerRay.geometry.dynamic = true;
       this.scene.add(this.controllerRay);
     }
@@ -377,9 +396,9 @@ export default class Scene {
       }, 0.1, '-=0.6');
       */
       this.camera.lookAt(
-        new THREE.Vector3().lerpVectors(
+        new Vector3().lerpVectors(
           this.ghostPaddlePosition,
-          new THREE.Vector3(
+          new Vector3(
             this.table.position.x,
             this.config.tableHeight + 0.3,
             this.table.position.z
@@ -398,9 +417,9 @@ export default class Scene {
         ease: Power1.easeInOut,
         onUpdate: () => {
           this.camera.lookAt(
-            new THREE.Vector3().lerpVectors(
+            new Vector3().lerpVectors(
               this.ghostPaddlePosition,
-              new THREE.Vector3(
+              new Vector3(
                 this.table.position.x,
                 this.config.tableHeight + 0.3,
                 this.table.position.z
@@ -571,11 +590,11 @@ export default class Scene {
       // of this players ball due to changes in latency. save the difference and
       // interpolate it until the ball is at our side again. this way the user
       // shouldnt notice any hard position changes
-      this.ballPositionDifference = new THREE.Vector3().subVectors(
+      this.ballPositionDifference = new Vector3().subVectors(
         this.physics.ball.position,
         mirrorPosition(data.point, this.config.tablePositionZ)
       );
-      this.lastOpponentHitPosition = new THREE.Vector3().copy(
+      this.lastOpponentHitPosition = new Vector3().copy(
         mirrorPosition(data.point, this.config.tablePositionZ)
       );
       this.ballInterpolationAlpha = 1;
@@ -628,7 +647,7 @@ export default class Scene {
       return;
     }
     const velocity = this.physics.ball.velocity.length();
-    const dist = new THREE.Vector3().subVectors(this.ball.position, this.paddleOpponent.position).length();
+    const dist = new Vector3().subVectors(this.ball.position, this.paddleOpponent.position).length();
     const eta = dist/velocity;
     const desirableEta = eta + (this.communication.latency / 1000);
     this.physicsTimeStep = 1000 * (desirableEta/eta) * 1;
@@ -757,7 +776,7 @@ export default class Scene {
     }
     if (this.hitTween && this.hitTween.isActive()) {
       // interpolate between ball and paddle position during hit animation
-      const newPos = new THREE.Vector3().lerpVectors(
+      const newPos = new Vector3().lerpVectors(
         pos,
         this.lastHitPosition,
         this.paddleInterpolationAlpha
@@ -778,13 +797,13 @@ export default class Scene {
       return;
     }
     // backup original rotation
-    const startRotation = new THREE.Euler().copy(this.camera.rotation);
+    const startRotation = new Euler().copy(this.camera.rotation);
 
     // look at the point at the middle position between the table center and paddle
     this.camera.lookAt(
-      new THREE.Vector3().lerpVectors(
+      new Vector3().lerpVectors(
         this.ghostPaddlePosition,
-        new THREE.Vector3(
+        new Vector3(
           this.table.position.x,
           this.config.tableHeight + 0.3,
           this.table.position.z
@@ -793,7 +812,7 @@ export default class Scene {
       )
     );
     // the rotation we want to end up with
-    const endRotation = new THREE.Euler().copy(this.camera.rotation);
+    const endRotation = new Euler().copy(this.camera.rotation);
     // revert to original rotation and then we can tween it
     this.camera.rotation.copy(startRotation);
     if (this.cameraTween) {
@@ -820,7 +839,7 @@ export default class Scene {
       if (controller) {
         // VIVE ETC
         // if we do have a controller, intersect the table with where the controller is facing
-        const direction = new THREE.Vector3(0, 0, -1);
+        const direction = new Vector3(0, 0, -1);
         direction.applyQuaternion(controller.getWorldQuaternion());
         direction.normalize();
         this.raycaster.set(controller.getWorldPosition(), direction);
@@ -833,7 +852,7 @@ export default class Scene {
         // if we are in vr, position paddle below looking direction so we dont have
         // to look down at all times
         const rayYDirection = this.manager.mode === VR_MODES.VR ? -0.7 : -0.3;
-        this.raycaster.setFromCamera(new THREE.Vector2(0, rayYDirection), this.camera);
+        this.raycaster.setFromCamera(new Vector2(0, rayYDirection), this.camera);
         this.raycaster.far = 5;
         intersects = this.raycaster.intersectObject(this.tablePlane, false);
         if (intersects.length > 0) {
@@ -879,9 +898,9 @@ export default class Scene {
     if (this.ballPositionDifference) {
       // we interpolate between the actual (received) position and the position
       // the user would expect. after 500ms both positions are the same.
-      const fauxPosition = new THREE.Vector3().lerpVectors(
+      const fauxPosition = new Vector3().lerpVectors(
         this.physics.ball.position,
-        new THREE.Vector3().addVectors(
+        new Vector3().addVectors(
           this.physics.ball.position,
           this.ballPositionDifference
         ),
@@ -925,7 +944,7 @@ export default class Scene {
     }
 
     if (this.ball) {
-      const dist = new THREE.Vector3();
+      const dist = new Vector3();
       dist.subVectors(this.ball.position, this.paddle.position);
       if (
         // ball is close enough to the paddle for a hit

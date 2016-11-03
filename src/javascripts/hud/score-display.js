@@ -1,5 +1,5 @@
 import TweenMax from 'gsap';
-import * as THREE from 'three';
+import {MeshBasicMaterial, TextGeometry, Mesh, Group, CircleGeometry, DoubleSide}  from 'three';
 import {MODE} from '../constants';
 
 const scoreSpacing = 0.3;
@@ -15,12 +15,12 @@ export default class ScoreDisplay {
   }
 
   setupText() {
-    let material = new THREE.MeshBasicMaterial({
+    let material = new MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
       opacity: 0.5,
     });
-    let geometry = new THREE.TextGeometry('0', {
+    let geometry = new TextGeometry('0', {
       font: this.font,
       size: 0.35,
       height: 0.001,
@@ -28,8 +28,8 @@ export default class ScoreDisplay {
     });
     geometry.computeBoundingBox();
 
-    this.opponentScore = new THREE.Mesh(geometry, material);
-    this.selfScore = new THREE.Mesh(geometry.clone(), material.clone());
+    this.opponentScore = new Mesh(geometry, material);
+    this.selfScore = new Mesh(geometry.clone(), material.clone());
 
     this.selfScore.rotation.y = Math.PI / 2;
     this.opponentScore.rotation.y = -Math.PI / 2;
@@ -41,16 +41,16 @@ export default class ScoreDisplay {
     this.setOpponentScore(0);
     this.opponentScore.visible = this.config.mode === MODE.MULTIPLAYER;
 
-    this.lifeGroup = new THREE.Group();
+    this.lifeGroup = new Group();
     for (let i = 0; i < this.config.startLives; i++) {
-      geometry = new THREE.CircleGeometry(.025, 32);
-      material = new THREE.MeshBasicMaterial({
+      geometry = new CircleGeometry(.025, 32);
+      material = new MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
-        side: THREE.DoubleSide,
+        side: DoubleSide,
         opacity: 1,
       });
-      let life = new THREE.Mesh(geometry, material);
+      let life = new Mesh(geometry, material);
       life.position.x = i * 0.12;
       this.lives.push(life);
       this.lifeGroup.add(life);
@@ -68,7 +68,7 @@ export default class ScoreDisplay {
   setSelfScore(value) {
      this.selfScore.geometry.dynamic = true;
 
-    this.selfScore.geometry = new THREE.TextGeometry('' + value, {
+    this.selfScore.geometry = new TextGeometry('' + value, {
       font: this.font,
       size: 0.35,
       height: 0.001,
@@ -86,7 +86,7 @@ export default class ScoreDisplay {
   }
 
   setOpponentScore(value) {
-    this.opponentScore.geometry = new THREE.TextGeometry('' + value, {
+    this.opponentScore.geometry = new TextGeometry('' + value, {
       font: this.font,
       size: 0.35,
       height: 0.001,

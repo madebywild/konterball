@@ -1,28 +1,28 @@
-import * as THREE from 'three';
+import {MeshLambertMaterial, Mesh, TextGeometry, Group, DoubleSide} from 'three';
 
 export default (font, loader) => {
   return new Promise((resolve, reject) => {
     loader.load('arrows.obj', object => {
       const scale = 0.024;
       object.scale.set(scale, scale, scale);
-      const material = new THREE.MeshLambertMaterial({
+      const material = new MeshLambertMaterial({
         color: 0xFFFFFF,
-        side: THREE.DoubleSide,
+        side: DoubleSide,
       });
       object.traverse(child => {
-        if (child instanceof THREE.Mesh) {
+        if (child instanceof Mesh) {
           child.material = material;
         }
       });
       object.position.z = 5;
 
-      const geometry = new THREE.TextGeometry('Turn Around', {
+      const geometry = new TextGeometry('Turn Around', {
         font: font,
         size: 0.15,
         height: 0.001,
         curveSegments: 3,
       });
-      const turnAroundText = new THREE.Mesh(geometry, material);
+      const turnAroundText = new Mesh(geometry, material);
 
 
       turnAroundText.geometry.computeBoundingBox();
@@ -33,7 +33,7 @@ export default (font, loader) => {
       turnAroundText.position.y = 0.2;
       turnAroundText.rotation.y = Math.PI;
 
-      const group = new THREE.Group();
+      const group = new Group();
       group.add(object);
       group.add(turnAroundText);
       resolve(group);

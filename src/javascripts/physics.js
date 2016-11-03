@@ -1,5 +1,5 @@
 import {MODE, EVENT} from './constants';
-import * as THREE from 'three';
+import {Raycaster} from 'three';
 import {cap} from './util/helpers';
 import Util from './webvr-manager/util';
 
@@ -17,7 +17,7 @@ export default class Physics {
     this.ballNetContact = null;
     this.ballGroundContact = null;
     this.ballPaddleContact = null;
-    this.raycaster = new THREE.Raycaster();
+    this.raycaster = new Raycaster();
     this.isMobile = Util.isMobile();
     this.speed = 1;
   }

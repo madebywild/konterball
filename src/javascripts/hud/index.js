@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import {FontLoader, Group} from 'three';
 import TweenMax from 'gsap';
 import ScoreDisplay from './score-display';
 import Countdown from './countdown';
@@ -29,10 +29,10 @@ export default class Hud {
 
   setup() {
     return new Promise((resolve, reject) => {
-      let fontloader = new THREE.FontLoader();
+      let fontloader = new FontLoader();
       fontloader.load('fonts/futura.json', font => {
         this.font = font;
-        this.container = new THREE.Group();
+        this.container = new Group();
         this.container.position.z = 1;
         this.container.position.y = 1.6;
         this.container.rotation.y = Math.PI;

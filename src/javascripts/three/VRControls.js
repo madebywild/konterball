@@ -3,13 +3,15 @@
  * @author mrdoob / http://mrdoob.com
  */
 
+import {Matrix4} from 'three';
+
 let VRControls = function ( object, onError ) {
 
 	var scope = this;
 
 	var vrDisplay, vrDisplays;
 
-	var standingMatrix = new THREE.Matrix4();
+	var standingMatrix = new Matrix4();
 
 	var frameData = null;
 

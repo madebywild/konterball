@@ -1,29 +1,29 @@
-import * as THREE from 'three';
+import {Group, MeshBasicMaterial, Mesh, GridHelper, BoxGeometry} from 'three';
 
 export default (parent, config) => {
-  let group = new THREE.Group();
+  let group = new Group();
 
-  // dis only for intersecting when predicting collisions
-  let geometry = new THREE.BoxGeometry(
+  // only for intersecting when predicting collisions
+  let geometry = new BoxGeometry(
     config.tableWidth,
     config.netHeight,
     config.netThickness
   );
-  let material = new THREE.MeshBasicMaterial({
+  let material = new MeshBasicMaterial({
     color: 0xFFFFFF,
     transparent: true,
     opacity: 0.1,
   });
 
-  let net = new THREE.Mesh(geometry, material);
+  let net = new Mesh(geometry, material);
   net.name = 'net-collider';
   net.castShadow = true;
   group.add(net);
 
-  // dis actual net
+  // actual net
   const griddivisions = 6;
   for (let i = 0; i < griddivisions; i++) {
-    let grid = new THREE.GridHelper(config.netHeight / 2, 8, 0x000000, 0x000000);
+    let grid = new GridHelper(config.netHeight / 2, 8, 0x000000, 0x000000);
     grid.rotation.x = Math.PI / 2;
     grid.scale.x = (config.tableWidth / griddivisions) / config.netHeight;
     grid.position.x = (((i/griddivisions) * config.tableWidth) + (config.netHeight / 2) * grid.scale.x) - config.tableWidth / 2;

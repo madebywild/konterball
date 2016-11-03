@@ -3,9 +3,11 @@
  * @author stewdio / http://stewd.io
  */
 
+import {Object3D} from 'three';
+
 let ViveController = function ( id ) {
 
-	THREE.Object3D.call( this );
+	Object3D.call( this );
 
 	var scope = this;
 	var gamepad;
@@ -41,7 +43,7 @@ let ViveController = function ( id ) {
 	}
 
 	this.matrixAutoUpdate = false;
-	this.standingMatrix = new THREE.Matrix4();
+	this.standingMatrix = new Matrix4();
 
 	this.getGamepad = function () {
 
@@ -125,7 +127,7 @@ let ViveController = function ( id ) {
 
 };
 
-ViveController.prototype = Object.create( THREE.Object3D.prototype );
-ViveController.prototype.constructor = THREE.ViveController;
+ViveController.prototype = Object.create( Object3D.prototype );
+ViveController.prototype.constructor = ViveController;
 
 module.exports = ViveController;
