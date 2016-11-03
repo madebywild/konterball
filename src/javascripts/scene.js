@@ -1,24 +1,25 @@
 import TweenMax from 'gsap';
+import $ from 'jquery';
 import * as THREE from 'three';
-import OBJLoader from 'imports?THREE=THREE!three/OBJLoader.js';
-import VREffect from 'imports?THREE=THREE!three/VREffect.js';
-import VRControls from 'imports?THREE=THREE!three/VRControls.js';
-import ViveController from 'imports?THREE=THREE!three/ViveController.js';
+import OBJLoader from 'imports?THREE=three!three/OBJLoader.js';
+import VREffect from 'imports?THREE=three!three/VREffect.js';
+import VRControls from 'imports?THREE=three!three/VRControls.js';
+import ViveController from 'imports?THREE=three!three/ViveController.js';
 
 import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
-import {cap} from './util/helpers';
+import {cap, mirrorPosition, mirrorVelocity} from './util/helpers';
 import VR_MODES from './webvr-manager/modes';
 import Physics from './physics';
 import Hud from './hud';
 import SoundManager from './sound-manager';
-import $ from 'jquery';
 import WebVRManager from './webvr-manager';
 import Util from './webvr-manager/util';
+import Time from './util/time';
 
 import Table from './models/table';
 import Net from './models/net';
 import Ball from './models/ball';
-import Time from './util/time';
+import setupPaddles from './models/paddle';
 
 const DEBUG_MODE = false;
 
@@ -73,7 +74,6 @@ export default class Scene {
       y: 0,
     };
 
-    this.paddleTween = null;
     this.hitAvailable = true;
 
     this.playerRequestedRestart = false;
@@ -123,25 +123,6 @@ export default class Scene {
         }
       };
 
-      document.addEventListener("mousemove", this.mousemove, false);
-      document.addEventListener('pointerlockchange', () => {
-        if (document.pointerLockElement === this.renderer.domElement) {
-          this.pointerIsLocked = true;
-        } else {
-          this.pointerIsLocked = false;
-        }
-      }, false);
-
-      $(window).on('blur', () => {
-        this.tabActive = false;
-        this.sound.blur();
-      });
-
-      $(window).on('focus', () => {
-        this.tabActive = true;
-        this.sound.focus();
-      });
-
       this.physics.setupWorld();
 
       if (DEBUG_MODE) {
@@ -154,9 +135,13 @@ export default class Scene {
       this.hud = new Hud(this.scene, this.config, this.emitter, this.objLoader);
 
       Promise.all([
+        setupPaddles(this.objLoader, this.config, this.scene),
         this.hud.setup(),
-        this.setupPaddles(),
-      ]).then(() => {
+      ]).then(response => {
+        this.paddle = response[0].paddle;
+        this.paddleOpponent = response[0].paddleOpponent;
+        this.paddle.position.copy(this.computePaddlePosition() || new THREE.Vector3());
+        this.ghostPaddlePosition.copy(this.paddle.position);
         this.animate();
         resolve('loaded');
       });
@@ -188,6 +173,25 @@ export default class Scene {
       this.time.clearTimeout(this.resetBallTimeout);
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
+
+    document.addEventListener('mousemove', this.mousemove, false);
+    document.addEventListener('pointerlockchange', () => {
+      if (document.pointerLockElement === this.renderer.domElement) {
+        this.pointerIsLocked = true;
+      } else {
+        this.pointerIsLocked = false;
+      }
+    }, false);
+
+    $(window).on('blur', () => {
+      this.tabActive = false;
+      this.sound.blur();
+    });
+
+    $(window).on('focus', () => {
+      this.tabActive = true;
+      this.sound.focus();
+    });
   }
 
   setupVRControls() {
@@ -266,9 +270,7 @@ export default class Scene {
 
   setupControllers() {
     navigator.getVRDisplays().then(displays => {
-      if (displays) {
-        // if we have more than 1 display: ¯\_(ツ)_/¯
-        // TODO
+      if (displays.length > 0) {
         this.display = displays[0];
         if (displays[0].capabilities && displays[0].capabilities.hasPosition) {
           // also check gamepads
@@ -285,7 +287,7 @@ export default class Scene {
             this.controller.material.specularMap = this.textureLoader.load('onepointfive_spec.png');
 
             this.controller1.add(object.clone());
-            // this.controller2.add(object.clone());
+            this.controller2.add(object.clone());
           });
         }
       }
@@ -304,51 +306,6 @@ export default class Scene {
       this.controllerRay.geometry.dynamic = true;
       this.scene.add(this.controllerRay);
     }
-  }
-
-  setupPaddles() {
-    return new Promise((resolve, reject) => {
-      this.objLoader.load('paddle.obj', object => {
-        const scale = 0.024;
-        object.scale.set(scale, scale, scale);
-        const redMaterial = new THREE.MeshLambertMaterial({
-          color: this.config.colors.PADDLE_COLOR,
-          side: THREE.DoubleSide,
-        });
-        const woodMaterial = new THREE.MeshLambertMaterial({
-          color: this.config.colors.PADDLE_WOOD_COLOR,
-          side: THREE.DoubleSide,
-        });
-        object.traverse(function(child) {
-          if (child.isMesh) {
-            if (child.name === 'Cap_1' || child.name === 'Cap_2' || child.name === 'Extrude') {
-              child.material = redMaterial;
-            } else {
-              child.material = woodMaterial;
-            }
-          }
-          child.castShadow = true;
-        });
-        this.paddle = object.clone();
-        this.paddle.name = 'paddle';
-        this.paddle.visible = true;
-        this.paddle.castShadow = true;
-        this.setPaddlePosition({
-          x: 0,
-          z: this.config.paddlePositionZ
-        });
-        this.ghostPaddlePosition.copy(this.paddle.position);
-        this.scene.add(this.paddle);
-
-        this.paddleOpponent = object.clone();
-        this.paddleOpponent.name = 'paddleOpponent';
-        this.paddleOpponent.position.z = this.config.tablePositionZ - this.config.tableDepth / 2;
-        this.paddleOpponent.position.y = 1;
-        this.paddleOpponent.visible = false;
-        this.scene.add(this.paddleOpponent);
-        resolve();
-      });
-    });
   }
 
   startGame() {
@@ -551,6 +508,7 @@ export default class Scene {
   }
 
   setSingleplayer() {
+    // prepare singleplayer mode
     this.config.mode = MODE.SINGLEPLAYER;
     this.scene.remove(this.table);
     this.table = Table(this.scene, this.config);
@@ -558,14 +516,12 @@ export default class Scene {
     this.resetTimeoutDuration = 1500;
     this.hud.scoreDisplay.opponentScore.visible = false;
     this.hud.scoreDisplay.lifeGroup.visible = true;
-    //this.table.getObjectByName('table').scale.z = 0.5;
-    //this.table.getObjectByName('table').position.z = this.config.tablePositionZ + this.config.tableDepth / 2;
   }
 
   receivedMove(move) {
     // received a move from the opponent,
     // set his paddle to the position received
-    const pos = this.mirrorPosition(move.position);
+    const pos = mirrorPosition(move.position, this.config.tablePositionZ);
     const no = {
       x: this.paddleOpponent.position.x,
       y: this.paddleOpponent.position.y,
@@ -617,10 +573,10 @@ export default class Scene {
       // shouldnt notice any hard position changes
       this.ballPositionDifference = new THREE.Vector3().subVectors(
         this.physics.ball.position,
-        this.mirrorPosition(data.point)
+        mirrorPosition(data.point, this.config.tablePositionZ)
       );
       this.lastOpponentHitPosition = new THREE.Vector3().copy(
-        this.mirrorPosition(data.point)
+        mirrorPosition(data.point, this.config.tablePositionZ)
       );
       this.ballInterpolationAlpha = 1;
       TweenMax.to(this, 0.5, {
@@ -630,27 +586,9 @@ export default class Scene {
     }
     this.physicsTimeStep = 1000;
     // received vectors are in the other users space
-    // invert x and z velocity and mirror the point across the center of the box
-    this.physics.ball.position.copy(this.mirrorPosition(data.point));
-    this.physics.ball.velocity.copy(this.mirrorVelocity(data.velocity));
-  }
-
-  mirrorPosition(pos) {
-    let z = pos.z;
-    z -= (z - this.config.tablePositionZ) * 2;
-    return {
-      x: -pos.x, 
-      y: pos.y,
-      z: z,
-    };
-  }
-
-  mirrorVelocity(vel) {
-    return {
-      x: -vel.x,
-      y: vel.y,
-      z: -vel.z,
-    };
+    // invert x and z velocity and mirror the point across the center of the table
+    this.physics.ball.position.copy(mirrorPosition(data.point, this.config.tablePositionZ));
+    this.physics.ball.velocity.copy(mirrorVelocity(data.velocity));
   }
 
   receivedMiss(data) {
@@ -752,14 +690,6 @@ export default class Scene {
     }, this.resetTimeoutDuration);
   }
 
-  ballIsInBox(ball) {
-    // add tolerance to be sure ball wont be reset if the ball is
-    // 'inside' of a wall for a short period
-    const E = 0.1;
-    return ball.position.z - E <= 4
-        && ball.position.z + E >= -4;
-  }
-
   ballPaddleCollision(point) {
     if (this.hitTween && this.hitTween.isActive()) {
       return;
@@ -807,15 +737,6 @@ export default class Scene {
     this.restartPingpongTimeout();
   }
 
-  setPaddlePosition(pos) {
-    this.paddle.position.x = cap(pos.x, this.config.tableWidth, -this.config.tableWidth),
-    this.paddle.position.z = cap(pos.z || this.config.paddlePositionZ, 0, this.config.tablePositionZ + 0.5);
-    this.paddle.position.y = pos.y || this.config.tableHeight + 0.1 - this.paddle.position.z * 0.2;
-
-    this.paddle.rotation.x = -((this.config.tablePositionZ + this.config.tableDepth / 2) - this.paddle.position.z * 1);
-    this.paddle.rotation.z = cap(-pos.x, -Math.PI / 2, Math.PI / 2);
-  }
-
   updateControls() {
     if (this.controller1 && this.controller2) {
       this.controller1.update();
@@ -837,14 +758,17 @@ export default class Scene {
     if (this.hitTween && this.hitTween.isActive()) {
       // interpolate between ball and paddle position during hit animation
       const newPos = new THREE.Vector3().lerpVectors(
-        this.ghostPaddlePosition,
+        pos,
         this.lastHitPosition,
         this.paddleInterpolationAlpha
       );
-      this.setPaddlePosition(newPos);
+      this.paddle.position.copy(newPos);
     } else if (pos) {
-      this.setPaddlePosition({x: pos.x, z: pos.z});
+      this.paddle.position.copy(pos);
     }
+    const rotation = this.computePaddleRotation(this.paddle.position);
+    this.paddle.rotation.x = rotation.x;
+    this.paddle.rotation.z = rotation.z;
     this.updateCamera();
   }
 
@@ -884,6 +808,7 @@ export default class Scene {
   }
 
   computePaddlePosition() {
+    let paddlePosition = null;
     if (this.display && this.controlMode === 'VR') {
       let controller = null;
       if (this.controller1 && this.controller1.visible) {
@@ -916,26 +841,38 @@ export default class Scene {
         }
       }
       if (intersects.length > 0) {
-        return intersects[0].point;
-      } else {
-        return null;
+        paddlePosition =  intersects[0].point;
       }
     } else {
       // MOUSE
       if (this.pointerIsLocked) {
-        return {
-          x: this.ghostPaddlePosition.x + 0.001 * this.mouseMoveSinceLastFrame.x,
+        paddlePosition =  {
+          x: this.ghostPaddlePosition.x + 0.0015 * this.mouseMoveSinceLastFrame.x,
           y: 1,
-          z: this.ghostPaddlePosition.z + 0.001 * this.mouseMoveSinceLastFrame.y,
+          z: this.ghostPaddlePosition.z + 0.0015 * this.mouseMoveSinceLastFrame.y,
         };
       } else {
-        return {
+        paddlePosition = {
           x: 1.4 * this.mousePosition.x * this.config.tableWidth,
           y: 1,
           z: -this.config.tableDepth * 0.5 * (this.mousePosition.y + 0.5),
         };
       }
     }
+    if (paddlePosition) {
+      const x = cap(paddlePosition.x, this.config.tableWidth, -this.config.tableWidth);
+      const z = cap(paddlePosition.z || this.config.paddlePositionZ, 0, this.config.tablePositionZ + 0.5);
+      const y = paddlePosition.y || this.config.tableHeight + 0.1 - z * 0.2;
+      return {x, y, z};
+    }
+  }
+
+  computePaddleRotation(pos) {
+    return {
+      x: -((this.config.tablePositionZ + this.config.tableDepth / 2) - pos.z * 1),
+      y: 0,
+      z: cap(-pos.x, -Math.PI / 2, Math.PI / 2),
+    };
   }
 
   updateBall() {
@@ -965,11 +902,13 @@ export default class Scene {
         onComplete: () => {this.hitAvailable = true;},
       });
       this.lastHitPosition = this.ball.position.clone();
-      this.lastHitPosition.y = Math.max(this.lastHitPosition.y, this.config.tableHeight + 0.15);
+      this.lastHitPosition.y = Math.max(this.lastHitPosition.y, this.config.tableHeight + 0.2);
       this.hitTween.to(this, 0.05, {
         paddleInterpolationAlpha: 1,
+        ease: Power2.easeIn,
       });
-      this.hitTween.to(this, 0.2, {
+      this.hitTween.to(this, 0.3, {
+        ease: Power2.easeOut,
         paddleInterpolationAlpha: 0,
       });
     }

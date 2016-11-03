@@ -159,7 +159,6 @@ export default class Physics {
     hitpointY = cap(hitpointY / this.config.paddleSize, -1, 1);
 
     const distFromRim = e.body.position.z - (this.config.tablePositionZ + this.config.tableDepth / 2);
-    console.log(distFromRim);
     if (this.config.mode === MODE.MULTIPLAYER) {
       e.body.velocity.z = -3.5 * this.speed + distFromRim * 1.2;
       // make aiming a little easier on mobile
@@ -172,14 +171,14 @@ export default class Physics {
     } else {
       const distFromCenter = e.target.position.x / this.config.tableWidth * 0.5;
 
-      e.body.velocity.z = -3.5 * this.speed + distFromRim * 1.2;
+      e.body.velocity.z = -3.5 * this.speed + distFromRim * 0.8;
       // make aiming a little easier on mobile
       if (this.isMobile) {
         e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.2);
       } else {
         e.body.velocity.x = (-distFromCenter * 1.2) - (hitpointX * e.body.velocity.z * 0.3);
       }
-      e.body.velocity.y = 2 * (1 / this.speed) + distFromRim * 1.2;
+      e.body.velocity.y = 2 * (1 / this.speed) + distFromRim * 0.8;
     }
   }
 
@@ -205,9 +204,6 @@ export default class Physics {
       this.ball.velocity.x = (Math.random() - 0.5) * 0.5;
       this.ball.velocity.y = 2 * (1 / this.speed);
       this.ball.position.set(0, this.config.tableHeight + 0.2, this.config.tablePositionZ - this.config.tableDepth * 0.4);
-      // this.ball.velocity.x = (0.5 - Math.random()) * 0.5;
-      // this.ball.velocity.y = 0.3 * (1 / this.speed);
-      // this.ball.velocity.z = 2.5 * this.speed;
       this.ball.angularVelocity.x = 0;
       this.ball.angularVelocity.y = 0;
       this.ball.angularVelocity.z = 0;

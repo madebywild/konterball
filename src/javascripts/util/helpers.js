@@ -9,4 +9,22 @@ module.exports = {
   rand: (min, max) => {
     return min + Math.floor(Math.random() * (max - min));
   },
+
+  mirrorPosition: (pos, xAxis=0) => {
+    let z = pos.z;
+    z -= (z - xAxis) * 2;
+    return {
+      x: -pos.x, 
+      y: pos.y,
+      z: z,
+    };
+  },
+
+  mirrorVelocity: vel => {
+    return {
+      x: -vel.x,
+      y: vel.y,
+      z: -vel.z,
+    };
+  },
 };
