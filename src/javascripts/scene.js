@@ -190,6 +190,8 @@ export default class Scene {
     this.emitter.on(EVENT.GAME_OVER, e => {
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
+      this.hud.message.setMessage('game over');
+      this.hud.message.showMessage();
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
 

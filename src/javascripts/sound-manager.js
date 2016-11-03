@@ -1,6 +1,7 @@
 import {Howler} from 'howler';
 import {rand, cap} from 'util/helpers';
 import {MODE} from './constants';
+import $ from 'jquery';
 
 const url = `https://s3.eu-central-1.amazonaws.com/pingpongsound/`;
 
@@ -32,6 +33,9 @@ export default class SoundManager {
     this.loopSounds.set('menu', new Howl({loop: true, src: `${url}music_menu.mp3`}));
     this.loopSounds.set('waiting', new Howl({loop: true, src: `${url}waiting.mp3`}));
     this.loopSounds.get('menu').play();
+    if (localStorage.muted === 'true') {
+      this.mute();
+    }
   }
 
   playLoop(keyLoop) {
@@ -77,8 +81,11 @@ export default class SoundManager {
   }
 
   toggleMute() {
-    this.muted = !this.muted;
-    Howler.mute(this.muted);
+    if (this.muted) {
+      this.unmute();
+    } else {
+      this.mute();
+    }
   }
 
   blur() {
@@ -92,11 +99,15 @@ export default class SoundManager {
   }
 
   mute() {
+    $('.mute img').attr('src', 'images/icon-unmute.svg');
+    localStorage.muted = 'true';
     Howler.mute(true);
     this.muted = true;
   }
 
   unmute() {
+    $('.mute img').attr('src', 'images/icon-mute.svg');
+    localStorage.muted = 'false';
     Howler.mute(false);
     this.muted = false;
   }

@@ -202,7 +202,7 @@ export default class Physics {
     } else {
       this.ball.velocity.z = 3.0 * this.speed;
       this.ball.velocity.x = (Math.random() - 0.5) * 0.5;
-      this.ball.velocity.y = 2 * (1 / this.speed);
+      this.ball.velocity.y = -2 * (1 / this.speed);
       this.ball.position.set(0, this.config.tableHeight + 0.2, this.config.tablePositionZ - this.config.tableDepth * 0.4);
       this.ball.angularVelocity.x = 0;
       this.ball.angularVelocity.y = 0;

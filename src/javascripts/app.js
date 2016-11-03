@@ -324,6 +324,9 @@ class PingPong {
       }
       // this.requestFullscreen();
       this.scene.setMultiplayer();
+      if (window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1) {
+        $('#room-code').val(window.location.pathname.slice(1));
+      }
       this.viewJoinRoomScreenAnimation().then(() => {
         bodymovin.stop();
         bodymovin.destroy();
@@ -409,11 +412,6 @@ class PingPong {
 
     $('.mute').click(() => {
       this.scene.sound.toggleMute();
-      if (this.scene.sound.muted) {
-        $('.mute img').attr('src', 'images/icon-unmute.svg');
-      } else {
-        $('.mute img').attr('src', 'images/icon-mute.svg');
-      }
     });
   }
 

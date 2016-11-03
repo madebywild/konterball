@@ -20,7 +20,11 @@ module.exports = function(env) {
 
   var webpackConfig = {
     context: jsSrc,
-    plugins: [],
+    plugins: [
+      new webpack.ProvidePlugin({
+        'Promise': 'es6-promise',
+      }),
+    ],
     eslint: {
       configFile: './.eslintrc.json'
     },
