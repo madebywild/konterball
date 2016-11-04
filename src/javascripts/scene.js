@@ -245,14 +245,14 @@ export default class Scene {
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = BasicShadowMap;
+    this.renderer.setClearColor(0xFF0000, 1);
 
     document.body.appendChild(this.renderer.domElement);
 
-    // js basics
     this.scene = new ThreeScene();
-
     this.camera = new PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 10000);
-    // position over the box, will be animated to the final camera position
+
+    // position over the table, will be animated to the final camera position
     this.camera.position.x = 2;
     this.camera.position.z = 2;
     this.camera.position.y = 4;
@@ -351,8 +351,10 @@ export default class Scene {
       table.material.color.set(this.config.colors.PINK_TABLE);
     }
 
-    TweenMax.set('.intro-wrapper', {display: 'none'});
     this.introPanAnimation().then(() => {
+      if (this.display) {
+        this.display.resetPose();
+      }
       this.paddle.visible = true;
       this.hud.container.visible = true;
       this.setupVRControls();
@@ -408,6 +410,7 @@ export default class Scene {
           0.5
         )
       );
+      tl.set('canvas', {display: 'block'});
       tl.to('.intro-wrapper', 0.5, {autoAlpha: 0});
 
       const panDuration = 1;
@@ -964,8 +967,12 @@ export default class Scene {
       }
     }
 
-    if (this.config.state === STATE.PLAYING || this.config.state === STATE.COUNTDOWN) {
+    if (this.config.state === STATE.PLAYING
+      || this.config.state === STATE.COUNTDOWN
+      || this.config.state === STATE.GAME_OVER) {
       this.updateControls();
+    }
+    if (this.config.state === STATE.PLAYING || this.config.state === STATE.COUNTDOWN) {
 
       if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
         // for multiplayer testing
@@ -1011,7 +1018,8 @@ export default class Scene {
   }
 
   onResize(e) {
-    this.effect.setSize(window.innerWidth, window.innerHeight);
+    this.effect.setSize(window.innerWidth, window.innerHeight, true);
+    //this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.viewport = {

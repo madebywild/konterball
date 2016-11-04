@@ -22,6 +22,23 @@ class PingPong {
     this.introBallTween = null;
 
     if (Util.isMobile() && 'orientation' in window && $(window).width() < $(window).height()) {
+      TweenMax.set('.phone', {rotation: 90});
+      TweenMax.set('.checkmark', {visibility: 'hidden'}, 0.3);
+      const tl = new TimelineMax({repeat: -1, repeatDelay: 1});
+      tl.to('.phone', 0.5, {
+        ease: Back.easeInOut.config(1),
+        rotation: 180,
+        onComplete: () => {
+        }
+      });
+      tl.set('.x', {visibility: 'hidden'}, 0.3);
+      tl.set('.checkmark', {visibility: 'visible'}, 0.3);
+      tl.to('.phone', 0.5, {
+        ease: Back.easeInOut.config(1),
+        rotation: 90,
+      }, '+=1');
+      tl.set('.x', {visibility: 'visible'}, '-=0.2');
+      tl.set('.checkmark', {visibility: 'hidden'}, '-=0.2');
       $('.rotate-phone-screen').css('display', 'block');
       $(window).on('orientationchange', () => {
         $(window).off('orientationchange');
@@ -265,11 +282,11 @@ class PingPong {
   }
 
   setupHandlers() {
-    $('#start').click(() => {
+    $('#start').on('click touchstart', () => {
       this.showModeChooserScreen();
     });
 
-    $('#start-singleplayer').click(e => {
+    $('#start-singleplayer').on('click touchstart', e => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
@@ -290,7 +307,7 @@ class PingPong {
       });
     });
 
-    $('#open-room').click(e => {
+    $('#open-room').on('click touchstart', e => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
@@ -310,7 +327,7 @@ class PingPong {
       });
     });
 
-    $('#join-room').click(e => {
+    $('#join-room').on('click touchstart', e => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-green.gif');
@@ -333,7 +350,7 @@ class PingPong {
       });
     });
 
-    $('#play-again').click(() => {
+    $('#play-again').on('click touchstart', () => {
       if (this.scene.config.mode === MODE.MULTIPLAYER) {
         $('#play-again').text('Waiting for opponent to restart...');
         this.scene.playerRequestedRestart = true;
@@ -342,15 +359,15 @@ class PingPong {
       this.scene.restartGame();
     });
 
-    $('#exit').click(() => {
+    $('#exit').on('click touchstart', () => {
       location.reload();
     });
 
-    $('.exit-arrow').click(() => {
+    $('.exit-arrow').on('click touchstart', () => {
       location.reload();
     });
 
-    $('.about-button').click(() => {
+    $('.about-button').on('click touchstart', () => {
       if (this.aboutScreenOpen) {
         TweenMax.to('.about-screen', 0.5, {
           autoAlpha: 0,
@@ -369,14 +386,14 @@ class PingPong {
       this.aboutScreenOpen = !this.aboutScreenOpen;
     });
 
-    $('#cardboard').click(() => {
+    $('#cardboard').on('click touchstart', () => {
       this.scene.setupVRControls();
       this.scene.controlMode = 'VR';
       this.scene.manager.enterVRMode_();
       this.scene.startGame();
     });
 
-    $('#tilt').click(() => {
+    $('#tilt').on('click touchstart', () => {
       // TODO 
       if (Util.isMobile()) {
         this.scene.setupVRControls();
@@ -387,11 +404,11 @@ class PingPong {
       this.scene.startGame();
     });
 
-    $('button.btn').click(() => {
+    $('button.btn').on('click touchstart', () => {
       this.scene.sound.playUI('button');
     });
 
-    $('button.btn').click(function() {
+    $('button.btn').on('click touchstart', function() {
       const duration = 0.1;
       TweenMax.to($(this), duration, {
         backgroundColor: '#fff',
@@ -402,15 +419,15 @@ class PingPong {
       });
     });
 
-    $('.back-arrow').click(() => {
+    $('.back-arrow').on('click touchstart', () => {
       this.backAnimation();
     });
 
-    $('.back-arrow').click(() => {
+    $('.back-arrow').on('click touchstart', () => {
       this.backAnimation();
     });
 
-    $('.mute').click(() => {
+    $('.mute').on('click touchstart', () => {
       this.scene.sound.toggleMute();
     });
   }

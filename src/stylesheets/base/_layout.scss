@@ -6,6 +6,7 @@ canvas {
   top: 0;
   left: 0;
   z-index: 1;
+  display: none;
 }
 body {
   font-family: Futura;
@@ -120,7 +121,7 @@ button.inactive {
   position: absolute;
   z-index: 100;
   img {
-    width: 30px;
+    width: 20px;
     height: auto;
   }
 }

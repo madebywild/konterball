@@ -3,10 +3,34 @@
   background-color: $blue-background;
   z-index: 10;
   display: none;
-  img {
+  .phone-container {
     @extend .absolute-center;
-    max-height: 90vh;
-    max-width: 90vw;
+    width: 100%;
+    max-width: 90vh;
+    max-height: 90vw;
   }
-
+  .phone-container:after {
+    padding-bottom: 100%;
+    display: block;
+    content: '';
+  }
+  .phone-inner {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+  }
+  .phone {
+    width: 55%;
+    margin-top: 20%;
+  }
+  .x, .checkmark {
+    position: absolute;
+    bottom: 15%;
+    left: 0;
+    right: 0;
+    margin: auto;
+    width: 10%;
+  }
 }

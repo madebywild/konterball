@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <title>Pong Pong</title>
     <link rel="stylesheet" href="stylesheets/app.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
     <!-- Generate using http://realfavicongenerator.net/ -->
 
 
@@ -16,7 +16,13 @@
 <button class='exit-arrow'>exit</button>
 <button class='mute'><img src='images/icon-mute.svg'></button>
 <div class='rotate-phone-screen'>
-  <img src='images/rotate-screen-ui.gif'>
+  <div class='phone-container'>
+    <div class='phone-inner'>
+      <img class='phone' src='images/rotate-screen/phone.svg'>
+      <img class='x' src='images/rotate-screen/x.svg'>
+      <img class='checkmark' src='images/rotate-screen/checkmark.svg'>
+    </div>
+  </div>
 </div>
 <div class='intro-wrapper'>
   <div class='transition-color-screen pink'></div>
@@ -141,10 +147,12 @@
 </div>
 
     
-      <script>window.WebVRConfig = {
-        MOUSE_KEYBOARD_CONTROLS_DISABLED: true,
-        ROTATE_INSTRUCTIONS_DISABLED: true,
-      };
+      <script>
+        window.WebVRConfig = {
+          MOUSE_KEYBOARD_CONTROLS_DISABLED: true,
+          ROTATE_INSTRUCTIONS_DISABLED: true,
+          BUFFER_SCALE: 1,
+        };
       </script>
       <script src="lib/cannon.js"></script>
       <script src="lib/webvr-polyfill.js"></script>
