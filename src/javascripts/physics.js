@@ -210,17 +210,18 @@ export default class Physics {
     }
   }
 
-  predictCollisions(ball, paddle, net) {
+  predictCollisions(net, delta) {
     // predict ball position in the next frame
     this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
     // divide by 50 at 60fps so we dont accidentally miss the frame
-    this.raycaster.far = this.ball.velocity.clone().length() / 50;
+    this.raycaster.far = this.ball.velocity.clone().length() * (delta / 1000) * 1.1;
 
-    const arr = this.raycaster.intersectObjects([paddle, net], true);
+    const arr = this.raycaster.intersectObjects([net], true);
     if (arr.length) {
-      if (arr[0].object.name === 'net-collider') {
-        this.ball.position.copy(arr[0].point);
-      }
+      this.ball.position.copy(arr[0].point);
+      this.ball.velocity.x *= 0.2;
+      this.ball.velocity.y *= 0.2;
+      this.ball.velocity.z *= 0.2;
     }
   }
 

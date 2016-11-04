@@ -141,7 +141,7 @@ class PingPong {
     if (!Util.isMobile()) {
       return;
     }
-    document.addEventListener("fullscreenchange", function(event) {
+    document.addEventListener('fullscreenchange', function(event) {
       return;
       if (document.fullscreen) {
         screen.lockOrientationUniversal
@@ -441,8 +441,8 @@ class PingPong {
       }
 
       if (!Util.isMobile()) {
-        $("#cardboard p").text("Vive");
-        $("#tilt p").text("Mouse");
+        $('#cardboard p').text('Vive');
+        $('#tilt p').text('Mouse');
       }
 
       this.scene.sound.playUI('transition');
@@ -491,6 +491,7 @@ class PingPong {
       });
       $('#room-form').on('submit', e => {
         e.preventDefault();
+        $('#room-form .grey-text').text('Connecting to server...');
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
           this.viewVRChooserScreen();
         }).catch(e => {

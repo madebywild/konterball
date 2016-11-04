@@ -5,7 +5,7 @@ import {rand} from 'util/helpers';
 import $ from 'jquery';
 import _ from 'lodash';
 
-const availableChars = "23456789QWERTZUPASDFGHJKLYXCVBNM";
+const availableChars = '23456789QWERTZUPASDFGHJKLYXCVBNM';
 
 export default class Communication {
   constructor(emitter) {
@@ -103,6 +103,9 @@ export default class Communication {
   connectToServer(host) {
     // connect to the deepstream server
     return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject('timeout');
+      }, 2000);
       console.log('connecting to server...');
       this.client = deepstream(host, {
         mergeStrategy: deepstream.MERGE_STRATEGIES.REMOTE_WINS
@@ -118,9 +121,6 @@ export default class Communication {
         if (e === deepstream.CONSTANTS.CONNECTION_STATE.ERROR) {
           reject('error');
         }
-      });
-      setTimeout(2000, () => {
-        reject('timeout');
       });
     });
   }
@@ -152,6 +152,9 @@ export default class Communication {
             reject('Room already full.');
           }
         });
+        setTimeout(() => {
+          reject('No room found.');
+        }, 2000);
       }).catch(e => {
         reject(e);
       });
@@ -193,6 +196,7 @@ export default class Communication {
       this.pingNumber++;
       if (this.pingNumber >= 20) {
         clearInterval(this.pingInterval);
+        console.log(this.latency);
       }
     }, 1000);
   }
@@ -201,6 +205,7 @@ export default class Communication {
     let rtt = Date.now() - this.pings[data.index];
     this.roundTripTimes.push(rtt);
     this.roundTripTimes.sort((a, b) => a - b);
+    // get median of all received roundtrips, divide by 2 to get the one-way-latency
     this.latency = this.roundTripTimes[Math.floor(this.roundTripTimes.length / 2)] / 2;
   }
 
@@ -268,7 +273,15 @@ export default class Communication {
   }
 
   sendMiss(point, velocity, ballHasHitEnemyTable, isInit=false) {
-    this.missRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, ballHasHitEnemyTable, isInit});
+    // insert random value so the record is actually updated 
+    // in case we reset it twice with the same values
+    this.missRecord.set(`player-${this.isHost ? 1 : 2}`, {
+      point,
+      velocity,
+      ballHasHitEnemyTable,
+      isInit,
+      v: Math.random(),
+    });
   }
 
   sendRestartGame() {

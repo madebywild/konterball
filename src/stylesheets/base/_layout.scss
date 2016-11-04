@@ -105,10 +105,14 @@ button.inactive {
   color: $medium-grey;
   @extend .futura-italic;
 }
-.present-players img {
-  width: 30px;
-  height: auto;
-  margin: 40px 10px;
+.present-players {
+  width: 50%;
+  margin: auto;
+  img {
+    width: 30px;
+    height: auto;
+    margin: 40px 10px;
+  }
 }
 .opponent-icon {
   opacity: 0.3;

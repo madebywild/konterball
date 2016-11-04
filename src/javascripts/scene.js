@@ -4,7 +4,7 @@ import {
   Scene as ThreeScene,
   WebGLRenderer,
   TextureLoader,
-  BasicShadowMap,
+  PCFSoftShadowMap,
   PerspectiveCamera,
   DirectionalLight,
   CameraHelper,
@@ -244,7 +244,7 @@ export default class Scene {
     this.renderer = new WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = BasicShadowMap;
+    this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.setClearColor(0xFF0000, 1);
 
     document.body.appendChild(this.renderer.domElement);
@@ -611,6 +611,7 @@ export default class Scene {
     this.physicsTimeStep = 1000;
     // received vectors are in the other users space
     // invert x and z velocity and mirror the point across the center of the table
+    console.log('copying ball pos');
     this.physics.ball.position.copy(mirrorPosition(data.point, this.config.tablePositionZ));
     this.physics.ball.velocity.copy(mirrorVelocity(data.velocity));
   }
@@ -628,6 +629,8 @@ export default class Scene {
         this.score.self++;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
       }
+    } else {
+      this.addBall();
     }
     if (this.score.self >= this.config.POINTS_FOR_WIN
       || this.score.opponent >= this.config.POINTS_FOR_WIN) {
@@ -931,7 +934,7 @@ export default class Scene {
         paddleInterpolationAlpha: 1,
         ease: Power2.easeIn,
       });
-      this.hitTween.to(this, 0.3, {
+      this.hitTween.to(this, 0.4, {
         ease: Power2.easeOut,
         paddleInterpolationAlpha: 0,
       });
@@ -972,6 +975,7 @@ export default class Scene {
       || this.config.state === STATE.GAME_OVER) {
       this.updateControls();
     }
+
     if (this.config.state === STATE.PLAYING || this.config.state === STATE.COUNTDOWN) {
 
       if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
@@ -994,7 +998,7 @@ export default class Scene {
     if (this.config.state === STATE.PLAYING) {
       this.physics.step(delta / this.physicsTimeStep);
       this.updateBall();
-      this.physics.predictCollisions(this.physics.ball, this.paddle, this.scene.getObjectByName('net-collider'));
+      this.physics.predictCollisions(this.scene.getObjectByName('net-collider'), delta);
     }
 
     if (DEBUG_MODE) {
