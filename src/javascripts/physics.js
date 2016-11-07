@@ -149,7 +149,13 @@ export default class Physics {
     this.initBallPosition();
   }
 
+  increaseSpeed() {
+    this.speed = Math.min(this.speed * 1.01, 1.5);
+    console.log(this.speed);
+  }
+
   paddleCollision(e) {
+    this.increaseSpeed();
     this.emitter.emit(EVENT.BALL_PADDLE_COLLISION, e.body);
 
     let hitpointX = e.body.position.x - e.target.position.x;
@@ -191,7 +197,7 @@ export default class Physics {
   }
 
   initBallPosition() {
-    console.log(this.speed);
+    this.speed = 1;
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.ball.position.set(0, 1.4, this.config.tablePositionZ + 0.1);
       this.ball.velocity.x = (0.5 - Math.random()) * 0.5;
@@ -201,9 +207,9 @@ export default class Physics {
       this.ball.angularVelocity.y = 0;
       this.ball.angularVelocity.z = 0;
     } else {
-      this.ball.velocity.z = 3 * this.speed;
+      this.ball.velocity.z = 3;
       this.ball.velocity.x = (Math.random() - 0.5) * 0.5;
-      this.ball.velocity.y = 2 * (1 / this.speed);
+      this.ball.velocity.y = 2;
       this.ball.position.set(0, this.config.tableHeight + 0.2, this.config.tablePositionZ - this.config.tableDepth * 0.4);
       this.ball.angularVelocity.x = 0;
       this.ball.angularVelocity.y = 0;

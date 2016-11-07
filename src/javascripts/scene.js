@@ -594,6 +594,7 @@ export default class Scene {
         ease: Power0.easeNone,
         ballInterpolationAlpha: 0,
       });
+      this.physics.increaseSpeed();
     }
     this.physicsTimeStep = 1000;
     // received vectors are in the other users space
@@ -604,6 +605,7 @@ export default class Scene {
   }
 
   receivedMiss(data) {
+    this.physics.speed = 1;
     this.ballPositionDifference = null;
     this.time.clearTimeout(this.resetBallTimeout);
     // opponent missed, update player score
@@ -674,8 +676,6 @@ export default class Scene {
           // the game goes on
           this.physics.initBallPosition();
         }
-        // speed will be 1 at 0 points and 1.5 at 11:11
-        this.physics.speed = 1 + (this.score.opponent + this.score.self) / 44;
 
         this.communication.sendMiss({
           x: this.physics.ball.position.x,
@@ -695,7 +695,6 @@ export default class Scene {
         this.physics.initBallPosition();
         this.score.lives--;
         this.hud.scoreDisplay.setLives(this.score.lives);
-        this.physics.speed = 1 + (5 - this.score.lives) * 0.1;
         if (this.score.lives < 1) {
           this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
         }
