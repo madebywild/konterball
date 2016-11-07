@@ -151,7 +151,6 @@ export default class Physics {
 
   increaseSpeed() {
     this.speed = Math.min(this.speed * 1.01, 1.5);
-    console.log(this.speed);
   }
 
   paddleCollision(e) {

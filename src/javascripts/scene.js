@@ -173,7 +173,7 @@ export default class Scene {
       || this.paddle.position.x < -this.config.tableWidth) {
     }
     if (this.paddle.position.z < this.config.tablePositionZ + 0.5
-      && this.paddle.position.x > 0) {
+      && this.paddle.position.z > 0) {
     }
     if (this.pointerIsLocked) {
       this.mouseMoveSinceLastFrame.x += e.movementX;
@@ -287,7 +287,6 @@ export default class Scene {
 
   setupControllers() {
     navigator.getVRDisplays().then(displays => {
-      console.log(displays);
       if (displays.length > 0) {
         this.display = displays[0];
         if (displays[0].capabilities && displays[0].capabilities.hasPosition) {
@@ -356,6 +355,7 @@ export default class Scene {
 
   introPanAnimation() {
     this.animate();
+    console.log('animate!');
     return new Promise((resolve, reject) => {
       const tl = new TimelineMax();
       /*
@@ -599,7 +599,6 @@ export default class Scene {
     this.physicsTimeStep = 1000;
     // received vectors are in the other users space
     // invert x and z velocity and mirror the point across the center of the table
-    console.log('copying ball pos');
     this.physics.ball.position.copy(mirrorPosition(data.point, this.config.tablePositionZ));
     this.physics.ball.velocity.copy(mirrorVelocity(data.velocity));
   }
@@ -732,7 +731,6 @@ export default class Scene {
   }
 
   ballTableCollision(body, target) {
-    console.log(this.physicsTimeStep);
     this.sound.table(body.position, this.physics.ball.velocity);
     if (target._name === 'table-2-player' && body.position.z < this.config.tablePositionZ) {
       this.ballHasHitEnemyTable = true;
@@ -875,7 +873,7 @@ export default class Scene {
     }
     if (paddlePosition) {
       const x = cap(paddlePosition.x, this.config.tableWidth, -this.config.tableWidth);
-      const z = cap(paddlePosition.z || this.config.paddlePositionZ, 0, this.config.tablePositionZ + 0.5);
+      const z = cap(paddlePosition.z, this.config.tablePositionZ + 0.5, 0);
       const y = paddlePosition.y || this.config.tableHeight + 0.1 - z * 0.2;
       return {x, y, z};
     }

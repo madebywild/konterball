@@ -6,6 +6,7 @@ module.exports = {
       return Math.max(cap1, Math.min(cap2, value));
     }
   },
+
   rand: (min, max) => {
     return min + Math.floor(Math.random() * (max - min));
   },

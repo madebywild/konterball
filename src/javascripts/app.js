@@ -299,12 +299,12 @@ class PingPong {
   }
 
   setupHandlers() {
-    $('#start').on('click touchstart', () => {
+    $('#start').on('click', () => {
       $('body').scrollTop(80);
       this.showModeChooserScreen();
     });
 
-    $('#start-singleplayer').on('click touchstart', e => {
+    $('#start-singleplayer').on('click', e => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
@@ -324,7 +324,7 @@ class PingPong {
       });
     });
 
-    $('#open-room').on('click touchstart', e => {
+    $('#open-room').on('click', e => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
@@ -344,7 +344,7 @@ class PingPong {
       });
     });
 
-    $('#join-room').on('click touchstart', e => {
+    $('#join-room').on('click', e => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-green.gif');
@@ -367,7 +367,7 @@ class PingPong {
       });
     });
 
-    $('#play-again').on('click touchstart', () => {
+    $('#play-again').on('click', () => {
       if (this.scene.config.mode === MODE.MULTIPLAYER) {
         $('#play-again').text('Waiting for opponent to restart...');
         this.scene.playerRequestedRestart = true;
@@ -376,15 +376,15 @@ class PingPong {
       this.scene.restartGame();
     });
 
-    $('#exit').on('click touchstart', () => {
+    $('#exit').on('click', () => {
       location.reload();
     });
 
-    $('.exit-arrow').on('click touchstart', () => {
+    $('.exit-arrow').on('click', () => {
       location.reload();
     });
 
-    $('.about-button').on('click touchstart', () => {
+    $('.about-button').on('click', () => {
       if (this.aboutScreenOpen) {
         TweenMax.to('.about-screen', 0.5, {
           autoAlpha: 0,
@@ -403,14 +403,15 @@ class PingPong {
       this.aboutScreenOpen = !this.aboutScreenOpen;
     });
 
-    $('#cardboard').on('click touchstart', () => {
+    $('#cardboard').on('click', () => {
       this.scene.setupVRControls();
       this.scene.controlMode = 'VR';
       this.scene.manager.enterVRMode_();
       this.scene.startGame();
+      console.log('start game');
     });
 
-    $('#tilt').on('click touchstart', () => {
+    $('#tilt').on('click', () => {
       console.log(this.scene.manager.mode);
       this.scene.manager.onFSClick_();
 
@@ -424,11 +425,11 @@ class PingPong {
       this.scene.startGame();
     });
 
-    $('button.btn').on('click touchstart', () => {
+    $('button.btn').on('click', () => {
       this.scene.sound.playUI('button');
     });
 
-    $('button.btn').on('click touchstart', function() {
+    $('button.btn').on('click', function() {
       const duration = 0.1;
       TweenMax.to($(this), duration, {
         backgroundColor: '#fff',
@@ -439,15 +440,15 @@ class PingPong {
       });
     });
 
-    $('.back-arrow').on('click touchstart', () => {
+    $('.back-arrow').on('click', () => {
       this.backAnimation();
     });
 
-    $('.back-arrow').on('click touchstart', () => {
+    $('.back-arrow').on('click', () => {
       this.backAnimation();
     });
 
-    $('.mute').on('click touchstart', () => {
+    $('.mute').on('click', () => {
       this.scene.sound.toggleMute();
     });
   }
