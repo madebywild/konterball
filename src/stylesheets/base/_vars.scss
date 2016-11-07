@@ -11,7 +11,8 @@ $dark-grey: #262626;
 $medium-grey: rgba(255, 255, 255, 0.5);
 $ball: #f9fc56;
 
-$breakpoint-mobile: 768px;
+$breakpoint-mobile-min: 768px;
+$breakpoint-mobile-max: $breakpoint-mobile-min - 1;
 
 $pink-light: #fdb1b1;
 $pink-background: #ff9c9c;
@@ -23,3 +24,4 @@ $blue-light: #27679e;
 $blue-background: #1e4b87;
 $blue-dark: #0d375c;
 $ball: #f9fc56;
+

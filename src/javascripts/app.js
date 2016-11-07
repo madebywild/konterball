@@ -6,6 +6,7 @@ import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
 import Util from 'webvr-manager/util';
+import Modes from 'webvr-manager/modes';
 import NoSleep from 'nosleep';
 import Communication from './communication';
 
@@ -41,17 +42,21 @@ class PingPong {
       tl.set('.checkmark', {visibility: 'hidden'}, '-=0.2');
       $('.rotate-phone-screen').css('display', 'block');
       $(window).on('orientationchange', () => {
-        $(window).off('orientationchange');
         setTimeout(() => {
+          window.scrollTo(0, 80);
           if ($(window).width() > $(window).height()) {
             TweenMax.to('.rotate-phone-screen', 0.3, {
               autoAlpha: 0,
             });
-            this.startLoading();
+            if (!this.startedLoading) {
+              this.startLoading();
+            }
+            tl.pause();
           } else {
             TweenMax.to('.rotate-phone-screen', 0.3, {
               autoAlpha: 1,
             });
+            tl.play();
           }
         }, 100);
       });
@@ -61,11 +66,16 @@ class PingPong {
   }
 
   startLoading() {
+    this.startedLoading = true;
     Promise.all([
       this.scene.setup(), 
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
+      // disable scrolling
+      $('canvas, .game-over-screen-wrapper').on('touchstart', e => {
+        // e.preventDefault();
+      });
       this.introAnimation();
     });
   }
@@ -140,6 +150,7 @@ class PingPong {
   }
 
   requestFullscreen() {
+    return;
     if (!Util.isMobile()) {
       return;
     }
@@ -289,6 +300,7 @@ class PingPong {
 
   setupHandlers() {
     $('#start').on('click touchstart', () => {
+      $('body').scrollTop(80);
       this.showModeChooserScreen();
     });
 
@@ -399,6 +411,9 @@ class PingPong {
     });
 
     $('#tilt').on('click touchstart', () => {
+      console.log(this.scene.manager.mode);
+      this.scene.manager.onFSClick_();
+
       // TODO 
       if (Util.isMobile()) {
         this.scene.setupVRControls();

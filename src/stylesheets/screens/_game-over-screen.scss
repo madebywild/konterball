@@ -8,6 +8,7 @@
     font-size: $font-size-olive;
     display: block;
     margin-top: 0;
+    margin-bottom: 10px;
   }
   .share-info-text {
     @extend .futura-italic;
@@ -15,9 +16,16 @@
     color: $medium-grey;
   }
   #play-again, #exit {
-    width: 200px;
+    width: 160px;
+    @media screen and (min-width: $breakpoint-mobile-min) {
+      width: 200px;
+      margin-top: 50px;
+    }
     margin-left: 20px;
     margin-right: 20px;
+  }
+  #score {
+    margin-bottom: 0;
   }
   .share-wrapper {
     margin-top: 50px;
@@ -32,6 +40,11 @@
           opacity: 0.8;
         }
       }
+    }
+  }
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    .share-wrapper {
+      margin-top: 15px;
     }
   }
 }

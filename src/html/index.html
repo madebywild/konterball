@@ -7,7 +7,6 @@
 {% extends 'layouts/application.html' %}
 
 {% block content %}
-<button class='exit-arrow'>exit</button>
 <button class='mute'><img src='images/icon-mute.svg'></button>
 <div class='rotate-phone-screen'>
   <div class='phone-container'>
@@ -96,7 +95,7 @@
         <img class='opponent-icon' src='images/icon-person.svg'>
       </div>
       <form id='room-form' action='javascript:void(0)'>
-        <input type='text' id='room-code' placeholder='____' maxlength='4'><br>
+        <input required type='text' id='room-code' placeholder='____' maxlength='4'><br>
         <p class='grey-text'>Type in your Code</p><br>
         <button class='btn' id='join-room-button' role='submit' class='inactive'>Join Game</button>
       </form>

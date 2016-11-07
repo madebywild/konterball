@@ -287,6 +287,7 @@ export default class Scene {
 
   setupControllers() {
     navigator.getVRDisplays().then(displays => {
+      console.log(displays);
       if (displays.length > 0) {
         this.display = displays[0];
         if (displays[0].capabilities && displays[0].capabilities.hasPosition) {
@@ -433,6 +434,7 @@ export default class Scene {
   }
 
   countdown() {
+    window.scrollTo(0, 1);
     this.hud.message.hideMessage();
     this.config.state = STATE.COUNTDOWN;
     // countdown from 3, start game afterwards
@@ -731,6 +733,7 @@ export default class Scene {
   }
 
   ballTableCollision(body, target) {
+    console.log(this.physicsTimeStep);
     this.sound.table(body.position, this.physics.ball.velocity);
     if (target._name === 'table-2-player' && body.position.z < this.config.tablePositionZ) {
       this.ballHasHitEnemyTable = true;

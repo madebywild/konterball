@@ -2,7 +2,7 @@ html {
   font-size: $font-size;
 }
 canvas {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: 1;
@@ -12,6 +12,9 @@ body {
   font-family: Futura;
   overflow: hidden;
   background-color: $blue-background;
+  height: 100vh;
+  // +80 to enable ios users to scroll up and down to view/hide the menu bar
+  padding-bottom: 80px;
   color: #fff;
 }
 .pink {
@@ -43,6 +46,7 @@ button.btn {
   border: 2px solid #fff;
   letter-spacing: 0.15em;
   color: #fff;
+  margin-top: 15px;
 }
 button:focus, textarea:focus, input:focus{
   outline: none;
@@ -70,9 +74,9 @@ button.inactive {
   text-align: center;
 }
 .screen {
-  position: absolute;
+  position: fixed;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh + 1px);
   top: 0;
   left: 0;
 }
@@ -122,7 +126,7 @@ button.inactive {
   border: 0;
   left: 0;
   bottom: 0;
-  position: absolute;
+  position: fixed;
   z-index: 100;
   img {
     width: 20px;
@@ -143,7 +147,7 @@ button.inactive {
 }
 .transition-color-screen {
   z-index: 3;
-  position: absolute;
+  position: fixed;
   height: 100%;
   width: 100%;
   top: 0;

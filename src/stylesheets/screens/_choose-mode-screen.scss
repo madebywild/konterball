@@ -28,7 +28,7 @@ $margin: 4vh;
     width: 100%;
     bottom: 10vh;
   }
-  @media screen and (max-width: $breakpoint-mobile) {
+  @media screen and (max-width: $breakpoint-mobile-max) {
     font-size: 15px;
     h3 {
       font-size: 25px;
