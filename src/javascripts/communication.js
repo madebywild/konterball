@@ -3,7 +3,7 @@ import randomstring from 'randomstring';
 import {ACTION, INITIAL_CONFIG, EVENT} from './constants';
 import {rand} from 'util/helpers';
 import $ from 'jquery';
-import _ from 'lodash';
+import chunk from 'lodash.chunk';
 
 const availableChars = '23456789QWERTZUPASDFGHJKLYXCVBNM';
 
@@ -22,7 +22,7 @@ export default class Communication {
       '138.68.98.41:6020', // frankfurt
       '104.236.73.94:6020', // new york
     ];
-    this.availablePrefixes = _.chunk(
+    this.availablePrefixes = chunk(
       availableChars,
       Math.floor(availableChars.length / this.availableServers.length)
     );

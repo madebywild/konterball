@@ -191,6 +191,7 @@ export default class Physics {
   }
 
   initBallPosition() {
+    console.log(this.speed);
     if (this.config.mode === MODE.SINGLEPLAYER) {
       this.ball.position.set(0, 1.4, this.config.tablePositionZ + 0.1);
       this.ball.velocity.x = (0.5 - Math.random()) * 0.5;

@@ -90,7 +90,9 @@ class PingPong {
     this.introBallTween = new TimelineMax({
       onComplete: () => {
         setTimeout(() => {
-          this.startBallTween();
+          if (!this.introOver) {
+            this.startBallTween();
+          }
         }, Math.random() * 2000);
       },
     });
@@ -151,8 +153,6 @@ class PingPong {
         window.screen.lockOrientationUniversal('landscape-primary');
       }
     });
-    let noSleep = new NoSleep();
-    noSleep.enable();
     let i = document.documentElement;
     if (i.requestFullscreen) {
       i.requestFullscreen();
@@ -199,6 +199,11 @@ class PingPong {
   }
 
   showModeChooserScreen() {
+    if (Util.isMobile()) {
+      const noSleep = new NoSleep();
+      noSleep.enable();
+    }
+
     this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
     tl.set('.choose-mode-screen h3, .choose-mode-screen svg, .buttons', {
@@ -220,6 +225,7 @@ class PingPong {
     tl.set('.intro-screen', {display: 'none'});
     tl.call(() => {
       this.introBallTween.kill();
+      this.introOver = true;
     });
     tl.to([
     ], 0.5, {
@@ -298,8 +304,7 @@ class PingPong {
         $('.choose-vr-mode-screen').removeClass('blue green');
         $('.choose-vr-mode-screen').addClass('pink');
       }
-      // TODO dev
-      // this.requestFullscreen();
+      this.requestFullscreen();
       this.scene.setSingleplayer();
       this.viewVRChooserScreen().then(() => {
         bodymovin.stop();
@@ -319,7 +324,7 @@ class PingPong {
         $('.choose-vr-mode-screen').removeClass('pink green');
         $('.choose-vr-mode-screen').addClass('blue');
       }
-      // this.requestFullscreen();
+      this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
         bodymovin.stop();

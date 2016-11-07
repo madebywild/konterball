@@ -81,6 +81,7 @@
     "sinon": "1.17.3",
     "sinon-chai": "2.8.0",
     "webpack": "1.12.14",
+    "webpack-bundle-analyzer": "^1.4.1",
     "webpack-dev-middleware": "1.5.1",
     "webpack-hot-middleware": "2.10.0"
   },
@@ -100,8 +101,9 @@
     "jquery": "^3.1.1",
     "json-loader": "^0.5.4",
     "lodash": "^4.6.1",
+    "lodash.chunk": "^4.2.0",
     "normalize.css": "^4.0.0",
-    "nosleep": "^1.0.0",
+    "nosleep": "github:bhspitmonkey/NoSleep.js",
     "randomstring": "^1.1.5",
     "three": "^0.82.1",
     "webvr-polyfill": "^0.9.20",

@@ -1,6 +1,7 @@
 var config = require('../config')
 if(!config.tasks.js) return
 
+var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 var path            = require('path')
 var pathToUrl       = require('./pathToUrl')
 var webpack         = require('webpack')
@@ -24,6 +25,7 @@ module.exports = function(env) {
       new webpack.ProvidePlugin({
         'Promise': 'es6-promise',
       }),
+      // new BundleAnalyzerPlugin(),
     ],
     eslint: {
       configFile: './.eslintrc.json'

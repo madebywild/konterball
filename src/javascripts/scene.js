@@ -68,7 +68,6 @@ export default class Scene {
     this.controller2 = null;
     this.raycaster = null;
     this.tablePlane = null;
-    this.controllerRay = null;
     this.net = null;
     this.tabActive = true;
     this.ball = null;
@@ -161,7 +160,6 @@ export default class Scene {
         this.paddleOpponent = response[0].paddleOpponent;
         this.paddle.position.copy(this.computePaddlePosition() || new Vector3());
         this.ghostPaddlePosition.copy(this.paddle.position);
-        this.animate();
         resolve('loaded');
       });
     });
@@ -245,7 +243,6 @@ export default class Scene {
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFSoftShadowMap;
-    this.renderer.setClearColor(0xFF0000, 1);
 
     document.body.appendChild(this.renderer.domElement);
 
@@ -271,7 +268,6 @@ export default class Scene {
     light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
     light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
     this.scene.add(light);
-    //this.scene.add(new CameraHelper(light.shadow.camera));
 
     light = new AmbientLight(0xFFFFFF, 0.9);
     this.scene.add(light);
@@ -313,20 +309,6 @@ export default class Scene {
         }
       }
     });
-
-    if (DEBUG_MODE) {
-      var material = new LineBasicMaterial({
-        color: 0x00ffff,
-      });
-      var geometry = new Geometry();
-      geometry.vertices.push(
-        new Vector3(0, 0, 0),
-        new Vector3(0, 0, 0)
-      );
-      this.controllerRay = new Line(geometry, material);
-      this.controllerRay.geometry.dynamic = true;
-      this.scene.add(this.controllerRay);
-    }
   }
 
   startGame() {
@@ -372,6 +354,7 @@ export default class Scene {
   }
 
   introPanAnimation() {
+    this.animate();
     return new Promise((resolve, reject) => {
       const tl = new TimelineMax();
       /*
@@ -459,8 +442,10 @@ export default class Scene {
       this.hud.countdown.setCountdown(n);
       n--;
       if (n < 0) {
+        // stop the countdown
         this.time.clearInterval(countdown);
         this.hud.countdown.hideCountdown();
+        // start game by adding ball
         if (this.config.mode === MODE.SINGLEPLAYER) {
           this.addBall();
           this.physics.initBallPosition();
