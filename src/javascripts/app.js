@@ -76,10 +76,6 @@ class PingPong {
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
-      // disable scrolling
-      $('canvas, .game-over-screen-wrapper').on('touchstart', e => {
-        // e.preventDefault();
-      });
       this.introAnimation();
     });
   }
@@ -548,7 +544,8 @@ class PingPong {
     return new Promise((resolve, reject) => {
       this.communication.chooseClosestServer().then(() => {
         let id = this.communication.openRoom();
-        $('#room-url').val(id);
+        $('#generated-room-code').val(id);
+        $('#generated-room-url').val(`pong.wild.plus/${id}`);
         $('.opponent-joined').text('Waiting for opponent...');
       }).catch(e => {
         console.log(e);
@@ -568,13 +565,14 @@ class PingPong {
         }, 1000);
       });
 
-      new Clipboard('#room-url');
+      new Clipboard('#generated-room-url');
+      new Clipboard('#generated-room-code');
       const tl = new TimelineMax();
       tl.set('.open-room-screen > div > *', {
         opacity: 0,
         y: 10,
       });
-      tl.set(['.open-room-screen #room-url', '.open-room-screen .grey-text'], {
+      tl.set(['#generated-room-code', '#generated-room-url', '.open-room-screen .grey-text'], {
         opacity: 0,
         y: 10,
       });
@@ -597,7 +595,7 @@ class PingPong {
         left: '0%',
         ease: screenTransitionEase,
       }, screenTransitionInterval, `-=${screenTransitionDuration + screenTransitionInterval}`);
-      tl.staggerTo(['.open-room-screen #room-url', '.open-room-screen .grey-text'], 0.3, {
+      tl.staggerTo(['#generated-room-code', '#generated-room-url', '.open-room-screen .grey-text'], 0.3, {
         y: 0,
         opacity: 1,
       });
