@@ -188,8 +188,22 @@ export default class Scene {
     this.emitter.on(EVENT.GAME_OVER, e => {
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
-      this.hud.message.setMessage('game over');
+      if (this.config.mode === MODE.SINGLEPLAYER) {
+        this.hud.message.setMessage(['game over', 'your score', `${this.score.highest} pts`]);
+      } else {
+          this.hud.message.setMessage(['game over',
+            this.score.self > this.score.opponent ? 'you won' : 'you lost',
+            `${this.score.self} : ${this.score.opponent}`]);
+      }
       this.hud.message.showMessage();
+      this.time.setTimeout(() => {
+        this.hud.message.hideMessage();
+        if (this.config.mode === MODE.MULTIPLAYER) {
+          this.playerRequestedRestart = true;
+          this.communication.sendRestartGame();
+        }
+        this.restartGame();
+      }, 2000);
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
 
@@ -508,6 +522,7 @@ export default class Scene {
     this.resetTimeoutDuration = 3000;
     this.hud.scoreDisplay.opponentScore.visible = true;
     this.hud.scoreDisplay.lifeGroup.visible = false;
+    this.scene.getObjectByName('net-collider').visible = true;
     // add callbacks for received actions
     this.communication.setCallbacks({
       move: this.receivedMove.bind(this),
@@ -527,6 +542,7 @@ export default class Scene {
     this.resetTimeoutDuration = 1500;
     this.hud.scoreDisplay.opponentScore.visible = false;
     this.hud.scoreDisplay.lifeGroup.visible = true;
+    this.scene.getObjectByName('net-collider').visible = false;
   }
 
   receivedMove(move) {
@@ -961,7 +977,9 @@ export default class Scene {
       this.updateControls();
     }
 
-    if (this.config.state === STATE.PLAYING || this.config.state === STATE.COUNTDOWN) {
+    if (this.config.state === STATE.PLAYING
+      || this.config.state === STATE.COUNTDOWN
+      || this.config.state === STATE.GAME_OVER) {
 
       if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
         // for multiplayer testing

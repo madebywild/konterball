@@ -179,6 +179,7 @@ WebVRManager.prototype.setMode_ = function(mode) {
 WebVRManager.prototype.onFSClick_ = function() {
   switch (this.mode) {
     case Modes.NORMAL:
+    case Modes.UNKNOWN:
       // TODO: Remove this hack if/when iOS gets real fullscreen mode.
       // If this is an iframe on iOS, break out and open in no_fullscreen mode.
       if (Util.isIOS() && Util.isIFrame()) {
@@ -230,6 +231,7 @@ WebVRManager.prototype.onVRClick_ = function() {
 };
 
 WebVRManager.prototype.requestFullscreen_ = function() {
+  console.log('request fs');
   var canvas = document.body;
   //var canvas = this.renderer.domElement;
   if (canvas.requestFullscreen) {

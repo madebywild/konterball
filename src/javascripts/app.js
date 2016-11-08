@@ -12,6 +12,10 @@ import Communication from './communication';
 
 document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
 
+const screenTransitionDuration = 1;
+const screenTransitionInterval = 0.1;
+const screenTransitionEase = Power4.easeInOut;
+
 class PingPong {
   constructor() {
     this.emitter = EventEmitter({});
@@ -149,33 +153,6 @@ class PingPong {
     });
   }
 
-  requestFullscreen() {
-    return;
-    if (!Util.isMobile()) {
-      return;
-    }
-    document.addEventListener('fullscreenchange', function(event) {
-      return;
-      if (document.fullscreen) {
-        screen.lockOrientationUniversal
-          = screen.lockOrientation
-          || screen.mozLockOrientation
-          || screen.msLockOrientation;
-        window.screen.lockOrientationUniversal('landscape-primary');
-      }
-    });
-    let i = document.documentElement;
-    if (i.requestFullscreen) {
-      i.requestFullscreen();
-    } else if (i.webkitRequestFullscreen) {
-      i.webkitRequestFullscreen();
-    } else if (i.mozRequestFullScreen) {
-      i.mozRequestFullScreen();
-    } else if (i.msRequestFullscreen) {
-      i.msRequestFullscreen();
-    }
-  }
-
   setupListeners() {
     this.emitter.on(EVENT.RESTART_GAME, () => {
       $('.game-over-screen-wrapper').hide();
@@ -183,23 +160,23 @@ class PingPong {
     });
 
     this.emitter.on(EVENT.GAME_OVER, (score, mode) => {
-      let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
-      $('.game-over-screen-wrapper').addClass(className);
-      $('.game-over-screen-wrapper').show();
-      if (document.exitPointerLock) {
-        document.exitPointerLock();
-      }
-      if (mode === MODE.MULTIPLAYER) {
-        if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
-          $('#result').text('You won!');
-        } else {
-          $('#result').text('Your opponent won!');
-        }
-        $('#score').text(`You ${score.self} : ${score.opponent} Opponent`);
-      } else {
-        $('#result').text('Game Over');
-        $('#score').text(`Your highscore this round: ${score.highest}`);
-      }
+      // let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
+      // $('.game-over-screen-wrapper').addClass(className);
+      // $('.game-over-screen-wrapper').show();
+      // if (document.exitPointerLock) {
+      //   document.exitPointerLock();
+      // }
+      // if (mode === MODE.MULTIPLAYER) {
+      //   if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
+      //     $('#result').text('You won!');
+      //   } else {
+      //     $('#result').text('Your opponent won!');
+      //   }
+      //   $('#score').text(`You ${score.self} : ${score.opponent} Opponent`);
+      // } else {
+      //   $('#result').text('Game Over');
+      //   $('#score').text(`Your highscore this round: ${score.highest}`);
+      // }
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
       // TODO
@@ -229,28 +206,24 @@ class PingPong {
       '.intro-screen p',
       '.intro-screen button',
       '.intro-screen',
-    ], 0.5, {
+    ], screenTransitionDuration, {
       x: $(window).width(),
-      ease: Power2.easeInOut,
-    }, 0.05);
+      ease: screenTransitionEase,
+    }, screenTransitionInterval);
     tl.set('.intro-screen', {display: 'none'});
     tl.call(() => {
       this.introBallTween.kill();
       this.introOver = true;
     });
-    tl.to([
-    ], 0.5, {
-      left: '100%',
-    }, 0.5);
     tl.staggerTo([
       '.transition-color-screen.pink',
       '.transition-color-screen.blue',
       '.transition-color-screen.green',
       '.choose-mode-screen',
-    ], 0.5, {
+    ], screenTransitionDuration, {
       left: '0%',
-      ease: Power2.easeInOut,
-    }, 0.1, '-=0.9');
+      ease: screenTransitionEase,
+    }, screenTransitionInterval, `-=${screenTransitionDuration + screenTransitionInterval}`);
     tl.set([
       '.transition-color-screen.pink',
       '.transition-color-screen.blue',
@@ -316,7 +289,6 @@ class PingPong {
         $('.choose-vr-mode-screen').removeClass('blue green');
         $('.choose-vr-mode-screen').addClass('pink');
       }
-      this.requestFullscreen();
       this.scene.setSingleplayer();
       this.viewVRChooserScreen().then(() => {
         bodymovin.stop();
@@ -336,7 +308,6 @@ class PingPong {
         $('.choose-vr-mode-screen').removeClass('pink green');
         $('.choose-vr-mode-screen').addClass('blue');
       }
-      this.requestFullscreen();
       this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
         bodymovin.stop();
@@ -356,7 +327,6 @@ class PingPong {
         $('.choose-vr-mode-screen').removeClass('pink blue');
         $('.choose-vr-mode-screen').addClass('green');
       }
-      // this.requestFullscreen();
       this.scene.setMultiplayer();
       if (window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1) {
         $('#room-code').val(window.location.pathname.slice(1));
@@ -408,15 +378,11 @@ class PingPong {
       this.scene.controlMode = 'VR';
       this.scene.manager.enterVRMode_();
       this.scene.startGame();
-      console.log('start game');
     });
 
     $('#tilt').on('click', () => {
-      console.log(this.scene.manager.mode);
-      this.scene.manager.onFSClick_();
-
-      // TODO 
       if (Util.isMobile()) {
+        this.scene.manager.onFSClick_();
         this.scene.setupVRControls();
         this.scene.controlMode = 'VR';
       } else {
@@ -482,19 +448,20 @@ class PingPong {
         '.open-room-screen',
         '.join-room-screen',
         '.choose-mode-screen',
-      ], 0.5, {
+      ], screenTransitionDuration, {
         left: '100%',
-        ease: Power2.easeInOut,
+        ease: screenTransitionEase,
       });
       tl.staggerTo([
         '.transition-color-screen.pink',
         '.transition-color-screen.blue',
         '.transition-color-screen.green',
         '.choose-vr-mode-screen',
-      ], 0.5, {
+      ], screenTransitionDuration, {
         left: '0%',
-        ease: Power2.easeInOut,
-      }, 0.1, '-=0.6');
+        ease: screenTransitionEase,
+      }, screenTransitionInterval, `-=${screenTransitionDuration + screenTransitionInterval}`);
+      tl.call(resolve);
     });
   }
 
@@ -529,18 +496,19 @@ class PingPong {
       tl.set('.choose-mode-screen', {zIndex: 10});
       tl.set('.transition-color-screen', {zIndex: 11});
       tl.set('.join-room-screen', {zIndex: 12});
-      tl.to('.choose-mode-screen', 0.5, {
+      tl.to('.choose-mode-screen', screenTransitionDuration, {
         left: '100%',
+        ease: screenTransitionEase,
       });
       tl.staggerTo([
         '.transition-color-screen.pink',
         '.transition-color-screen.blue',
         '.transition-color-screen.green',
         '.join-room-screen',
-      ], 0.5, {
+      ], screenTransitionDuration, {
         left: '0%',
-        ease: Power2.easeInOut,
-      }, 0.1, '-=0.6');
+        ease: screenTransitionEase,
+      }, screenTransitionInterval, `-=${screenTransitionDuration - screenTransitionInterval}`);
       tl.staggerTo([
         '.join-room-screen .present-players',
         '.join-room-screen #room-code',
@@ -564,16 +532,16 @@ class PingPong {
       '.transition-color-screen.green',
       '.transition-color-screen.blue',
       '.transition-color-screen.pink',
-    ], 0.5, {
+    ], screenTransitionDuration, {
       left: '-100%',
-      ease: Power2.easeInOut,
-    }, 0.1);
+      ease: screenTransitionEase,
+    }, screenTransitionInterval);
     tl.to([
       '.choose-mode-screen',
-    ], 0.5, {
+    ], screenTransitionDuration, {
       left: '0%',
-      ease: Power2.easeInOut,
-    }, '-=0.5');
+      ease: screenTransitionEase,
+    }, `-=${screenTransitionDuration - screenTransitionInterval}`);
   }
 
   viewOpenRoomScreenAnimation() {
@@ -616,18 +584,19 @@ class PingPong {
       tl.set('.choose-mode-screen', {zIndex: 10});
       tl.set('.transition-color-screen', {zIndex: 11});
       tl.set('.open-room-screen', {zIndex: 12});
-      tl.to('.choose-mode-screen', 0.5, {
+      tl.to('.choose-mode-screen', screenTransitionDuration, {
         left: '100%',
+        ease: screenTransitionEase,
       });
       tl.staggerTo([
         '.transition-color-screen.pink',
         '.transition-color-screen.blue',
         '.transition-color-screen.green',
         '.open-room-screen',
-      ], 0.5, {
+      ], screenTransitionDuration, {
         left: '0%',
-        ease: Power2.easeInOut,
-      }, 0.1, '-=0.6');
+        ease: screenTransitionEase,
+      }, screenTransitionInterval, `-=${screenTransitionDuration + screenTransitionInterval}`);
       tl.staggerTo(['.open-room-screen #room-url', '.open-room-screen .grey-text'], 0.3, {
         y: 0,
         opacity: 1,

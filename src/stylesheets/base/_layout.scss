@@ -153,3 +153,21 @@ button.inactive {
   top: 0;
   left: -100%;
 }
+.webvr-button {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  background-size: cover;
+  background-color: transparent;
+  border: 0;
+  user-select: none;
+  cursor: pointer;
+  padding: 20px;
+  z-index: 1;
+  display: none;
+  box-sizing: content-box;
+}
+.fullscreen-button {
+  bottom: 0;
+  right: 0;
+}

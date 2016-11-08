@@ -1,5 +1,6 @@
 import wrap from 'wordwrap';
 import {Group, MeshBasicMaterial, TextGeometry, Mesh} from 'three';
+import $ from 'jquery';
 
 const CHAR_LIMIT = 16;
 const FONT_SIZE = 0.07;
@@ -12,14 +13,17 @@ export default class Message {
     this.config = config;
     this.wrap = wrap(CHAR_LIMIT);
     this.messageGroup = new Group();
-    this.messageGroup.position.z = this.config.tablePositionZ;
     this.setMessage('waiting');
-    this.scene.add(this.messageGroup);
   }
 
   setMessage(text) {
     this.messageGroup.remove(...this.messageGroup.children);
-    let splitText = this.wrap(text).split('\n').reverse();
+    let splitText = [];
+    if ($.isArray(text)) {
+      splitText = text.reverse();
+    } else {
+      splitText = this.wrap(text).split('\n').reverse();
+    }
     let material = new MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
@@ -43,6 +47,8 @@ export default class Message {
     });
     let height = splitText.length * (LINE_SPACING + lineHeight);
     this.messageGroup.position.y = this.config.tableHeight + height / 2 + 0.2;
+    this.messageGroup.position.z = this.config.tablePositionZ;
+    this.scene.add(this.messageGroup);
   }
 
   showMessage() {
