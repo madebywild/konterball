@@ -187,6 +187,7 @@ export default class Scene {
 
   setupEventListeners() {
     this.emitter.on(EVENT.GAME_OVER, e => {
+      this.sound.playLoop('bass-pad-synth');
       this.ball.visible = false;
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
@@ -246,8 +247,9 @@ export default class Scene {
   }
 
   setupThree() {
-    this.renderer = new WebGLRenderer({antialias: true});
+    this.renderer = new WebGLRenderer({antialias: false});
     this.renderer.setPixelRatio(window.devicePixelRatio);
+    // this.renderer.setPixelRatio(0.5);
     this.renderer.shadowMap.enabled = true;
     // this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.shadowMap.type = BasicShadowMap;
@@ -275,8 +277,8 @@ export default class Scene {
     light.shadow.camera.bottom = 0.8;
     light.shadow.camera.top = 3.4;
     light.castShadow = true;
-    light.shadow.mapSize.width = (this.isMobile ? 1 : 1) * 512;
-    light.shadow.mapSize.height = (this.isMobile ? 1 : 1) * 512;
+    light.shadow.mapSize.width = (this.isMobile ? 1 : 2) * 512;
+    light.shadow.mapSize.height = (this.isMobile ? 1 : 2) * 512;
     this.scene.add(light);
     // this.scene.add(new CameraHelper(light.shadow.camera));
 
@@ -352,10 +354,8 @@ export default class Scene {
       this.hud.container.visible = true;
       this.setupVRControls();
       if (this.config.mode === MODE.SINGLEPLAYER) {
-        this.sound.playLoop('game1');
         this.countdown();
       } else {
-        this.sound.playLoop('game2');
         this.paddleOpponent.visible = true;
         this.communication.sendRequestCountdown();
         this.playerRequestedCountdown = true;
@@ -366,7 +366,6 @@ export default class Scene {
 
   introPanAnimation() {
     this.animate();
-    console.log('animate!');
     return new Promise((resolve, reject) => {
       const tl = new TimelineMax();
       /*
@@ -445,6 +444,7 @@ export default class Scene {
   }
 
   countdown() {
+    this.sound.playLoop('bass');
     window.scrollTo(0, 1);
     this.hud.message.hideMessage();
     this.config.state = STATE.COUNTDOWN;
@@ -1012,6 +1012,11 @@ export default class Scene {
     this.frameNumber++;
     this.mouseMoveSinceLastFrame.x = 0;
     this.mouseMoveSinceLastFrame.y = 0;
+
+    // debug
+    // if (this.frameNumber % 100 === 0) {
+    //   console.log(this.renderer.info.render);
+    // }
 
     // Render the scene through the manager.
     this.manager.render(this.scene, this.camera, this.timestamp);

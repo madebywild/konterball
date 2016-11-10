@@ -76,7 +76,6 @@ class PingPong {
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
-      console.log('done loading');
       this.introAnimation();
     });
   }
@@ -146,6 +145,9 @@ class PingPong {
         $ball.attr('cy', no.y);
       },
     }, 0);
+    this.introBallTween.call(() => {
+
+    });
     this.introBallTween.to(no, 0.8, {
       y: startY + 150,
       ease: Power1.easeOut,
@@ -194,6 +196,7 @@ class PingPong {
       noSleep.enable();
     }
 
+    this.scene.sound.playLoop('bass-pad');
     this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
     tl.set('.choose-mode-screen h3, .choose-mode-screen svg, .buttons', {

@@ -3,14 +3,13 @@ import {rand, cap} from 'util/helpers';
 import {MODE} from './constants';
 import $ from 'jquery';
 
-const url = `https://s3.eu-central-1.amazonaws.com/pingpongsound/`;
-
 export default class SoundManager {
   constructor(config) {
     this.config = config;
     this.muted = false;
     this.paddleSounds = [];
     this.tableSounds = [];
+    let url = `/audio/menu/`;
     for (let i = 1; i <= 3; i++) {
       this.paddleSounds.push(new Howl({
         src: `${url}racket0${i}.mp3`,
@@ -27,12 +26,12 @@ export default class SoundManager {
     this.uiSounds.set('transition', new Howl({src: `${url}transition.mp3`}));
     this.uiSounds.set('win', new Howl({src: `${url}win.mp3`}));
 
+    url = `/audio/loops/`;
     this.loopSounds = new Map();
-    this.loopSounds.set('game1', new Howl({loop: true, src: `${url}music_game01.mp3`}));
-    this.loopSounds.set('game2', new Howl({loop: true, src: `${url}music_game02.mp3`}));
-    this.loopSounds.set('menu', new Howl({loop: true, src: `${url}music_menu.mp3`}));
-    this.loopSounds.set('waiting', new Howl({loop: true, src: `${url}waiting.mp3`}));
-    this.loopSounds.get('menu').play();
+    this.loopSounds.set('bass', new Howl({loop: true, src: `${url}loop1-bass.mp3`}));
+    this.loopSounds.set('bass-pad', new Howl({loop: true, src: `${url}loop1-bass-pad.mp3`}));
+    this.loopSounds.set('bass-pad-synth', new Howl({loop: true, src: `${url}loop1-bass-pad-synth.mp3`}));
+    this.loopSounds.get('bass').play();
     if (localStorage.muted === 'true') {
       this.mute();
     }
@@ -40,14 +39,18 @@ export default class SoundManager {
 
   playLoop(keyLoop) {
     let key = '';
+    let pos = 0;
     for (key of this.loopSounds.keys()) {
-      this.loopSounds.get(key).stop();
+      if (this.loopSounds.get(key).playing()) {
+        pos = this.loopSounds.get(key).seek();
+        this.loopSounds.get(key).stop();
+      }
     }
+    this.loopSounds.get(keyLoop).seek(pos);
     this.loopSounds.get(keyLoop).play();
   }
 
   playUI(id) {
-    console.log(id);
     this.uiSounds.get(id).play();
   }
 
