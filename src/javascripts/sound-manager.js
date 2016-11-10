@@ -55,13 +55,12 @@ export default class SoundManager {
   }
 
   paddle(point={x: 0, y: 0, z: 0}) {
-    point = point || {x: 0, y: 0, z: 0};
     let i = rand(0, this.paddleSounds.length);
     this.paddleSounds[i].pos(point.x, point.y, point.z);
     this.paddleSounds[i].play();
   }
 
-  table(point={x: 0, y: 0, z: 0}, velocity={x: 0, y: 0, z: 0}) {
+  table(point={x: 0, y: 0, z: 0}, velocity={x: 0, y: -1, z: -1}) {
     if (point.y > this.config.tableHeight + 0.1 && this.config.mode === MODE.MULTIPLAYER) {
       // ball hit vertical table but its not visible
       return;
@@ -76,11 +75,6 @@ export default class SoundManager {
       this.tableSounds[i].volume(cap(velocity.y * -0.5, 0, 1));
     }
     this.tableSounds[i].play();
-  }
-
-  gameOver() {
-    return;
-    this.gameOverSound.play();
   }
 
   toggleMute() {

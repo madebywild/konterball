@@ -144,10 +144,12 @@ class PingPong {
       onUpdate: () => {
         $ball.attr('cy', no.y);
       },
+      onComplete: () => {
+      },
     }, 0);
     this.introBallTween.call(() => {
-
-    });
+      this.scene.sound.table();
+    }, null, null, '-=0.39');
     this.introBallTween.to(no, 0.8, {
       y: startY + 150,
       ease: Power1.easeOut,
@@ -589,6 +591,8 @@ class PingPong {
           this.viewVRChooserScreen();
         }, 1000);
       });
+
+      this.scene.sound.playUI('transition');
 
       new Clipboard('#generated-room-url');
       new Clipboard('#generated-room-code');
