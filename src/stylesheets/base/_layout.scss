@@ -47,6 +47,15 @@ button.btn {
   letter-spacing: 0.15em;
   color: #fff;
   margin-top: 15px;
+  padding: 22px 32px;
+  padding-top: 24px;
+  font-size: 12px;
+}
+@media screen and (max-width: $breakpoint-mobile-max) {
+  button.btn {
+    padding: 16px 25px;
+    padding-top: 17px;
+  }
 }
 button:focus, textarea:focus, input:focus{
   outline: none;
@@ -109,40 +118,43 @@ button.inactive {
   color: $medium-grey;
   @extend .futura-italic;
 }
-.present-players {
-  width: 50%;
-  margin: auto;
-  img {
-    width: 30px;
-    height: auto;
-    margin: 40px 10px;
-  }
-}
-.opponent-icon {
-  opacity: 0.3;
-}
 .mute {
   padding: 20px;
+  padding-bottom: 13px;
   border: 0;
   left: 0;
   bottom: 0;
   position: fixed;
   z-index: 100;
   img {
-    width: 20px;
+    width: 25px;
     height: auto;
+  }
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    padding-left: 15px;
+    padding-bottom: 8px;
+    img {
+      width: 20px;
+    }
   }
 }
 .exit-arrow,
 .back-arrow {
-  padding: 20px;
+  padding: 18px;
   border: 0;
   left: 0;
   top: 0;
   position: absolute;
   img {
-    width: 30px;
+    width: 25px;
     height: auto;
+  }
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    padding-left: 15px;
+    padding-top: 13px;
+    img {
+      width: 20px;
+    }
   }
 }
 .transition-color-screen {

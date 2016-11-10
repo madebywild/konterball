@@ -99,14 +99,14 @@ export default class SoundManager {
   }
 
   mute() {
-    $('.mute img').attr('src', 'images/icon-unmute.svg');
+    $('.mute img').attr('src', 'images/icon-mute.svg');
     localStorage.muted = 'true';
     Howler.mute(true);
     this.muted = true;
   }
 
   unmute() {
-    $('.mute img').attr('src', 'images/icon-mute.svg');
+    $('.mute img').attr('src', 'images/icon-unmute.svg');
     localStorage.muted = 'false';
     Howler.mute(false);
     this.muted = false;

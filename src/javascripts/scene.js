@@ -5,6 +5,7 @@ import {
   WebGLRenderer,
   TextureLoader,
   PCFSoftShadowMap,
+  BasicShadowMap,
   PerspectiveCamera,
   DirectionalLight,
   CameraHelper,
@@ -186,6 +187,7 @@ export default class Scene {
 
   setupEventListeners() {
     this.emitter.on(EVENT.GAME_OVER, e => {
+      this.ball.visible = false;
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
       if (this.config.mode === MODE.SINGLEPLAYER) {
@@ -216,15 +218,6 @@ export default class Scene {
       }
     }, false);
 
-    $(window).on('blur', () => {
-      this.tabActive = false;
-      this.sound.blur();
-    });
-
-    $(window).on('focus', () => {
-      this.tabActive = true;
-      this.sound.focus();
-    });
   }
 
   setupVRControls() {
@@ -256,7 +249,8 @@ export default class Scene {
     this.renderer = new WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = PCFSoftShadowMap;
+    // this.renderer.shadowMap.type = PCFSoftShadowMap;
+    this.renderer.shadowMap.type = BasicShadowMap;
 
     document.body.appendChild(this.renderer.domElement);
 
@@ -274,14 +268,17 @@ export default class Scene {
     light.position.z = this.config.tablePositionZ;
     light.position.z = 2;
     light.position.y = 4;
-    light.shadow.camera.near = 2.5;
-    light.shadow.camera.far = 6.2;
-    light.shadow.camera.left = -1;
-    light.shadow.camera.right = 1;
+    light.shadow.camera.near = 3.5;
+    light.shadow.camera.far = 5.4;
+    light.shadow.camera.left = -this.config.tableWidth / 2;
+    light.shadow.camera.right = this.config.tableWidth / 2;
+    light.shadow.camera.bottom = 0.8;
+    light.shadow.camera.top = 3.4;
     light.castShadow = true;
-    light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
-    light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
+    light.shadow.mapSize.width = (this.isMobile ? 1 : 1) * 512;
+    light.shadow.mapSize.height = (this.isMobile ? 1 : 1) * 512;
     this.scene.add(light);
+    // this.scene.add(new CameraHelper(light.shadow.camera));
 
     light = new AmbientLight(0xFFFFFF, 0.9);
     this.scene.add(light);
@@ -756,6 +753,7 @@ export default class Scene {
   addBall() {
     this.config.state = STATE.PLAYING;
     if (this.ball) {
+      this.ball.visible = true;
       this.physics.initBallPosition();
       this.restartPingpongTimeout();
       return;

@@ -6,16 +6,16 @@ $margin: 4vh;
   @extend .screen;
   h3 {
     font-family: AntiqueOlive;
-    font-size: calc(30px + 0.5vw);
     text-transform: uppercase;
-    font-size: 40px;
+    font-size: 60px;
+    line-height: 1em;
     margin-bottom: 20px;
     margin-top: 0;
     color: #fff;
     position: absolute;
-    top: 10vh;
+    top: 12vh;
     width: 100%;
-    letter-spacing: 4px;
+    letter-spacing: 2px;
     font-weight: normal;
   }
   .one-player-col, .two-player-col {
@@ -26,13 +26,19 @@ $margin: 4vh;
   .buttons {
     position: absolute;
     width: 100%;
-    bottom: 10vh;
+    bottom: 12vh;
   }
-  @media screen and (max-width: $breakpoint-mobile-max) {
-    font-size: 15px;
-    h3 {
-      font-size: 25px;
-    }
+  #join-room {
+    margin-left: 15px;
+    margin-right: 0;
+  }
+  #open-room {
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .btn {
+    margin-left: 10px;
+    margin-right: 10px;
   }
   .one-player-col {
     background-color: $pink-background;
@@ -52,14 +58,50 @@ $margin: 4vh;
       top: $margin * 1.5;
     }
   }
+  // optically center the table animations
   #singleplayer-animation {
-    width: 70%;
+    width: 64%;
     margin: auto;
     @extend .absolute-center;
+    transform: translate(-55%, -45%);
   }
   #multiplayer-animation {
     width: 85%;
     margin: auto;
     @extend .absolute-center;
+    transform: translate(-50%, -45%);
+  }
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    #singleplayer-animation {
+      width: 60%;
+      transform: translate(-55%, -48%);
+    }
+    #multiplayer-animation {
+      width: 80%;
+      transform: translate(-50%, -48%);
+    }
+    .buttons {
+      bottom: 10vh;
+    }
+    .btn {
+      padding: 20px;
+      padding-top: 15px;
+      padding-bottom: 13px;
+    }
+    h3 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+  }
+  @media screen and (max-width: 600px) {
+    .btn {
+      padding: 10px;
+      padding-top: 15px;
+      padding-bottom: 13px;
+      font-size: 10px;
+    }
+    #join-room {
+      margin-left: 5px;
+    }
   }
 }

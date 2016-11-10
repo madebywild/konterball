@@ -1,6 +1,7 @@
 .intro-screen {
   @extend .screen;
   svg {
+    position: absolute;
     width: 100vw;
     height: 100vh;
     object-fit: cover;
@@ -11,7 +12,9 @@
       fill: rgba(0, 0, 0, 0.3);
     }
   }
-
+  .ball-svg {
+    pointer-events: none;
+  }
   header {
     text-transform: uppercase;
     font-size: $font-size-olive;
@@ -21,12 +24,13 @@
     position: relative;
     h1 {
       opacity: 0.4;
-      font-size: $font-size-olive;
       font-family: AntiqueOlive;
       font-weight: normal;
+      margin: 0;
+      font-size: calc(20px + 7vw);
     }
-    span {
-      font-size: $font-size-olive;
+    .loading-text-overlay {
+      font-size: calc(20px + 7vw);
       font-family: AntiqueOlive;
       font-weight: normal;
       display: block;
@@ -39,25 +43,38 @@
       overflow: hidden;
     }
   }
-
-  .inner {
-    @extend .absolute-center;
-    & > * {
-      transform: translateY(70px);
-    }
-  }
-  h1 {
-    margin: 0;
-  }
   p {
     @extend .futura-italic;
     opacity: 0;
-    font-size: calc(15px + 0.8vw);
+    font-size: 30px;
+    font-size: calc(8px + 7vw / 4);
     letter-spacing: 0.03em;
     margin-bottom: 50px;
     margin-top: 10px;
   }
+  .no-break {
+    display: inline-block;
+    text-shadow: 0 0 30px transparentize(#0e2850, 0);
+  }
+  .btn {
+    margin-top: 0;
+  }
+  .inner {
+    @extend .absolute-center;
+    & > * {
+      transform: translateY(50px);
+    }
+  }
   #start {
     opacity: 0;
+  }
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    .inner {
+      margin-top: 10px;
+    }
+    p {
+      margin-top: 5px;
+      margin-bottom: 25px;
+    }
   }
 }

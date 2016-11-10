@@ -76,13 +76,28 @@ class PingPong {
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
+      console.log('done loading');
       this.introAnimation();
+    });
+  }
+
+  loadingAnimation() {
+    return new Promise((resolve, reject) => {
+      TweenMax.to('header span', 0.5, {
+        ease: SlowMo.ease.config(0.3, 0.7, false),
+        width: '100%',
+        onComplete: () => {
+          $('header h1').css('opacity', 1);
+          $('header span').remove();
+          resolve();
+        }
+      });
     });
   }
 
   introAnimation() {
     TweenMax.to(['.intro-screen > div > *'], 0.5, {
-      y: 10,
+      y: 0,
     });
     TweenMax.to(['.intro-screen > div > *'], 0.2, {
       opacity: 1,
@@ -110,13 +125,18 @@ class PingPong {
     const $shadow = $('#ball-shadow');
     const width = $('.intro-screen svg').width();
     const startY = no.y;
+    const shadowPos = 840;
     this.introBallTween.to(no, 1, {
       x: no.x > 0 ? -ballRadius : 1920 + ballRadius,
       ease: Power0.easeNone,
       onUpdate: () => {
         $ball.attr('cx', no.x);
         $shadow.attr('cx', no.x);
-        $shadow.attr('cy', 800);
+        $shadow.attr('cy', shadowPos);
+        let rx = 40 + 15 * (1 - (shadowPos - no.y) / shadowPos);
+        let ry = rx / 2;
+        $shadow.attr('rx', rx);
+        $shadow.attr('ry', ry);
       },
     }, 0);
     this.introBallTween.to(no, 0.6, {
@@ -133,20 +153,6 @@ class PingPong {
         $ball.attr('cy', no.y);
       },
     }, 0.6);
-  }
-
-  loadingAnimation() {
-    return new Promise((resolve, reject) => {
-      TweenMax.to('header span', 0.5, {
-        ease: SlowMo.ease.config(0.3, 0.7, false),
-        width: '100%',
-        onComplete: () => {
-          $('header h1').css('opacity', 1);
-          $('header span').remove();
-          resolve();
-        }
-      });
-    });
   }
 
   setupListeners() {
@@ -197,13 +203,14 @@ class PingPong {
     tl.set('.intro-screen', {zIndex: 10});
     tl.set('.transition-color-screen', {zIndex: 11});
     tl.set('.choose-mode-screen', {zIndex: 12});
+    const width = $(window).width();
     tl.staggerTo([
       '.intro-screen h1',
       '.intro-screen p',
       '.intro-screen button',
       '.intro-screen',
     ], screenTransitionDuration, {
-      x: $(window).width(),
+      x: width,
       ease: screenTransitionEase,
     }, screenTransitionInterval);
     tl.set('.intro-screen', {display: 'none'});
@@ -232,12 +239,17 @@ class PingPong {
       '#multiplayer-animation svg',
       '.one-player-col h3',
       '.two-player-col h3',
+    ], 0.3, {
+      y: 0,
+      opacity: 1,
+    }, 0.1);
+    tl.staggerTo([
       '.one-player-col .buttons',
       '.two-player-col .buttons',
     ], 0.3, {
       y: 0,
       opacity: 1,
-    }, 0.1);
+    }, 0.1, '+=0.2');
   }
   
   loadModeChooserAnimation() {
@@ -268,6 +280,16 @@ class PingPong {
   }
 
   setupHandlers() {
+    $(window).on('blur', () => {
+      this.scene.tabActive = false;
+      this.scene.sound.blur();
+    });
+
+    $(window).on('focus', () => {
+      this.scene.tabActive = true;
+      this.scene.sound.focus();
+    });
+
     $('#start').on('click', () => {
       $('body').scrollTop(80);
       this.showModeChooserScreen();
@@ -335,7 +357,7 @@ class PingPong {
 
     $('#play-again').on('click', () => {
       if (this.scene.config.mode === MODE.MULTIPLAYER) {
-        $('#play-again').text('Waiting for opponent to restart...');
+        $('#play-again').text('waiting for opponent to restart');
         this.scene.playerRequestedRestart = true;
         this.communication.sendRestartGame();
       }
@@ -475,7 +497,7 @@ class PingPong {
       });
       $('#room-form').on('submit', e => {
         e.preventDefault();
-        $('#room-form .grey-text').text('Connecting to server...');
+        $('#room-form .grey-text').text('connecting to server');
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
           this.viewVRChooserScreen();
         }).catch(e => {
@@ -507,7 +529,7 @@ class PingPong {
       }, screenTransitionInterval, `-=${screenTransitionDuration - screenTransitionInterval}`);
       tl.staggerTo([
         '.join-room-screen .present-players',
-        '.join-room-screen #room-code',
+        '.join-room-screen .input-wrapper',
         '.join-room-screen .grey-text',
         '.join-room-screen #join-room-button',
       ], 0.3, {
@@ -546,10 +568,10 @@ class PingPong {
         let id = this.communication.openRoom();
         $('#generated-room-code').val(id);
         $('#generated-room-url').val(`pong.wild.plus/${id}`);
-        $('.opponent-joined').text('Waiting for opponent...');
+        $('.opponent-joined').text('waiting for opponent');
       }).catch(e => {
         console.log(e);
-        $('.opponent-joined').text('Cannot connect to server');
+        $('.opponent-joined').text('cannot connect to server');
         TweenMax.killTweensOf('.opponent-joined');
         TweenMax.set('.opponent-joined', {visibility: 'visible', opacity: 1});
       });
@@ -594,7 +616,7 @@ class PingPong {
       ], screenTransitionDuration, {
         left: '0%',
         ease: screenTransitionEase,
-      }, screenTransitionInterval, `-=${screenTransitionDuration + screenTransitionInterval}`);
+      }, screenTransitionInterval, `-=${screenTransitionDuration}`);
       tl.staggerTo(['#generated-room-code', '#generated-room-url', '.open-room-screen .grey-text'], 0.3, {
         y: 0,
         opacity: 1,

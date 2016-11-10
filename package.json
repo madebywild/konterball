@@ -107,6 +107,7 @@
     "randomstring": "^1.1.5",
     "three": "^0.82.1",
     "webvr-polyfill": "^0.9.20",
-    "wordwrap": "^1.0.0"
+    "wordwrap": "^1.0.0",
+    "worker-loader": "^0.7.1"
   }
 }

@@ -17,22 +17,93 @@
     border: 0;
     color: #fff;
     padding: 0;
-    font-size: $font-size-olive;
+    font-size: 120px;
     letter-spacing: 0.05em;
     width: 100%;
   }
+  .present-players {
+    width: 50%;
+    margin: auto;
+    svg {
+      width: 40px;
+      height: auto;
+      margin: 40px 5px;
+      margin-top: 10px;
+    }
+  }
   #generated-room-url {
     font-family: FuturaItalic;
-    font-size: 30px;
-    margin-bottom: 15px;
+    font-size: 40px;
+    margin-bottom: 0;
+    margin-top: -24px;
   }
   #room-code {
     text-transform: uppercase;
   }
+  .opponent-joined {
+    font-family: FuturaItalic;
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+  .grey-text {
+    margin-top: 5px;
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    input {
+      font-size: 90px;
+    }
+    #generated-room-url {
+      font-size: 30px;
+      margin-top: -30px;
+    }
+    .opponent-joined {
+      margin-top: 10px;
+    }
+    .grey-text {
+      margin-bottom: 0;
+      margin-top: -10px;
+    }
+  }
 }
 .open-room-screen {
   background-color: $blue-background;
+  .opponent-icon {
+    circle, path {
+      fill: $blue-inactive;
+    }
+  }
+  .grey-text {
+    color: $blue-inactive;
+  }
 }
 .join-room-screen {
   background-color: $green-background;
+  .opponent-icon {
+    circle, path {
+      fill: $green-inactive;
+    }
+  }
+  .grey-text {
+    color: $green-inactive;
+  }
+  .input-wrapper {
+    position: relative;
+    &::after {
+      font-family: AntiqueOlive;
+      z-index: 1000;
+      content: '____';
+      letter-spacing: 40px;
+      text-align: center;
+      display: block;
+      color: #fff;
+      font-size: 160px;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      margin: auto;
+    }
+  }
 }

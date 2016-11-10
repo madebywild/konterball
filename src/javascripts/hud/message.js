@@ -35,7 +35,7 @@ export default class Message {
         font: this.font,
         size: FONT_SIZE,
         height: 0.001,
-        curveSegments: 3,
+        curveSegments: 1,
       });
       geometry.computeBoundingBox();
       let message = new Mesh(geometry, material);

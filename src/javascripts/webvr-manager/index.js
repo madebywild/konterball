@@ -180,19 +180,6 @@ WebVRManager.prototype.onFSClick_ = function() {
   switch (this.mode) {
     case Modes.NORMAL:
     case Modes.UNKNOWN:
-      // TODO: Remove this hack if/when iOS gets real fullscreen mode.
-      // If this is an iframe on iOS, break out and open in no_fullscreen mode.
-      if (Util.isIOS() && Util.isIFrame()) {
-        if (this.fullscreenCallback) {
-          this.fullscreenCallback();
-        } else {
-          var url = window.location.href;
-          url = Util.appendQueryParameter(url, 'no_fullscreen', 'true');
-          url = Util.appendQueryParameter(url, 'start_mode', Modes.MAGIC_WINDOW);
-          top.location.href = url;
-          return;
-        }
-      }
       this.setMode_(Modes.MAGIC_WINDOW);
       this.requestFullscreen_();
       break;
@@ -231,7 +218,6 @@ WebVRManager.prototype.onVRClick_ = function() {
 };
 
 WebVRManager.prototype.requestFullscreen_ = function() {
-  console.log('request fs');
   var canvas = document.body;
   //var canvas = this.renderer.domElement;
   if (canvas.requestFullscreen) {
@@ -242,6 +228,9 @@ WebVRManager.prototype.requestFullscreen_ = function() {
     canvas.webkitRequestFullscreen();
   } else if (canvas.msRequestFullscreen) {
     canvas.msRequestFullscreen();
+  } else if (Util.isIOS()) {
+    window.scrollTo(0, 80);
+
   }
 };
 
