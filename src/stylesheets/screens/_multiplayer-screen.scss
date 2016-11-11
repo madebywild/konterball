@@ -90,18 +90,18 @@
   }
   .input-wrapper {
     position: relative;
-    &::after {
+    .placeholder {
+      pointer-events: none;
       font-family: AntiqueOlive;
-      z-index: 1000;
-      content: '____';
-      letter-spacing: 40px;
+      letter-spacing: 30px;
       text-align: center;
       display: block;
       color: #fff;
       font-size: 160px;
       position: absolute;
-      bottom: 0;
-      left: 0;
+      height: 100%;
+      bottom: 30px;
+      left: 30px;
       right: 0;
       margin: auto;
     }

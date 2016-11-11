@@ -26,12 +26,23 @@ export default class Hud {
     this.modeWasSelected = false;
   }
 
-
   setup() {
+    let fontloader = new FontLoader();
     return new Promise((resolve, reject) => {
-      let fontloader = new FontLoader();
-      fontloader.load('fonts/futura.json', font => {
-        this.font = font;
+      Promise.all([
+        new Promise((resolve, reject) => {
+          fontloader.load('fonts/AntiqueOlive.json', font => {
+            this.antique = font;
+            resolve();
+          });
+        }),
+        new Promise((resolve, reject) => {
+          fontloader.load('fonts/Futura.json', font => {
+            this.font = font;
+            resolve();
+          });
+        }),
+      ]).then(result => {
         this.container = new Group();
         this.container.position.z = 1;
         this.container.position.y = 1.6;
@@ -40,18 +51,24 @@ export default class Hud {
 
         this.initialized = true;
 
-        this.message = new Message(this.scene, this.config, this.font);
+        this.message = new Message(this.scene, this.config, this.font, this.antique, this.emitter);
         this.message.hideMessage();
 
         this.scoreDisplay = new ScoreDisplay(this.scene, this.config, this.font);
-        this.countdown = new Countdown(this.scene, this.config, this.font);
+        this.countdown = new Countdown(this.scene, this.config, this.antique);
         this.countdown.hideCountdown();
         Arrows(this.font, this.loader).then(arrow => {
           this.arrows = arrow;
           this.scene.add(arrow);
           resolve();
+        }).catch(e => {
+          console.log(e);
         });
+      }).catch(e => {
+        console.log(e);
       });
+    }).catch(e => {
+      console.log(e);
     });
   }
 }

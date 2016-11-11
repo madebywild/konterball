@@ -58,7 +58,7 @@ export default class Scene {
     this.controller = null;
     this.effect = null;
     this.textureLoader = new TextureLoader();
-    this.textureLoader.setPath('/models/');
+    this.textureLoader.setPath('/textures/');
     this.objLoader = new OBJLoader();
     this.objLoader.setPath('/models/');
     this.table = null;
@@ -105,8 +105,8 @@ export default class Scene {
     this.isMobile = Util.isMobile();
 
     this.viewport = {
-      width: $(document).width(),
-      height: $(document).height(),
+      width: $('body').width(),
+      height: $('body').height(),
     };
 
     this.config = Object.assign({}, INITIAL_CONFIG);
@@ -137,7 +137,8 @@ export default class Scene {
         || this.renderer.domElement.mozRequestPointerLock;
 
       this.renderer.domElement.onclick = () => {
-        if (this.renderer.domElement.requestPointerLock) {
+        if (this.config.state !== STATE.GAME_OVER
+         && this.renderer.domElement.requestPointerLock) {
           this.renderer.domElement.requestPointerLock();
         }
       };
@@ -162,6 +163,8 @@ export default class Scene {
         this.paddle.position.copy(this.computePaddlePosition() || new Vector3());
         this.ghostPaddlePosition.copy(this.paddle.position);
         resolve('loaded');
+      }).catch(e => {
+        console.log(e);
       });
     });
   }
@@ -192,25 +195,31 @@ export default class Scene {
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
       if (this.config.mode === MODE.SINGLEPLAYER) {
-        this.hud.message.setMessage(['game over', 'your score', `${this.score.highest} pts`]);
+        this.hud.message.gameOver(this.score);
       } else {
-          this.hud.message.setMessage(['game over',
-            this.score.self > this.score.opponent ? 'you won' : 'you lost',
-            `${this.score.self} : ${this.score.opponent}`]);
+        this.hud.message.gameOver(this.score);
       }
       this.hud.message.showMessage();
-      this.time.setTimeout(() => {
-        this.hud.message.hideMessage();
-        if (this.config.mode === MODE.MULTIPLAYER) {
-          this.playerRequestedRestart = true;
-          this.communication.sendRestartGame();
-        }
-        this.restartGame();
-      }, 2000);
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
+    this.emitter.on(EVENT.RESTART_BUTTON_PRESSED, e => {
+      this.hud.message.hideMessage();
+      if (this.config.mode === MODE.MULTIPLAYER) {
+        this.playerRequestedRestart = true;
+        this.communication.sendRestartGame();
+      }
+      this.restartGame();
+    });
+    this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, e => {
+      this.hud.message.setMessage('take off vr device');
+    });
 
-    document.addEventListener('mousemove', this.mousemove, false);
+    // $(document).mousemove(this.mousemove.bind(this));
+    document.querySelector('canvas').addEventListener('mousemove', this.mousemove, false);
+    // $('canvas').mousemove(this.mousemove.bind(this));
+    $('canvas').click(() => {
+      this.hud.message.click();
+    });
     document.addEventListener('pointerlockchange', () => {
       if (document.pointerLockElement === this.renderer.domElement) {
         this.pointerIsLocked = true;
@@ -247,7 +256,7 @@ export default class Scene {
   }
 
   setupThree() {
-    this.renderer = new WebGLRenderer({antialias: false});
+    this.renderer = new WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
     // this.renderer.setPixelRatio(0.5);
     this.renderer.shadowMap.enabled = true;
@@ -260,9 +269,9 @@ export default class Scene {
     this.camera = new PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 10000);
 
     // position over the table, will be animated to the final camera position
-    this.camera.position.x = 2;
-    this.camera.position.z = 2;
-    this.camera.position.y = 4;
+    this.camera.position.x = 0;
+    this.camera.position.y = 1.6;
+    this.camera.position.z = 0.6;
   }
 
   setupLights() {
@@ -277,8 +286,8 @@ export default class Scene {
     light.shadow.camera.bottom = 0.8;
     light.shadow.camera.top = 3.4;
     light.castShadow = true;
-    light.shadow.mapSize.width = (this.isMobile ? 1 : 2) * 512;
-    light.shadow.mapSize.height = (this.isMobile ? 1 : 2) * 512;
+    light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
+    light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
     this.scene.add(light);
     // this.scene.add(new CameraHelper(light.shadow.camera));
 
@@ -404,30 +413,16 @@ export default class Scene {
           0.5
         )
       );
+      this.camera.position.y = 4;
       tl.set('canvas', {display: 'block'});
       tl.to('.intro-wrapper', 0.5, {autoAlpha: 0});
 
-      const panDuration = 1;
+      const panDuration = 1.5;
 
       tl.to(this.camera.position, panDuration, {
-        x: 0,
         y: 1.6,
-        z: 0.6,
         ease: Power1.easeInOut,
-        onUpdate: () => {
-          this.camera.lookAt(
-            new Vector3().lerpVectors(
-              this.ghostPaddlePosition,
-              new Vector3(
-                this.table.position.x,
-                this.config.tableHeight + 0.3,
-                this.table.position.z
-              ),
-              0.5
-            )
-          );
-        },
-      }, 0.3);
+      }, 0.6);
       tl.call(resolve, [], null, '+=1');
     });
   }
@@ -1000,6 +995,24 @@ export default class Scene {
       this.physics.step(delta / this.physicsTimeStep);
       this.updateBall();
       this.physics.predictCollisions(this.scene.getObjectByName('net-collider'), delta);
+    }
+
+    if (this.config.state === STATE.GAME_OVER) {
+      // raycaster wants mouse from -1 to 1, not -0.5 to 0.5 like mousePosition is normalized
+      let mouse = {};
+      if (this.controlMode === 'VR' || this.isMobile) {
+        mouse = {
+          x: 0,
+          y: 0,
+        };
+      } else {
+        mouse = {
+          x: this.mousePosition.x * 2,
+          y: this.mousePosition.y * 2,
+        };
+      }
+      this.raycaster.setFromCamera(mouse, this.camera);
+      this.hud.message.intersect(this.raycaster, this.controlMode === 'MOUSE' && !this.isMobile);
     }
 
     if (DEBUG_MODE) {

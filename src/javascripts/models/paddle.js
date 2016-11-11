@@ -1,22 +1,34 @@
-import {MeshLambertMaterial, Vector3, DoubleSide} from 'three';
+import {MeshLambertMaterial, MeshBasicMaterial, Vector3, DoubleSide} from 'three';
 
 export default (objLoader, config, parent) => {
   return new Promise((resolve, reject) => {
     objLoader.load('paddle.obj', object => {
       const scale = 0.024;
       object.scale.set(scale, scale, scale);
-      const redMaterial = new MeshLambertMaterial({
+      const redMaterial = new MeshBasicMaterial({
         color: config.colors.PADDLE_COLOR,
         side: DoubleSide,
       });
-      const woodMaterial = new MeshLambertMaterial({
+      const redSideMaterial = new MeshBasicMaterial({
+        color: config.colors.PADDLE_SIDE_COLOR,
+        side: DoubleSide,
+      });
+      const woodMaterial = new MeshBasicMaterial({
         color: config.colors.PADDLE_WOOD_COLOR,
+        side: DoubleSide,
+      });
+      const woodSideMaterial = new MeshBasicMaterial({
+        color: config.colors.PADDLE_WOOD_SIDE_COLOR,
         side: DoubleSide,
       });
       object.traverse(function(child) {
         if (child.isMesh) {
-          if (child.name === 'Cap_1' || child.name === 'Cap_2' || child.name === 'Extrude') {
+          if (child.name === 'Extrude') {
+            child.material = redSideMaterial;
+          } else if (child.name === 'Cap_1' || child.name === 'Cap_2') {
             child.material = redMaterial;
+          } else if (child.name === 'Extrude.1') {
+            child.material = woodSideMaterial;
           } else {
             child.material = woodMaterial;
           }

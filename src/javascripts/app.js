@@ -89,7 +89,7 @@ class PingPong {
           $('header h1').css('opacity', 1);
           $('header span').remove();
           resolve();
-        }
+        },
       });
     });
   }
@@ -166,12 +166,12 @@ class PingPong {
     });
 
     this.emitter.on(EVENT.GAME_OVER, (score, mode) => {
+      if (document.exitPointerLock) {
+        document.exitPointerLock();
+      }
       // let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
       // $('.game-over-screen-wrapper').addClass(className);
       // $('.game-over-screen-wrapper').show();
-      // if (document.exitPointerLock) {
-      //   document.exitPointerLock();
-      // }
       // if (mode === MODE.MULTIPLAYER) {
       //   if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
       //     $('#result').text('You won!');
@@ -492,6 +492,11 @@ class PingPong {
     return new Promise((resolve, reject) => {
       $('#room-code').focus();
       $('#room-code').bind('input', function() {
+        if ($(this).val().length !== 0) {
+          $('.input-wrapper .placeholder').hide();
+        } else {
+          $('.input-wrapper .placeholder').show();
+        }
         if ($(this).val().length === 4) {
           $('#join-room-button').removeClass('inactive');
           $('#join-room-button').css('pointer-events', 'auto');
@@ -501,12 +506,18 @@ class PingPong {
         }
       });
       $('#room-form').on('submit', e => {
+        $('#room-form .grey-text').css('color', '#fff');
         e.preventDefault();
         $('#room-form .grey-text').text('connecting to server');
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
-          this.viewVRChooserScreen();
+          $('#room-form .grey-text').text('game starts');
+          $('#room-form #join-room-button').css('visibility', 'hidden');
+          TweenMax.set('.opponent-icon > *', {fill: '#fff'});
+          setTimeout(() => {
+            this.viewVRChooserScreen();
+          }, 1000);
         }).catch(e => {
-          alert(e);
+          $('#room-form .grey-text').text(e);
         });
       });
 
@@ -585,8 +596,10 @@ class PingPong {
       this.emitter.on(EVENT.OPPONENT_CONNECTED, () => {
         this.scene.sound.playUI('joined');
         $('.opponent-joined').text('Opponent joined');
-        TweenMax.set('.opponent-icon', {opacity: 1});
+        TweenMax.set('.opponent-icon > *', {fill: '#fff'});
         $('#join-waiting-room').hide();
+        TweenMax.killTweensOf('.opponent-joined');
+        TweenMax.set('.opponent-joined', {visibility: 'visible', opacity: 1});
         setTimeout(() => {
           this.viewVRChooserScreen();
         }, 1000);

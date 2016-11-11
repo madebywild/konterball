@@ -18,7 +18,6 @@ export default class ScoreDisplay {
     let material = new MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.5,
     });
     let geometry = new TextGeometry('0', {
       font: this.font,

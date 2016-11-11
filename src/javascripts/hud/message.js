@@ -1,19 +1,26 @@
 import wrap from 'wordwrap';
-import {Group, MeshBasicMaterial, TextGeometry, Mesh} from 'three';
+import {Group, MeshBasicMaterial, FontLoader, TextGeometry, Mesh} from 'three';
 import $ from 'jquery';
+import Button from './button';
 
 const CHAR_LIMIT = 16;
 const FONT_SIZE = 0.07;
 const LINE_SPACING = 0.1;
 
 export default class Message {
-  constructor(scene, config, font) {
+  constructor(scene, config, font, antique, emitter) {
+    this.emitter = emitter;
     this.scene = scene;
     this.font = font;
     this.config = config;
     this.wrap = wrap(CHAR_LIMIT);
+    this.buttons = {};
+    this.antique = antique;
     this.messageGroup = new Group();
+    this.intersectedButton = null;
+    this.scene.add(this.messageGroup);
     this.setMessage('waiting');
+    this.showMessage();
   }
 
   setMessage(text) {
@@ -27,7 +34,6 @@ export default class Message {
     let material = new MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
-      opacity: 0.5,
     });
     let lineHeight = 0;
     splitText.forEach((text, index) => {
@@ -35,7 +41,7 @@ export default class Message {
         font: this.font,
         size: FONT_SIZE,
         height: 0.001,
-        curveSegments: 1,
+        curveSegments: 2,
       });
       geometry.computeBoundingBox();
       let message = new Mesh(geometry, material);
@@ -47,8 +53,49 @@ export default class Message {
     });
     let height = splitText.length * (LINE_SPACING + lineHeight);
     this.messageGroup.position.y = this.config.tableHeight + height / 2 + 0.2;
-    this.messageGroup.position.z = this.config.tablePositionZ;
-    this.scene.add(this.messageGroup);
+    this.messageGroup.position.z = this.config.tablePositionZ + 0.7;
+  }
+
+  gameOver(score) {
+    const multiplayer = score.self || score.opponent;
+    this.messageGroup.remove(...this.messageGroup.children);
+    let material = new MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+    });
+    const text = multiplayer ? (score.self > score.opponent ? 'YOU WON' : 'YOU LOST') : `${score.highest} POINTS`;
+    let geometry = new TextGeometry(text, {
+      font: this.antique,
+      size: FONT_SIZE * 2,
+      height: 0.001,
+      curveSegments: 2,
+    });
+    geometry.computeBoundingBox();
+    const gameOverText = new Mesh(geometry, material);
+    gameOverText.position.x = -geometry.boundingBox.max.x / 2;
+    gameOverText.position.y = 0.4;
+    this.messageGroup.add(gameOverText);
+
+    const buttonsYPosition = 0.1;
+    this.buttons.exit = new Button(this.messageGroup, this.font, 'exit', -0.6, buttonsYPosition, this.emitter);
+    this.buttons.restart = new Button(this.messageGroup, this.font, 'restart', -0.2, buttonsYPosition, this.emitter);
+    this.buttons.google = new Button(this.messageGroup, this.font, 'google', 0.15, buttonsYPosition, this.emitter);
+    this.buttons.facebook = new Button(this.messageGroup, this.font, 'facebook', 0.4, buttonsYPosition, this.emitter);
+    this.buttons.twitter = new Button(this.messageGroup, this.font, 'twitter', 0.65, buttonsYPosition, this.emitter);
+
+    if (multiplayer) {
+      geometry = new TextGeometry(`highscore this round: ${score.highest}`, {
+        font: this.font,
+        size: FONT_SIZE,
+        height: 0.001,
+        curveSegments: 2,
+      });
+      geometry.computeBoundingBox();
+      const scoreText = new Mesh(geometry, material);
+      scoreText.position.x = -geometry.boundingBox.max.x / 2;
+      scoreText.position.y = 0.2;
+      this.messageGroup.add(scoreText);
+    }
   }
 
   showMessage() {
@@ -57,5 +104,27 @@ export default class Message {
 
   hideMessage() {
     this.messageGroup.visible = false;
+  }
+
+  intersect(raycaster, mouseControls) {
+    const intersects = raycaster.intersectObjects(Object.values(this.buttons).map(button => button.hitbox), false);
+    if (intersects.length > 0 && !this.intersectedButton) {
+      this.intersectedButton = intersects[0].object._name;
+      if (!mouseControls) {
+        this.buttons[this.intersectedButton].enter();
+      }
+    } else if (intersects.length === 0 && this.intersectedButton) {
+      if (!mouseControls) {
+        this.buttons[this.intersectedButton].leave();
+      }
+      this.intersectedButton = null;
+    }
+  }
+
+  click() {
+    if (this.intersectedButton) {
+      this.buttons[this.intersectedButton].emit();
+      this.intersectedButton = null;
+    }
   }
 }

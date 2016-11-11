@@ -106,7 +106,7 @@ export default class Communication {
       setTimeout(() => {
         reject('timeout');
       }, 2000);
-      console.log('connecting to server...');
+      console.log('connecting to server');
       this.client = deepstream(host, {
         mergeStrategy: deepstream.MERGE_STRATEGIES.REMOTE_WINS
       });
@@ -135,7 +135,7 @@ export default class Communication {
         }
       });
       if (serverIndex === -1) {
-        reject('Unknown prefix');
+        reject('unknown prefix');
       }
       this.connectToServer(this.availableServers[serverIndex]).then(() => {
         this.GAME_ID = id;
@@ -149,11 +149,11 @@ export default class Communication {
             setTimeout(this.sendPings.bind(this), 1000);
             resolve();
           } else {
-            reject('Room already full.');
+            reject('room already full');
           }
         });
         setTimeout(() => {
-          reject('No room found.');
+          reject('no room found');
         }, 2000);
       }).catch(e => {
         reject(e);
