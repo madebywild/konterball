@@ -39,6 +39,7 @@ import Time from './util/time';
 import Table from './models/table';
 import Net from './models/net';
 import Ball from './models/ball';
+import Crosshair from './models/crosshair';
 import setupPaddles from './models/paddle';
 
 const DEBUG_MODE = false;
@@ -79,6 +80,7 @@ export default class Scene {
     this.physicsTimeStep = 1000;
     this.lastOpponentHitPosition = null;
     this.lastHitPosition = null;
+    this.crossHair = null;
     this.paddleInterpolationAlpha = 0;
     this.ballInterpolationAlpha = 0;
     this.ghostPaddlePosition = new Vector3();
@@ -153,6 +155,8 @@ export default class Scene {
       this.setupTablePlane();
       this.setupLights();
       this.hud = new Hud(this.scene, this.config, this.emitter, this.objLoader);
+      this.crosshair = new Crosshair(this.scene, this.config);
+      this.crosshair.visible = false;
 
       Promise.all([
         setupPaddles(this.objLoader, this.config, this.scene),
@@ -194,6 +198,7 @@ export default class Scene {
       this.ball.visible = false;
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
+      this.crosshair.visible = true;
       if (this.config.mode === MODE.SINGLEPLAYER) {
         this.hud.message.gameOver(this.score);
       } else {
@@ -212,6 +217,7 @@ export default class Scene {
     });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, e => {
       this.hud.message.setMessage('take off vr device');
+
     });
 
     // $(document).mousemove(this.mousemove.bind(this));
@@ -476,6 +482,7 @@ export default class Scene {
   }
 
   restartGame() {
+    this.crosshair.visible = false;
     this.physics.speed = 1;
     this.resetScore();
     if (this.config.mode === MODE.SINGLEPLAYER) {
@@ -1001,6 +1008,9 @@ export default class Scene {
       // raycaster wants mouse from -1 to 1, not -0.5 to 0.5 like mousePosition is normalized
       let mouse = {};
       if (this.controlMode === 'VR' || this.isMobile) {
+        const zCamVec = new Vector3(0, 0, -1);
+        const position = this.camera.localToWorld(zCamVec);
+        this.crosshair.position.set(position.x, position.y, position.z);
         mouse = {
           x: 0,
           y: 0,

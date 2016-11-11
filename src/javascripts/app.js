@@ -169,20 +169,11 @@ class PingPong {
       if (document.exitPointerLock) {
         document.exitPointerLock();
       }
-      // let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
-      // $('.game-over-screen-wrapper').addClass(className);
-      // $('.game-over-screen-wrapper').show();
-      // if (mode === MODE.MULTIPLAYER) {
-      //   if (score.self >= INITIAL_CONFIG.POINTS_FOR_WIN) {
-      //     $('#result').text('You won!');
-      //   } else {
-      //     $('#result').text('Your opponent won!');
-      //   }
-      //   $('#score').text(`You ${score.self} : ${score.opponent} Opponent`);
-      // } else {
-      //   $('#result').text('Game Over');
-      //   $('#score').text(`Your highscore this round: ${score.highest}`);
-      // }
+    });
+    this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
+      let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
+      $('.game-over-screen-wrapper').addClass(className);
+      $('.game-over-screen-wrapper').show();
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
       // TODO
@@ -317,6 +308,10 @@ class PingPong {
         bodymovin.stop();
         bodymovin.destroy();
       });
+    });
+
+    $('#reload').on('click', e => {
+      window.location.reload();
     });
 
     $('#open-room').on('click', e => {
