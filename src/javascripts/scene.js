@@ -196,13 +196,20 @@ export default class Scene {
     this.emitter.on(EVENT.GAME_OVER, e => {
       this.sound.playLoop('bass-pad-synth');
       this.ball.visible = false;
+      this.paddle.visible = false;
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
       this.crosshair.visible = true;
       if (this.config.mode === MODE.SINGLEPLAYER) {
         this.hud.message.gameOver(this.score);
+        this.sound.playUI('win');
       } else {
         this.hud.message.gameOver(this.score);
+        if (this.score.self > this.score.opponent) {
+          this.sound.playUI('win');
+        } else {
+          this.sound.playUI('lose');
+        }
       }
       this.hud.message.showMessage();
     });
@@ -445,8 +452,8 @@ export default class Scene {
   }
 
   countdown() {
+    this.paddle.visible = true;
     this.sound.playLoop('bass');
-    window.scrollTo(0, 1);
     this.hud.message.hideMessage();
     this.config.state = STATE.COUNTDOWN;
     // countdown from 3, start game afterwards
@@ -628,9 +635,11 @@ export default class Scene {
       if (data.ballHasHitEnemyTable) {
         this.score.opponent++;
         this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
+        this.sound.playUI('miss');
       } else {
         this.score.self++;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
+        this.sound.playUI('point');
       }
     } else {
       this.addBall();
@@ -677,9 +686,11 @@ export default class Scene {
         if (this.ballHasHitEnemyTable) {
           this.score.self++;
           this.hud.scoreDisplay.setSelfScore(this.score.self);
+          this.sound.playUI('point');
         } else {
           this.score.opponent++;
           this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
+          this.sound.playUI('miss');
         }
         if (this.score.opponent >= this.config.POINTS_FOR_WIN
             || this.score.self >= this.config.POINTS_FOR_WIN) {
@@ -709,6 +720,7 @@ export default class Scene {
         this.physics.initBallPosition();
         this.score.lives--;
         this.hud.scoreDisplay.setLives(this.score.lives);
+        this.sound.playUI('miss');
         if (this.score.lives < 1) {
           this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
         }

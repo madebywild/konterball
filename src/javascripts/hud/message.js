@@ -41,7 +41,7 @@ export default class Message {
         font: this.font,
         size: FONT_SIZE,
         height: 0.001,
-        curveSegments: 2,
+        curveSegments: 3,
       });
       geometry.computeBoundingBox();
       let message = new Mesh(geometry, material);
@@ -53,7 +53,7 @@ export default class Message {
     });
     let height = splitText.length * (LINE_SPACING + lineHeight);
     this.messageGroup.position.y = this.config.tableHeight + height / 2 + 0.2;
-    this.messageGroup.position.z = this.config.tablePositionZ + 0.7;
+    this.messageGroup.position.z = this.config.tablePositionZ + 0.5;
   }
 
   gameOver(score) {
@@ -63,20 +63,20 @@ export default class Message {
       color: 0xffffff,
       transparent: true,
     });
-    const text = multiplayer ? (score.self > score.opponent ? 'YOU WON' : 'YOU LOST') : `${score.highest} POINTS`;
+    const text = multiplayer ? (score.self > score.opponent ? 'YOU WON' : 'YOU LOST') : `${score.highest} PTS`;
     let geometry = new TextGeometry(text, {
       font: this.antique,
-      size: FONT_SIZE * 2,
+      size: FONT_SIZE * (multiplayer ? 2.5 : 3.5),
       height: 0.001,
-      curveSegments: 2,
+      curveSegments: 3,
     });
     geometry.computeBoundingBox();
     const gameOverText = new Mesh(geometry, material);
     gameOverText.position.x = -geometry.boundingBox.max.x / 2;
-    gameOverText.position.y = 0.4;
+    gameOverText.position.y = multiplayer ? 0.25 : 0.1;
     this.messageGroup.add(gameOverText);
 
-    const buttonsYPosition = 0.1;
+    const buttonsYPosition = multiplayer ? -0.15 : -0.1;
     this.buttons.exit = new Button(this.messageGroup, this.font, 'exit', -0.6, buttonsYPosition, this.emitter);
     this.buttons.restart = new Button(this.messageGroup, this.font, 'restart', -0.2, buttonsYPosition, this.emitter);
     this.buttons.google = new Button(this.messageGroup, this.font, 'google', 0.15, buttonsYPosition, this.emitter);
@@ -84,16 +84,16 @@ export default class Message {
     this.buttons.twitter = new Button(this.messageGroup, this.font, 'twitter', 0.65, buttonsYPosition, this.emitter);
 
     if (multiplayer) {
-      geometry = new TextGeometry(`highscore this round: ${score.highest}`, {
+      geometry = new TextGeometry(`You: ${score.self} Opponent: ${score.opponent}`, {
         font: this.font,
         size: FONT_SIZE,
         height: 0.001,
-        curveSegments: 2,
+        curveSegments: 3,
       });
       geometry.computeBoundingBox();
       const scoreText = new Mesh(geometry, material);
       scoreText.position.x = -geometry.boundingBox.max.x / 2;
-      scoreText.position.y = 0.2;
+      scoreText.position.y = 0.07;
       this.messageGroup.add(scoreText);
     }
   }
@@ -112,10 +112,14 @@ export default class Message {
       this.intersectedButton = intersects[0].object._name;
       if (!mouseControls) {
         this.buttons[this.intersectedButton].enter();
+      } else {
+        this.buttons[this.intersectedButton].mouseEnter();
       }
     } else if (intersects.length === 0 && this.intersectedButton) {
       if (!mouseControls) {
         this.buttons[this.intersectedButton].leave();
+      } else {
+        this.buttons[this.intersectedButton].mouseLeave();
       }
       this.intersectedButton = null;
     }

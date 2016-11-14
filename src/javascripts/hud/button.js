@@ -186,6 +186,7 @@ export default class Button {
   emit() {
     this.timeline.pause();
     this.timeline.seek(0);
+    document.body.style.cursor = 'initial';
     switch (this.name) {
       case 'restart':
         this.emitter.emit(EVENT.RESTART_BUTTON_PRESSED);
@@ -195,20 +196,37 @@ export default class Button {
         break;
       case 'google':
         let googleUrl = 'https://plus.google.com/share?url=';
-        googleUrl += encodeURIComponent(root);
-        window.location = (googleUrl);
+        googleUrl += encodeURIComponent('http://pong.wild.plus');
+        window.open(googleUrl);
       case 'facebook':
         let fbUrl = 'https://www.facebook.com/dialog/feed?';
         fbUrl += '&link=' + encodeURIComponent(root);
         fbUrl += '&app_id=674070926074386';
-        window.location = fbUrl;
+        window.open(fbUrl);
         break;
       case 'twitter':
         let twitterUrl = 'http://twitter.com/intent/tweet?status=';
         twitterUrl += encodeURIComponent(root);
-        window.location = twitterUrl;
+        window.open(twitterUrl);
         break;
     }
+  }
+
+  mouseEnter() {
+    // hover effect
+    document.body.style.cursor = 'pointer';
+    this.rightAnimationBorder.scale.y = 1;
+    this.leftAnimationBorder.scale.y = 1;
+    this.topAnimationBorder.scale.x = 1;
+    this.bottomAnimationBorder.scale.x = 1;
+  }
+
+  mouseLeave() {
+    document.body.style.cursor = 'initial';
+    this.rightAnimationBorder.scale.y = 0.001;
+    this.leftAnimationBorder.scale.y = 0.001;
+    this.topAnimationBorder.scale.x = 0.001;
+    this.bottomAnimationBorder.scale.x = 0.001;
   }
 
   enter() {

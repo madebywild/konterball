@@ -97,7 +97,7 @@ export default class ScoreDisplay {
     this.opponentScore.position.y = this.config.tableHeight + 0.2;
     this.opponentScore.position.z = this.config.tablePositionZ
       - this.config.tableDepth / 4
-      - this.opponentScore.geometry.boundingBox.max.x / 2;
+      - this.opponentScore.geometry.boundingBox.max.x / 2 + 0.2;
   }
 
   setLives(value) {

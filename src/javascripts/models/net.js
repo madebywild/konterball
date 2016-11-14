@@ -14,11 +14,10 @@ export default (parent, config) => {
   let material = new MeshBasicMaterial({
     color: 0xFFFFFF,
     transparent: true,
-    opacity: 0.2,
+    opacity: 0.0,
   });
 
   let net = new Mesh(geometry, material);
-  net.castShadow = true;
   colliderGroup.add(net);
 
   geometry = new BoxGeometry(

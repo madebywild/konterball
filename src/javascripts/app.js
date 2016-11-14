@@ -171,7 +171,7 @@ class PingPong {
       }
     });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
-      let className = mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
+      let className = this.scene.config.mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
       $('.game-over-screen-wrapper').addClass(className);
       $('.game-over-screen-wrapper').show();
     });
@@ -571,6 +571,7 @@ class PingPong {
       left: '0%',
       ease: screenTransitionEase,
     }, `-=${screenTransitionDuration - screenTransitionInterval}`);
+    this.scene.sound.playLoop('bass-pad');
   }
 
   viewOpenRoomScreenAnimation() {
@@ -601,6 +602,7 @@ class PingPong {
       });
 
       this.scene.sound.playUI('transition');
+      this.scene.sound.playLoop('waiting');
 
       new Clipboard('#generated-room-url');
       new Clipboard('#generated-room-code');
