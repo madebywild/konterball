@@ -230,7 +230,7 @@ export default class Scene {
     });
 
     // $(document).mousemove(this.mousemove.bind(this));
-    document.addEventListener('mousemove', this.mousemove, false);
+    this.renderer.domElement.addEventListener('mousemove', this.mousemove, false);
     // $('canvas').mousemove(this.mousemove.bind(this));
     $('canvas').click(() => {
       this.hud.message.click();
@@ -392,31 +392,6 @@ export default class Scene {
     this.animate();
     return new Promise((resolve, reject) => {
       const tl = new TimelineMax();
-      /*
-      tl.set('canvas, .transition-color-screen', {
-        'left': '-100%',
-      });
-      tl.set('.intro', {zIndex: 10});
-      tl.set('.transition-color-screen', {zIndex: 11});
-      tl.set('canvas', {zIndex: 12});
-      tl.to([
-        '.open-room-screen',
-        '.join-room-screen',
-        '.choose-mode-screen',
-      ], 0.5, {
-        left: '100%',
-        ease: Power2.easeInOut,
-      });
-      tl.staggerTo([
-        '.transition-color-screen.pink',
-        '.transition-color-screen.blue',
-        '.transition-color-screen.green',
-        'canvas',
-      ], 0.5, {
-        left: '0%',
-        ease: Power2.easeInOut,
-      }, 0.1, '-=0.6');
-      */
       this.camera.lookAt(
         new Vector3().lerpVectors(
           this.ghostPaddlePosition,
@@ -430,7 +405,17 @@ export default class Scene {
       );
       this.camera.position.y = 5;
       tl.set('canvas', {display: 'block'});
-      tl.to('.intro-wrapper', 0.5, {autoAlpha: 0});
+
+      tl.staggerTo([
+        '.present-players',
+        '#generated-room-code, #generated-room-url, #room-code',
+        '.grey-text',
+        '.opponent-joined',
+      ], 0.5, {
+        y: -20,
+        opacity: 0,
+      }, 0.1, 0);
+      tl.to('.intro-wrapper', 0.3, {autoAlpha: 0});
 
       const panDuration = 1.5;
 

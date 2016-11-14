@@ -109,6 +109,8 @@ let VRControls = function ( object, onError ) {
 
 			}
 
+      // console.log(pose);
+
 			if ( pose.position !== null ) {
 
 				object.position.fromArray( pose.position );

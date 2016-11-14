@@ -3,7 +3,7 @@
  * @author stewdio / http://stewd.io
  */
 
-import {Object3D} from 'three';
+import {Object3D, Matrix4} from 'three';
 
 let ViveController = function ( id ) {
 

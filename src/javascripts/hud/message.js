@@ -96,6 +96,7 @@ export default class Message {
       scoreText.position.y = 0.07;
       this.messageGroup.add(scoreText);
     }
+    this.messageGroup.position.y = this.config.tableHeight + 0.3;
   }
 
   showMessage() {
