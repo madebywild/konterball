@@ -104,6 +104,7 @@
     "lodash.chunk": "^4.2.0",
     "normalize.css": "^4.0.0",
     "nosleep": "github:bhspitmonkey/NoSleep.js",
+    "object.values": "^1.0.3",
     "randomstring": "^1.1.5",
     "three": "^0.82.1",
     "webvr-polyfill": "^0.9.20",

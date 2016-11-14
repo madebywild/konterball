@@ -2,6 +2,7 @@ import wrap from 'wordwrap';
 import {Group, MeshBasicMaterial, FontLoader, TextGeometry, Mesh} from 'three';
 import $ from 'jquery';
 import Button from './button';
+import values from 'object.values';
 
 const CHAR_LIMIT = 16;
 const FONT_SIZE = 0.07;
@@ -108,7 +109,7 @@ export default class Message {
   }
 
   intersect(raycaster, mouseControls) {
-    const intersects = raycaster.intersectObjects(Object.values(this.buttons).map(button => button.hitbox), false);
+    const intersects = raycaster.intersectObjects(values(this.buttons).map(button => button.hitbox), false);
     if (intersects.length > 0 && !this.intersectedButton) {
       this.intersectedButton = intersects[0].object._name;
       if (!mouseControls) {
