@@ -52,7 +52,7 @@ export default class Message {
       lineHeight = geometry.boundingBox.max.y;
     });
     let height = splitText.length * (LINE_SPACING + lineHeight);
-    this.messageGroup.position.y = this.config.tableHeight + height / 2 + 0.2;
+    this.messageGroup.position.y = this.config.tableHeight + height / 2 + 0.4;
     this.messageGroup.position.z = this.config.tablePositionZ + 0.5;
   }
 
@@ -63,7 +63,7 @@ export default class Message {
       color: 0xffffff,
       transparent: true,
     });
-    const text = multiplayer ? (score.self > score.opponent ? 'YOU WON' : 'YOU LOST') : `${score.highest} PTS`;
+    const text = multiplayer ? (score.self > score.opponent ? 'YOU WON' : 'YOU LOST') : `${score.highest} ${score.highest === 1 ? 'PT' : 'PTS'}`;
     let geometry = new TextGeometry(text, {
       font: this.antique,
       size: FONT_SIZE * (multiplayer ? 2.5 : 3.5),

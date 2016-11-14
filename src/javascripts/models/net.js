@@ -13,8 +13,7 @@ export default (parent, config) => {
   );
   let material = new MeshBasicMaterial({
     color: 0xFFFFFF,
-    transparent: true,
-    opacity: 0.0,
+    visible: false,
   });
 
   let net = new Mesh(geometry, material);

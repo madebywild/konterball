@@ -105,4 +105,16 @@ export default class ScoreDisplay {
       life.material.opacity = value > index ? 1 : 0.3;
     });
   }
+
+  hide() {
+    this.opponentScore.visible = false;
+    this.selfScore.visible = false;
+    this.lives.forEach(life => {life.visible = false;});
+  }
+
+  show(multiplayer) {
+    this.opponentScore.visible = multiplayer;
+    this.selfScore.visible = true;
+    this.lives.forEach(life => {life.visible = !multiplayer;});
+  }
 }

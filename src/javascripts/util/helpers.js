@@ -1,3 +1,5 @@
+import {Mesh, Line} from 'three';
+
 module.exports = {
   cap: (value, cap1, cap2) => {
     if (cap1 > cap2) {
@@ -27,5 +29,18 @@ module.exports = {
       y: vel.y,
       z: -vel.z,
     };
+  },
+
+  setTransparency: (object, transparency) => {
+    object.traverse(child => {
+      if (child instanceof Mesh) {
+        child.material.transparent = transparency === 1 ? false : true;
+        child.material.opacity = transparency;
+      }
+      if (child instanceof Line) {
+        child.material.transparent = transparency === 1 ? false : true;
+        child.material.opacity = transparency;
+      }
+    });
   },
 };

@@ -171,9 +171,11 @@ class PingPong {
       }
     });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
-      let className = this.scene.config.mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
-      $('.game-over-screen-wrapper').addClass(className);
-      $('.game-over-screen-wrapper').show();
+      if (this.scene.controlMode === 'VR') {
+        setTimeout(() => {location.reload();}, 3000);
+      } else {
+        location.reload();
+      }
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
       // TODO

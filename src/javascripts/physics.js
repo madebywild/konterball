@@ -12,10 +12,8 @@ export default class Physics {
     this.world = null;
     this.ball = null;
     this.net = null;
-    this.ground = null;
     this.paddle = null;
     this.ballNetContact = null;
-    this.ballGroundContact = null;
     this.ballPaddleContact = null;
     this.raycaster = new Raycaster();
     this.isMobile = Util.isMobile();
@@ -30,17 +28,6 @@ export default class Physics {
     this.setupTable();
     this.setupPaddle();
     this.setupNet();
-    this.setupGround();
-  }
-
-  setupGround() {
-    this.ground = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Plane(),
-      material: new CANNON.Material(),
-    });
-    this.ground.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0),-Math.PI/2);
-    this.world.add(this.ground);
   }
 
   setupNet() {
@@ -224,6 +211,7 @@ export default class Physics {
 
     const arr = this.raycaster.intersectObjects([net], true);
     if (arr.length) {
+      this.emitter.emit(EVENT.BALL_NET_COLLISION);
       this.ball.position.copy(arr[0].point);
       this.ball.velocity.x *= 0.2;
       this.ball.velocity.y *= 0.2;

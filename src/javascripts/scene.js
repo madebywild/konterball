@@ -27,7 +27,7 @@ import VRControls from 'three/VRControls.js';
 import ViveController from 'three/ViveController.js';
 
 import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
-import {cap, mirrorPosition, mirrorVelocity} from './util/helpers';
+import {cap, mirrorPosition, mirrorVelocity, setTransparency} from './util/helpers';
 import VR_MODES from './webvr-manager/modes';
 import Physics from './physics';
 import Hud from './hud';
@@ -177,12 +177,6 @@ export default class Scene {
     if (!this.paddle) {
       return;
     }
-    if (this.paddle.position.x > this.config.tableWidth 
-      || this.paddle.position.x < -this.config.tableWidth) {
-    }
-    if (this.paddle.position.z < this.config.tablePositionZ + 0.5
-      && this.paddle.position.z > 0) {
-    }
     if (this.pointerIsLocked) {
       this.mouseMoveSinceLastFrame.x += e.movementX;
       this.mouseMoveSinceLastFrame.y += e.movementY;
@@ -197,6 +191,7 @@ export default class Scene {
       this.sound.playLoop('bass-pad-synth');
       this.ball.visible = false;
       this.paddle.visible = false;
+      this.paddleOpponent.visible = false;
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
       this.crosshair.visible = true;
@@ -211,6 +206,9 @@ export default class Scene {
           this.sound.playUI('lose');
         }
       }
+      setTransparency(this.table, 0.2);
+      setTransparency(this.net, 0.2);
+      this.hud.scoreDisplay.hide();
       this.hud.message.showMessage();
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
@@ -218,17 +216,21 @@ export default class Scene {
       this.hud.message.hideMessage();
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.playerRequestedRestart = true;
+        this.hud.message.setMessage('waiting');
+        this.hud.message.showMessage();
         this.communication.sendRestartGame();
       }
       this.restartGame();
     });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, e => {
       this.hud.message.setMessage('take off vr device');
-
+    });
+    this.emitter.on(EVENT.BALL_NET_COLLISION, e => {
+      this.sound.playUI('net');
     });
 
     // $(document).mousemove(this.mousemove.bind(this));
-    document.querySelector('canvas').addEventListener('mousemove', this.mousemove, false);
+    document.addEventListener('mousemove', this.mousemove, false);
     // $('canvas').mousemove(this.mousemove.bind(this));
     $('canvas').click(() => {
       this.hud.message.click();
@@ -426,7 +428,7 @@ export default class Scene {
           0.5
         )
       );
-      this.camera.position.y = 4;
+      this.camera.position.y = 5;
       tl.set('canvas', {display: 'block'});
       tl.to('.intro-wrapper', 0.5, {autoAlpha: 0});
 
@@ -453,8 +455,13 @@ export default class Scene {
 
   countdown() {
     this.paddle.visible = true;
+    this.paddleOpponent.visible = this.config.mode === MODE.MULTIPLAYER;
     this.sound.playLoop('bass');
-    this.hud.message.hideMessage();
+    this.hud.scoreDisplay.show();
+    this.hud.message.hideMessage(this.config.mode === MODE.MULTIPLAYER);
+    setTransparency(this.table, 1);
+    setTransparency(this.net, 1);
+
     this.config.state = STATE.COUNTDOWN;
     // countdown from 3, start game afterwards
     this.hud.countdown.showCountdown();
