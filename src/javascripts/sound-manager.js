@@ -29,6 +29,7 @@ export default class SoundManager {
     this.uiSounds.set('miss', new Howl({src: `${url}miss.mp3`}));
     this.uiSounds.set('point', new Howl({src: `${url}point.mp3`}));
     this.uiSounds.set('net', new Howl({src: `${url}net.mp3`}));
+    this.uiSounds.set('type', new Howl({src: `${url}type.mp3`}));
 
     url = `/audio/loops/`;
     this.loopSounds = new Map();

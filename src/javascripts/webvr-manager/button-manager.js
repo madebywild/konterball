@@ -118,8 +118,6 @@ ButtonManager.prototype.loadIcons_ = function() {
   this.ICONS.exitFullscreen = `data:image/svg+xml;utf8,
 <?xml version="1.0" encoding="utf-8"?>
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 50.2 52.8" style="enable-background:new 0 0 50.2 52.8;" xml:space="preserve">
-<g id="Layer_2">
-</g>
 <g id="Layer_1">
   <g>
     <g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="15.3,52.8 15.3,38.3 0,38.3"/> </g>

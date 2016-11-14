@@ -177,7 +177,9 @@ export default class Scene {
     if (!this.paddle) {
       return;
     }
+    //console.log(e);
     if (this.pointerIsLocked) {
+      //console.log('pointer is locked');
       this.mouseMoveSinceLastFrame.x += e.movementX;
       this.mouseMoveSinceLastFrame.y += e.movementY;
     } else {
@@ -235,14 +237,22 @@ export default class Scene {
     $('canvas').click(() => {
       this.hud.message.click();
     });
-    document.addEventListener('pointerlockchange', () => {
-      if (document.pointerLockElement === this.renderer.domElement) {
-        this.pointerIsLocked = true;
-      } else {
-        this.pointerIsLocked = false;
-      }
-    }, false);
 
+    if ("onpointerlockchange" in document) {
+      document.addEventListener('pointerlockchange', this.pointerLockChange.bind(this), false);
+    } else if ("onmozpointerlockchange" in document) {
+      document.addEventListener('mozpointerlockchange', this.pointerLockChange.bind(this), false);
+    }
+  }
+
+  pointerLockChange() {
+    console.log(document.pointerLockElement);
+    if (document.pointerLockElement === this.renderer.domElement
+      || document.mozPointerLockElement === this.renderer.domElement) {
+      this.pointerIsLocked = true;
+    } else {
+      this.pointerIsLocked = false;
+    }
   }
 
   setupVRControls() {
@@ -406,6 +416,8 @@ export default class Scene {
       this.camera.position.y = 5;
       tl.set('canvas', {display: 'block'});
 
+      /*
+       * TODO
       tl.staggerTo([
         '.present-players',
         '#generated-room-code, #generated-room-url, #room-code',
@@ -415,6 +427,7 @@ export default class Scene {
         y: -20,
         opacity: 0,
       }, 0.1, 0);
+      */
       tl.to('.intro-wrapper', 0.3, {autoAlpha: 0});
 
       const panDuration = 1.5;
@@ -439,6 +452,8 @@ export default class Scene {
   }
 
   countdown() {
+    // TODO why is this neccessary
+    $('.opponent-joined').css('display', 'none');
     this.paddle.visible = true;
     this.paddleOpponent.visible = this.config.mode === MODE.MULTIPLAYER;
     this.sound.playLoop('bass');

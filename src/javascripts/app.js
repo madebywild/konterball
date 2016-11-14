@@ -488,13 +488,14 @@ class PingPong {
   viewJoinRoomScreenAnimation() {
     return new Promise((resolve, reject) => {
       $('#room-code').focus();
-      $('#room-code').bind('input', function() {
-        if ($(this).val().length !== 0) {
+      $('#room-code').bind('input', () => {
+        this.scene.sound.playUI('type');
+        if ($('#room-code').val().length !== 0) {
           $('.input-wrapper .placeholder').hide();
         } else {
           $('.input-wrapper .placeholder').show();
         }
-        if ($(this).val().length === 4) {
+        if ($('#room-code').val().length === 4) {
           $('#join-room-button').removeClass('inactive');
           $('#join-room-button').css('pointer-events', 'auto');
         } else {
