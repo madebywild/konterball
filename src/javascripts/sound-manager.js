@@ -9,7 +9,7 @@ export default class SoundManager {
     this.muted = false;
     this.paddleSounds = [];
     this.tableSounds = [];
-    let url = `/audio/menu/`;
+    let url = `https://s3.eu-central-1.amazonaws.com/pingpongsound/menu/`;
     for (let i = 1; i <= 3; i++) {
       this.paddleSounds.push(new Howl({
         src: `${url}racket0${i}.mp3`,
@@ -31,7 +31,7 @@ export default class SoundManager {
     this.uiSounds.set('net', new Howl({src: `${url}net.mp3`}));
     this.uiSounds.set('type', new Howl({src: `${url}type.mp3`}));
 
-    url = `/audio/loops/`;
+    url = `https://s3.eu-central-1.amazonaws.com/pingpongsound/loops/`;
     this.loopSounds = new Map();
     this.loopSounds.set('bass', new Howl({loop: true, src: `${url}loop1-bass.mp3`}));
     this.loopSounds.set('bass-pad', new Howl({loop: true, src: `${url}loop1-bass-pad.mp3`, onloaderror: (a, b) => {this.error = true;}}));

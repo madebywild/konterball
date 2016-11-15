@@ -160,11 +160,6 @@ class PingPong {
   }
 
   setupListeners() {
-    this.emitter.on(EVENT.RESTART_GAME, () => {
-      $('.game-over-screen-wrapper').hide();
-      $('#play-again').text('Play again');
-    });
-
     this.emitter.on(EVENT.GAME_OVER, (score, mode) => {
       if (document.exitPointerLock) {
         document.exitPointerLock();
@@ -179,7 +174,7 @@ class PingPong {
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
       // TODO
-      this.scene.hud.message.setMessage('Opponent disconnected');
+      this.scene.hud.message.setMessage('opponent disconnected');
       this.scene.hud.message.showMessage();
       this.scene.paddleOpponent.visible = false;
     });
