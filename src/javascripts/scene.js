@@ -1072,8 +1072,7 @@ export default class Scene {
     // }
 
     // Render the scene through the manager.
-    // this.manager.render(this.scene, this.camera, this.timestamp);
-    this.renderer.render(this.scene, this.camera);
+    this.manager.render(this.scene, this.camera, this.timestamp);
     if (this.display && 'requestAnimationFrame' in this.display && this.controlMode === 'VR') {
       this.display.requestAnimationFrame(this.animate.bind(this));
     } else {
