@@ -1,5 +1,6 @@
 import TweenMax from 'gsap';
-import $ from 'jquery';
+import $ from 'zepto-modules';
+import FPS from 'fps';
 import {
   Scene as ThreeScene,
   WebGLRenderer,
@@ -85,6 +86,10 @@ export default class Scene {
     this.ballInterpolationAlpha = 0;
     this.ghostPaddlePosition = new Vector3();
     this.pointerIsLocked = false;
+    this.fps = FPS({
+      every: 10,
+      decay: 0.1,
+    });
 
     this.mouseMoveSinceLastFrame = {
       x: 0,
@@ -106,11 +111,6 @@ export default class Scene {
 
     this.isMobile = Util.isMobile();
 
-    this.viewport = {
-      width: $('body').width(),
-      height: $('body').height(),
-    };
-
     this.config = Object.assign({}, INITIAL_CONFIG);
 
     this.score = {
@@ -124,6 +124,7 @@ export default class Scene {
     this.sound = new SoundManager(this.config);
 
     this.frameNumber = 0;
+    this.firstActiveFrame = 0;
     this.totaltime = 0;
     this.lastRender = 0;
   }
@@ -174,7 +175,7 @@ export default class Scene {
   }
 
   mousemove(e) {
-    if (!this.paddle) {
+    if (!this.paddle || !this.viewport) {
       return;
     }
     //console.log(e);
@@ -183,8 +184,8 @@ export default class Scene {
       this.mouseMoveSinceLastFrame.x += e.movementX;
       this.mouseMoveSinceLastFrame.y += e.movementY;
     } else {
-      this.mousePosition.x = e.clientX / this.viewport.width - 0.5;
-      this.mousePosition.y = -(e.clientY / this.viewport.height - 0.5);
+      this.mousePosition.x = e.offsetX / this.viewport.width - 0.5;
+      this.mousePosition.y = -(e.offsetY / this.viewport.height - 0.5);
     }
   }
 
@@ -234,7 +235,7 @@ export default class Scene {
     // $(document).mousemove(this.mousemove.bind(this));
     this.renderer.domElement.addEventListener('mousemove', this.mousemove, false);
     // $('canvas').mousemove(this.mousemove.bind(this));
-    $('canvas').click(() => {
+    $(this.renderer.domElement).click(() => {
       this.hud.message.click();
     });
 
@@ -243,6 +244,13 @@ export default class Scene {
     } else if ("onmozpointerlockchange" in document) {
       document.addEventListener('mozpointerlockchange', this.pointerLockChange.bind(this), false);
     }
+
+    this.fps.on('data', framerate => {
+      if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
+        // TODO maybe reduce shadow map size first
+        this.renderer.setPixelRatio(window.devicePixelRatio / 2);
+      }
+    });
   }
 
   pointerLockChange() {
@@ -381,6 +389,10 @@ export default class Scene {
     }
 
     this.introPanAnimation().then(() => {
+      this.viewport = {
+        width: $(this.renderer.domElement).width(),
+        height: $(this.renderer.domElement).height(),
+      };
       if (this.display) {
         this.display.resetPose();
       }
@@ -391,8 +403,8 @@ export default class Scene {
         this.countdown();
       } else {
         this.paddleOpponent.visible = true;
-        this.communication.sendRequestCountdown();
         this.playerRequestedCountdown = true;
+        this.communication.sendRequestCountdown();
         this.requestCountdown();
       }
     });
@@ -414,20 +426,20 @@ export default class Scene {
         )
       );
       this.camera.position.y = 5;
-      tl.set('canvas', {display: 'block'});
+      tl.set(this.renderer.domElement, {display: 'block'});
 
-      /*
-       * TODO
-      tl.staggerTo([
-        '.present-players',
-        '#generated-room-code, #generated-room-url, #room-code',
-        '.grey-text',
-        '.opponent-joined',
-      ], 0.5, {
-        y: -20,
-        opacity: 0,
-      }, 0.1, 0);
-      */
+      if (this.config.mode === MODE.MULTIPLAYER && !this.isMobile && this.controlMode === 'MOUSE') {
+        console.log('stagger');
+        tl.staggerTo([
+          '.present-players',
+          '#generated-room-code, #generated-room-url, #room-code',
+          '.grey-text',
+          '.opponent-joined',
+        ], 0.5, {
+          y: -20,
+          opacity: 0,
+        }, 0.1, 0);
+      }
       tl.to('.intro-wrapper', 0.3, {autoAlpha: 0});
 
       const panDuration = 1.5;
@@ -895,13 +907,13 @@ export default class Scene {
       if (this.pointerIsLocked) {
         paddlePosition =  {
           x: this.ghostPaddlePosition.x + 0.0015 * this.mouseMoveSinceLastFrame.x,
-          y: 1,
+          y: this.config.tableHeight + 0.24,
           z: this.ghostPaddlePosition.z + 0.0015 * this.mouseMoveSinceLastFrame.y,
         };
       } else {
         paddlePosition = {
           x: 1.4 * this.mousePosition.x * this.config.tableWidth,
-          y: 1,
+          y: this.config.tableHeight + 0.24,
           z: -this.config.tableDepth * 0.5 * (this.mousePosition.y + 0.5),
         };
       }
@@ -911,6 +923,8 @@ export default class Scene {
       const z = cap(paddlePosition.z, this.config.tablePositionZ + 0.5, 0);
       const y = paddlePosition.y || this.config.tableHeight + 0.1 - z * 0.2;
       return {x, y, z};
+    } else {
+      return this.paddle.position.clone();
     }
   }
 
@@ -965,11 +979,7 @@ export default class Scene {
     const timestamp = Date.now();
     const delta = Math.min(timestamp - this.lastRender, 500);
     this.totaltime += delta;
-
-    if (!this.tabActive) {
-      // requestAnimationFrame(this.animate.bind(this));
-      // return;
-    }
+    this.fps.tick();
 
     if (this.ball) {
       const dist = new Vector3();
@@ -1061,7 +1071,8 @@ export default class Scene {
     // }
 
     // Render the scene through the manager.
-    this.manager.render(this.scene, this.camera, this.timestamp);
+    // this.manager.render(this.scene, this.camera, this.timestamp);
+    this.renderer.render(this.scene, this.camera);
     if (this.display && 'requestAnimationFrame' in this.display && this.controlMode === 'VR') {
       this.display.requestAnimationFrame(this.animate.bind(this));
     } else {
@@ -1074,9 +1085,5 @@ export default class Scene {
     //this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
-    this.viewport = {
-      width: $(document).width(),
-      height: $(document).height(),
-    };
   }
 }

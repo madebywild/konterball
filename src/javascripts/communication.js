@@ -2,7 +2,7 @@ import deepstream from 'deepstream.io-client-js';
 import randomstring from 'randomstring';
 import {ACTION, INITIAL_CONFIG, EVENT} from './constants';
 import {rand} from 'util/helpers';
-import $ from 'jquery';
+import $ from 'zepto-modules';
 import chunk from 'lodash.chunk';
 
 const availableChars = '23456789QWERTZUPASDFGHJKLYXCVBNM';
@@ -106,7 +106,7 @@ export default class Communication {
       setTimeout(() => {
         reject('timeout');
       }, 2000);
-      console.log('connecting to server');
+      console.log('connecting to server: ' + host);
       this.client = deepstream(host, {
         mergeStrategy: deepstream.MERGE_STRATEGIES.REMOTE_WINS
       });
@@ -138,6 +138,7 @@ export default class Communication {
         reject('unknown prefix');
       }
       this.connectToServer(this.availableServers[serverIndex]).then(() => {
+        console.log('connected to server, connecting to room');
         this.GAME_ID = id;
         this.isHost = false;
         this.setRecords();
@@ -210,6 +211,7 @@ export default class Communication {
   }
 
   startListening() {
+    console.log('subscribing');
     this.statusRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
       switch (value.action) {
         case ACTION.CONNECT:
@@ -223,6 +225,7 @@ export default class Communication {
           this.emitter.emit(EVENT.OPPONENT_DISCONNECTED);
           break;
         case ACTION.REQUEST_COUNTDOWN:
+          console.log('receive request countdown');
           this.callbacks.requestCountdown();
           break;
         case ACTION.RESTART_GAME:
@@ -293,6 +296,8 @@ export default class Communication {
   }
 
   sendRequestCountdown() {
-    this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {action: ACTION.REQUEST_COUNTDOWN});
+    console.log('send request countdown:');
+    console.log(`player-${this.isHost ? 1 : 2}`, {action: ACTION.REQUEST_COUNTDOWN});
+    this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {action: ACTION.REQUEST_COUNTDOWN, v: Math.random()});
   }
 }

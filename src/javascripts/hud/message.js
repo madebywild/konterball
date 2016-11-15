@@ -1,6 +1,6 @@
 import wrap from 'wordwrap';
 import {Group, MeshBasicMaterial, FontLoader, TextGeometry, Mesh} from 'three';
-import $ from 'jquery';
+import $ from 'zepto-modules';
 import Button from './button';
 import values from 'object.values';
 

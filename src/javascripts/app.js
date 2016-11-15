@@ -1,7 +1,7 @@
 import Scene from './scene';
 import TweenMax from 'gsap';
 import {EVENT, MODE, INITIAL_CONFIG} from './constants';
-import $ from 'jquery';
+import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
@@ -284,6 +284,7 @@ class PingPong {
 
     $(window).on('focus', () => {
       this.scene.tabActive = true;
+      this.scene.firstActiveFrame = this.scene.frameNumber;
       this.scene.sound.focus();
     });
 
@@ -306,8 +307,12 @@ class PingPong {
       }
       this.scene.setSingleplayer();
       this.viewVRChooserScreen().then(() => {
-        bodymovin.stop();
-        bodymovin.destroy();
+        setTimeout(() => {
+          bodymovin.stop();
+          bodymovin.destroy();
+          bodymovin.stop();
+          bodymovin.destroy();
+        }, 300);
       });
     });
 
@@ -331,6 +336,8 @@ class PingPong {
       this.viewOpenRoomScreenAnimation().then(() => {
         bodymovin.stop();
         bodymovin.destroy();
+        bodymovin.stop();
+        bodymovin.destroy();
       });
     });
 
@@ -351,6 +358,8 @@ class PingPong {
         $('#room-code').val(window.location.pathname.slice(1));
       }
       this.viewJoinRoomScreenAnimation().then(() => {
+        bodymovin.stop();
+        bodymovin.destroy();
         bodymovin.stop();
         bodymovin.destroy();
       });
@@ -499,6 +508,7 @@ class PingPong {
         e.preventDefault();
         $('#room-form .grey-text').text('connecting to server');
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
+          console.log('resolved');
           $('#room-form .grey-text').text('game starts');
           $('#room-form #join-room-button').css('visibility', 'hidden');
           TweenMax.set('.opponent-icon > *', {fill: '#fff'});

@@ -45,7 +45,7 @@ export const INITIAL_CONFIG = {
   netThickness: 0.02,
   tableWidth: 1.52,
   tableDepth: 2.74,
-  tableHeight: 0.762,
+  tableHeight: 0.76,
   netHeight: 0.15,
   tablePositionZ: -2,
   tableThickness: 0.1,

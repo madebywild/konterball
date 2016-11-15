@@ -1,7 +1,7 @@
 import {Howler} from 'howler';
 import {rand, cap} from 'util/helpers';
 import {MODE} from './constants';
-import $ from 'jquery';
+import $ from 'zepto-modules';
 
 export default class SoundManager {
   constructor(config) {

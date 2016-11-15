@@ -55,7 +55,7 @@ export default class ScoreDisplay {
       this.lifeGroup.add(life);
     }
     this.lifeGroup.position.z = -1.4;
-    this.lifeGroup.position.y = 1;
+    this.lifeGroup.position.y = this.config.tableHeight + 0.24;
     this.lifeGroup.position.x = this.config.tableWidth / 2;
     this.lifeGroup.rotation.y = Math.PI / 2;
     this.lifeGroup.rotation.x = Math.PI;
