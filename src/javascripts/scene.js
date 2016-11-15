@@ -247,6 +247,7 @@ export default class Scene {
 
     this.fps.on('data', framerate => {
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
+        console.log('reducing quality, fps was ' + framerate);
         // TODO maybe reduce shadow map size first
         this.renderer.setPixelRatio(window.devicePixelRatio / 2);
       }
@@ -1085,5 +1086,9 @@ export default class Scene {
     //this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
+    this.viewport = {
+      width: $(this.renderer.domElement).width(),
+      height: $(this.renderer.domElement).height(),
+    };
   }
 }
