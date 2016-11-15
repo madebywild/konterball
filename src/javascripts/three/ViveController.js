@@ -25,7 +25,6 @@ let ViveController = function ( id ) {
 
 		var gamepads = navigator.getGamepads();
 
-    console.log(gamepads);
 		for ( var i = 0, j = 0; i < 4; i ++ ) {
 
 			var gamepad = gamepads[ i ];

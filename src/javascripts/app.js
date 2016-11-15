@@ -185,7 +185,7 @@ class PingPong {
     });
   }
 
-  showModeChooserScreen() {
+  viewModeChooserScreen() {
     if (Util.isMobile()) {
       const noSleep = new NoSleep();
       noSleep.enable();
@@ -199,7 +199,7 @@ class PingPong {
       y: 10,
     });
     tl.set('.intro-screen', {zIndex: 10});
-    tl.set('.transition-color-screen', {zIndex: 11});
+    tl.set('.transition-color-screen', {zIndex: 11, left: '-100%'});
     tl.set('.choose-mode-screen', {zIndex: 12});
     const width = $(window).width();
     tl.staggerTo([
@@ -218,7 +218,6 @@ class PingPong {
     });
     tl.staggerTo([
       '.transition-color-screen.pink',
-      '.transition-color-screen.blue',
       '.transition-color-screen.green',
       '.choose-mode-screen',
     ], screenTransitionDuration, {
@@ -290,7 +289,7 @@ class PingPong {
 
     $('#start').on('click', () => {
       $('body').scrollTop(80);
-      this.showModeChooserScreen();
+      this.viewModeChooserScreen();
     });
 
     $('#start-singleplayer').on('click', e => {
@@ -366,14 +365,6 @@ class PingPong {
       this.scene.restartGame();
     });
 
-    $('#exit').on('click', () => {
-      location.reload();
-    });
-
-    $('.exit-arrow').on('click', () => {
-      location.reload();
-    });
-
     $('.about-button').on('click', () => {
       if (this.aboutScreenOpen) {
         TweenMax.to('.about-screen', 0.5, {
@@ -426,12 +417,12 @@ class PingPong {
       });
     });
 
-    $('.back-arrow').on('click', () => {
-      this.backAnimation();
+    $('.join-room-screen .back-arrow').on('click', () => {
+      this.backAnimation('join');
     });
 
-    $('.back-arrow').on('click', () => {
-      this.backAnimation();
+    $('.open-room-screen .back-arrow').on('click', () => {
+      this.backAnimation('open');
     });
 
     $('.mute').on('click', () => {
@@ -525,17 +516,19 @@ class PingPong {
         opacity: 0,
         y: 10,
       });
+      $('.intro-wrapper').removeClass('green blue pink');
+      $('.intro-wrapper').addClass('pink');
       tl.set('.choose-mode-screen', {zIndex: 10});
-      tl.set('.transition-color-screen', {zIndex: 11});
-      tl.set('.join-room-screen', {zIndex: 12});
+      tl.set('.transition-color-screen.green', {zIndex: 11});
+      tl.set('.transition-color-screen.blue', {zIndex: 12});
+      tl.set('.join-room-screen', {zIndex: 13});
       tl.to('.choose-mode-screen', screenTransitionDuration, {
         left: '100%',
         ease: screenTransitionEase,
       });
       tl.staggerTo([
-        '.transition-color-screen.pink',
-        '.transition-color-screen.blue',
         '.transition-color-screen.green',
+        '.transition-color-screen.blue',
         '.join-room-screen',
       ], screenTransitionDuration, {
         left: '0%',
@@ -553,17 +546,18 @@ class PingPong {
     });
   }
 
-  backAnimation() {
+  backAnimation(from) {
     this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
-    tl.set('.choose-mode-screen', {zIndex: 12});
-    tl.set('.transition-color-screen', {zIndex: 11, left: '100%'});
-    tl.set('.join-room-screen, .open-room-screen', {zIndex: 10});
+    tl.set('.choose-mode-screen', {zIndex: 10});
+    tl.set('.transition-color-screen.' + (from === 'join' ? 'blue' : 'green'), {zIndex: 11, left: '0'});
+    tl.set('.transition-color-screen.' + (from === 'join' ? 'green' : 'blue'), {zIndex: 11, left: '-100%'});
+    tl.set('.transition-color-screen.pink', {zIndex: 12, left: '0'});
+    tl.set('.join-room-screen, .open-room-screen', {zIndex: 13});
     tl.staggerTo([
       '.join-room-screen, .open-room-screen',
-      '.transition-color-screen.green',
-      '.transition-color-screen.blue',
       '.transition-color-screen.pink',
+      '.transition-color-screen.' + (from === 'join' ? 'blue' : 'green'),
     ], screenTransitionDuration, {
       left: '-100%',
       ease: screenTransitionEase,
@@ -607,6 +601,9 @@ class PingPong {
       this.scene.sound.playUI('transition');
       this.scene.sound.playLoop('waiting');
 
+      $('.intro-wrapper').removeClass('green blue pink');
+      $('.intro-wrapper').addClass('pink');
+
       new Clipboard('#generated-room-url');
       new Clipboard('#generated-room-code');
       const tl = new TimelineMax();
@@ -622,14 +619,13 @@ class PingPong {
         opacity: 0,
       });
       tl.set('.choose-mode-screen', {zIndex: 10});
-      tl.set('.transition-color-screen', {zIndex: 11});
+      tl.set('.transition-color-screen', {zIndex: 11, left: '-100%'});
       tl.set('.open-room-screen', {zIndex: 12});
       tl.to('.choose-mode-screen', screenTransitionDuration, {
         left: '100%',
         ease: screenTransitionEase,
       });
       tl.staggerTo([
-        '.transition-color-screen.pink',
         '.transition-color-screen.blue',
         '.transition-color-screen.green',
         '.open-room-screen',

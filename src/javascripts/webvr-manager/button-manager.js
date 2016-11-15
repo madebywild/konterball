@@ -120,10 +120,10 @@ ButtonManager.prototype.loadIcons_ = function() {
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 50.2 52.8" style="enable-background:new 0 0 50.2 52.8;" xml:space="preserve">
 <g id="Layer_1">
   <g>
-    <g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="15.3,52.8 15.3,38.3 0,38.3"/> </g>
-    <g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="50.2,38.3 34.8,38.3 34.8,52.8"/> </g>
-    <g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="34.8,0 34.8,14.4 50.2,14.4"/> </g>
-    <g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="0,14.4 15.3,14.4 15.3,0"/> </g>
+    <g> <polyline fill="none" stroke-width="5" stroke="white" points="15.3,52.8 15.3,38.3 0,38.3"/> </g>
+    <g> <polyline fill="none" stroke-width="5" stroke="white" points="50.2,38.3 34.8,38.3 34.8,52.8"/> </g>
+    <g> <polyline fill="none" stroke-width="5" stroke="white" points="34.8,0 34.8,14.4 50.2,14.4"/> </g>
+    <g> <polyline fill="none" stroke-width="5" stroke="white" points="0,14.4 15.3,14.4 15.3,0"/> </g>
   </g>
 </g>
 </svg>
@@ -133,10 +133,10 @@ ButtonManager.prototype.loadIcons_ = function() {
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 53.2 53.2" style="enable-background:new 0 0 53.2 53.2;" xml:space="preserve">
 <g id="Layer_1">
 	<g>
-		<g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="17.8,2.5 2.5,2.5 2.5,16.9"/> </g>
-		<g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="2.5,36.2 2.5,50.7 17.8,50.7"/> </g>
-		<g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="35.3,50.7 50.7,50.7 50.7,36.2"/> </g>
-		<g> <polyline fill="none" stroke-width="5" stroke="#ffffff" points="50.7,16.9 50.7,2.5 35.3,2.5"/> </g>
+		<g> <polyline fill="none" stroke-width="5" stroke="white" points="17.8,2.5 2.5,2.5 2.5,16.9"/> </g>
+		<g> <polyline fill="none" stroke-width="5" stroke="white" points="2.5,36.2 2.5,50.7 17.8,50.7"/> </g>
+		<g> <polyline fill="none" stroke-width="5" stroke="white" points="35.3,50.7 50.7,50.7 50.7,36.2"/> </g>
+		<g> <polyline fill="none" stroke-width="5" stroke="white" points="50.7,16.9 50.7,2.5 35.3,2.5"/> </g>
 	</g>
 </g>
 </svg>
