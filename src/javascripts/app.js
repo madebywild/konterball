@@ -62,7 +62,7 @@ class PingPong {
             });
             tl.play();
           }
-        }, 100);
+        }, 400);
       });
     } else {
       this.startLoading();
