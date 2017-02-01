@@ -1,7 +1,7 @@
 import Scene from './scene';
 import TweenMax from 'gsap';
 import {EVENT, MODE, INITIAL_CONFIG} from './constants';
-import $ from 'jquery';
+import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
@@ -62,7 +62,7 @@ class PingPong {
             });
             tl.play();
           }
-        }, 100);
+        }, 400);
       });
     } else {
       this.startLoading();
@@ -160,30 +160,27 @@ class PingPong {
   }
 
   setupListeners() {
-    this.emitter.on(EVENT.RESTART_GAME, () => {
-      $('.game-over-screen-wrapper').hide();
-      $('#play-again').text('Play again');
-    });
-
     this.emitter.on(EVENT.GAME_OVER, (score, mode) => {
       if (document.exitPointerLock) {
         document.exitPointerLock();
       }
     });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
-      let className = this.scene.config.mode === MODE.SINGLEPLAYER ? 'pink' : this.communication.isHost ? 'blue' : 'green';
-      $('.game-over-screen-wrapper').addClass(className);
-      $('.game-over-screen-wrapper').show();
+      if (this.scene.controlMode === 'VR') {
+        setTimeout(() => {location.reload();}, 3000);
+      } else {
+        location.reload();
+      }
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
       // TODO
-      this.scene.hud.message.setMessage('Opponent disconnected');
+      this.scene.hud.message.setMessage('opponent disconnected');
       this.scene.hud.message.showMessage();
       this.scene.paddleOpponent.visible = false;
     });
   }
 
-  showModeChooserScreen() {
+  viewModeChooserScreen() {
     if (Util.isMobile()) {
       const noSleep = new NoSleep();
       noSleep.enable();
@@ -197,7 +194,7 @@ class PingPong {
       y: 10,
     });
     tl.set('.intro-screen', {zIndex: 10});
-    tl.set('.transition-color-screen', {zIndex: 11});
+    tl.set('.transition-color-screen', {zIndex: 11, left: '-100%'});
     tl.set('.choose-mode-screen', {zIndex: 12});
     const width = $(window).width();
     tl.staggerTo([
@@ -216,7 +213,6 @@ class PingPong {
     });
     tl.staggerTo([
       '.transition-color-screen.pink',
-      '.transition-color-screen.blue',
       '.transition-color-screen.green',
       '.choose-mode-screen',
     ], screenTransitionDuration, {
@@ -283,12 +279,13 @@ class PingPong {
 
     $(window).on('focus', () => {
       this.scene.tabActive = true;
+      this.scene.firstActiveFrame = this.scene.frameNumber;
       this.scene.sound.focus();
     });
 
     $('#start').on('click', () => {
       $('body').scrollTop(80);
-      this.showModeChooserScreen();
+      this.viewModeChooserScreen();
     });
 
     $('#start-singleplayer').on('click', e => {
@@ -305,8 +302,12 @@ class PingPong {
       }
       this.scene.setSingleplayer();
       this.viewVRChooserScreen().then(() => {
-        bodymovin.stop();
-        bodymovin.destroy();
+        setTimeout(() => {
+          bodymovin.stop();
+          bodymovin.destroy();
+          bodymovin.stop();
+          bodymovin.destroy();
+        }, 300);
       });
     });
 
@@ -328,6 +329,8 @@ class PingPong {
       }
       this.scene.setMultiplayer();
       this.viewOpenRoomScreenAnimation().then(() => {
+        bodymovin.stop();
+        bodymovin.destroy();
         bodymovin.stop();
         bodymovin.destroy();
       });
@@ -352,6 +355,8 @@ class PingPong {
       this.viewJoinRoomScreenAnimation().then(() => {
         bodymovin.stop();
         bodymovin.destroy();
+        bodymovin.stop();
+        bodymovin.destroy();
       });
     });
 
@@ -362,14 +367,6 @@ class PingPong {
         this.communication.sendRestartGame();
       }
       this.scene.restartGame();
-    });
-
-    $('#exit').on('click', () => {
-      location.reload();
-    });
-
-    $('.exit-arrow').on('click', () => {
-      location.reload();
     });
 
     $('.about-button').on('click', () => {
@@ -424,12 +421,12 @@ class PingPong {
       });
     });
 
-    $('.back-arrow').on('click', () => {
-      this.backAnimation();
+    $('.join-room-screen .back-arrow').on('click', () => {
+      this.backAnimation('join');
     });
 
-    $('.back-arrow').on('click', () => {
-      this.backAnimation();
+    $('.open-room-screen .back-arrow').on('click', () => {
+      this.backAnimation('open');
     });
 
     $('.mute').on('click', () => {
@@ -486,13 +483,14 @@ class PingPong {
   viewJoinRoomScreenAnimation() {
     return new Promise((resolve, reject) => {
       $('#room-code').focus();
-      $('#room-code').bind('input', function() {
-        if ($(this).val().length !== 0) {
+      $('#room-code').bind('input', () => {
+        this.scene.sound.playUI('type');
+        if ($('#room-code').val().length !== 0) {
           $('.input-wrapper .placeholder').hide();
         } else {
           $('.input-wrapper .placeholder').show();
         }
-        if ($(this).val().length === 4) {
+        if ($('#room-code').val().length === 4) {
           $('#join-room-button').removeClass('inactive');
           $('#join-room-button').css('pointer-events', 'auto');
         } else {
@@ -505,6 +503,7 @@ class PingPong {
         e.preventDefault();
         $('#room-form .grey-text').text('connecting to server');
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
+          console.log('resolved');
           $('#room-form .grey-text').text('game starts');
           $('#room-form #join-room-button').css('visibility', 'hidden');
           TweenMax.set('.opponent-icon > *', {fill: '#fff'});
@@ -522,17 +521,19 @@ class PingPong {
         opacity: 0,
         y: 10,
       });
+      $('.intro-wrapper').removeClass('green blue pink');
+      $('.intro-wrapper').addClass('pink');
       tl.set('.choose-mode-screen', {zIndex: 10});
-      tl.set('.transition-color-screen', {zIndex: 11});
-      tl.set('.join-room-screen', {zIndex: 12});
+      tl.set('.transition-color-screen.green', {zIndex: 11});
+      tl.set('.transition-color-screen.blue', {zIndex: 12});
+      tl.set('.join-room-screen', {zIndex: 13});
       tl.to('.choose-mode-screen', screenTransitionDuration, {
         left: '100%',
         ease: screenTransitionEase,
       });
       tl.staggerTo([
-        '.transition-color-screen.pink',
-        '.transition-color-screen.blue',
         '.transition-color-screen.green',
+        '.transition-color-screen.blue',
         '.join-room-screen',
       ], screenTransitionDuration, {
         left: '0%',
@@ -550,17 +551,18 @@ class PingPong {
     });
   }
 
-  backAnimation() {
+  backAnimation(from) {
     this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
-    tl.set('.choose-mode-screen', {zIndex: 12});
-    tl.set('.transition-color-screen', {zIndex: 11, left: '100%'});
-    tl.set('.join-room-screen, .open-room-screen', {zIndex: 10});
+    tl.set('.choose-mode-screen', {zIndex: 10});
+    tl.set('.transition-color-screen.' + (from === 'join' ? 'blue' : 'green'), {zIndex: 11, left: '0'});
+    tl.set('.transition-color-screen.' + (from === 'join' ? 'green' : 'blue'), {zIndex: 11, left: '-100%'});
+    tl.set('.transition-color-screen.pink', {zIndex: 12, left: '0'});
+    tl.set('.join-room-screen, .open-room-screen', {zIndex: 13});
     tl.staggerTo([
       '.join-room-screen, .open-room-screen',
-      '.transition-color-screen.green',
-      '.transition-color-screen.blue',
       '.transition-color-screen.pink',
+      '.transition-color-screen.' + (from === 'join' ? 'blue' : 'green'),
     ], screenTransitionDuration, {
       left: '-100%',
       ease: screenTransitionEase,
@@ -604,6 +606,9 @@ class PingPong {
       this.scene.sound.playUI('transition');
       this.scene.sound.playLoop('waiting');
 
+      $('.intro-wrapper').removeClass('green blue pink');
+      $('.intro-wrapper').addClass('pink');
+
       new Clipboard('#generated-room-url');
       new Clipboard('#generated-room-code');
       const tl = new TimelineMax();
@@ -619,14 +624,13 @@ class PingPong {
         opacity: 0,
       });
       tl.set('.choose-mode-screen', {zIndex: 10});
-      tl.set('.transition-color-screen', {zIndex: 11});
+      tl.set('.transition-color-screen', {zIndex: 11, left: '-100%'});
       tl.set('.open-room-screen', {zIndex: 12});
       tl.to('.choose-mode-screen', screenTransitionDuration, {
         left: '100%',
         ease: screenTransitionEase,
       });
       tl.staggerTo([
-        '.transition-color-screen.pink',
         '.transition-color-screen.blue',
         '.transition-color-screen.green',
         '.open-room-screen',

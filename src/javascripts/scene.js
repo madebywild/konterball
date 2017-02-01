@@ -1,5 +1,6 @@
 import TweenMax from 'gsap';
-import $ from 'jquery';
+import $ from 'zepto-modules';
+import FPS from 'fps';
 import {
   Scene as ThreeScene,
   WebGLRenderer,
@@ -27,7 +28,7 @@ import VRControls from 'three/VRControls.js';
 import ViveController from 'three/ViveController.js';
 
 import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
-import {cap, mirrorPosition, mirrorVelocity} from './util/helpers';
+import {cap, mirrorPosition, mirrorVelocity, setTransparency} from './util/helpers';
 import VR_MODES from './webvr-manager/modes';
 import Physics from './physics';
 import Hud from './hud';
@@ -85,6 +86,10 @@ export default class Scene {
     this.ballInterpolationAlpha = 0;
     this.ghostPaddlePosition = new Vector3();
     this.pointerIsLocked = false;
+    this.fps = FPS({
+      every: 10,
+      decay: 0.1,
+    });
 
     this.mouseMoveSinceLastFrame = {
       x: 0,
@@ -106,11 +111,6 @@ export default class Scene {
 
     this.isMobile = Util.isMobile();
 
-    this.viewport = {
-      width: $('body').width(),
-      height: $('body').height(),
-    };
-
     this.config = Object.assign({}, INITIAL_CONFIG);
 
     this.score = {
@@ -124,6 +124,7 @@ export default class Scene {
     this.sound = new SoundManager(this.config);
 
     this.frameNumber = 0;
+    this.firstActiveFrame = 0;
     this.totaltime = 0;
     this.lastRender = 0;
   }
@@ -174,21 +175,17 @@ export default class Scene {
   }
 
   mousemove(e) {
-    if (!this.paddle) {
+    if (!this.paddle || !this.viewport) {
       return;
     }
-    if (this.paddle.position.x > this.config.tableWidth 
-      || this.paddle.position.x < -this.config.tableWidth) {
-    }
-    if (this.paddle.position.z < this.config.tablePositionZ + 0.5
-      && this.paddle.position.z > 0) {
-    }
+    //console.log(e);
     if (this.pointerIsLocked) {
+      //console.log('pointer is locked');
       this.mouseMoveSinceLastFrame.x += e.movementX;
       this.mouseMoveSinceLastFrame.y += e.movementY;
     } else {
-      this.mousePosition.x = e.clientX / this.viewport.width - 0.5;
-      this.mousePosition.y = -(e.clientY / this.viewport.height - 0.5);
+      this.mousePosition.x = e.offsetX / this.viewport.width - 0.5;
+      this.mousePosition.y = -(e.offsetY / this.viewport.height - 0.5);
     }
   }
 
@@ -197,6 +194,7 @@ export default class Scene {
       this.sound.playLoop('bass-pad-synth');
       this.ball.visible = false;
       this.paddle.visible = false;
+      this.paddleOpponent.visible = false;
       this.config.state = STATE.GAME_OVER;
       this.time.clearTimeout(this.resetBallTimeout);
       this.crosshair.visible = true;
@@ -211,6 +209,9 @@ export default class Scene {
           this.sound.playUI('lose');
         }
       }
+      setTransparency(this.table, 0.2);
+      setTransparency(this.net, 0.2);
+      this.hud.scoreDisplay.hide();
       this.hud.message.showMessage();
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
@@ -218,29 +219,49 @@ export default class Scene {
       this.hud.message.hideMessage();
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.playerRequestedRestart = true;
+        this.hud.message.setMessage('waiting');
+        this.hud.message.showMessage();
         this.communication.sendRestartGame();
       }
       this.restartGame();
     });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, e => {
       this.hud.message.setMessage('take off vr device');
-
+    });
+    this.emitter.on(EVENT.BALL_NET_COLLISION, e => {
+      this.sound.playUI('net');
     });
 
     // $(document).mousemove(this.mousemove.bind(this));
-    document.querySelector('canvas').addEventListener('mousemove', this.mousemove, false);
+    this.renderer.domElement.addEventListener('mousemove', this.mousemove, false);
     // $('canvas').mousemove(this.mousemove.bind(this));
-    $('canvas').click(() => {
+    $(this.renderer.domElement).click(() => {
       this.hud.message.click();
     });
-    document.addEventListener('pointerlockchange', () => {
-      if (document.pointerLockElement === this.renderer.domElement) {
-        this.pointerIsLocked = true;
-      } else {
-        this.pointerIsLocked = false;
-      }
-    }, false);
 
+    if ("onpointerlockchange" in document) {
+      document.addEventListener('pointerlockchange', this.pointerLockChange.bind(this), false);
+    } else if ("onmozpointerlockchange" in document) {
+      document.addEventListener('mozpointerlockchange', this.pointerLockChange.bind(this), false);
+    }
+
+    this.fps.on('data', framerate => {
+      if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
+        console.log('reducing quality, fps was ' + framerate);
+        // TODO maybe reduce shadow map size first
+        this.renderer.setPixelRatio(window.devicePixelRatio / 2);
+      }
+    });
+  }
+
+  pointerLockChange() {
+    console.log(document.pointerLockElement);
+    if (document.pointerLockElement === this.renderer.domElement
+      || document.mozPointerLockElement === this.renderer.domElement) {
+      this.pointerIsLocked = true;
+    } else {
+      this.pointerIsLocked = false;
+    }
   }
 
   setupVRControls() {
@@ -369,6 +390,10 @@ export default class Scene {
     }
 
     this.introPanAnimation().then(() => {
+      this.viewport = {
+        width: $(this.renderer.domElement).width(),
+        height: $(this.renderer.domElement).height(),
+      };
       if (this.display) {
         this.display.resetPose();
       }
@@ -379,8 +404,8 @@ export default class Scene {
         this.countdown();
       } else {
         this.paddleOpponent.visible = true;
-        this.communication.sendRequestCountdown();
         this.playerRequestedCountdown = true;
+        this.communication.sendRequestCountdown();
         this.requestCountdown();
       }
     });
@@ -390,31 +415,6 @@ export default class Scene {
     this.animate();
     return new Promise((resolve, reject) => {
       const tl = new TimelineMax();
-      /*
-      tl.set('canvas, .transition-color-screen', {
-        'left': '-100%',
-      });
-      tl.set('.intro', {zIndex: 10});
-      tl.set('.transition-color-screen', {zIndex: 11});
-      tl.set('canvas', {zIndex: 12});
-      tl.to([
-        '.open-room-screen',
-        '.join-room-screen',
-        '.choose-mode-screen',
-      ], 0.5, {
-        left: '100%',
-        ease: Power2.easeInOut,
-      });
-      tl.staggerTo([
-        '.transition-color-screen.pink',
-        '.transition-color-screen.blue',
-        '.transition-color-screen.green',
-        'canvas',
-      ], 0.5, {
-        left: '0%',
-        ease: Power2.easeInOut,
-      }, 0.1, '-=0.6');
-      */
       this.camera.lookAt(
         new Vector3().lerpVectors(
           this.ghostPaddlePosition,
@@ -426,9 +426,22 @@ export default class Scene {
           0.5
         )
       );
-      this.camera.position.y = 4;
-      tl.set('canvas', {display: 'block'});
-      tl.to('.intro-wrapper', 0.5, {autoAlpha: 0});
+      this.camera.position.y = 5;
+      tl.set(this.renderer.domElement, {display: 'block'});
+
+      if (this.config.mode === MODE.MULTIPLAYER && !this.isMobile && this.controlMode === 'MOUSE') {
+        console.log('stagger');
+        tl.staggerTo([
+          '.present-players',
+          '#generated-room-code, #generated-room-url, #room-code',
+          '.grey-text',
+          '.opponent-joined',
+        ], 0.5, {
+          y: -20,
+          opacity: 0,
+        }, 0.1, 0);
+      }
+      tl.to('.intro-wrapper', 0.3, {autoAlpha: 0});
 
       const panDuration = 1.5;
 
@@ -452,9 +465,16 @@ export default class Scene {
   }
 
   countdown() {
+    // TODO why is this neccessary
+    $('.opponent-joined').css('display', 'none');
     this.paddle.visible = true;
+    this.paddleOpponent.visible = this.config.mode === MODE.MULTIPLAYER;
     this.sound.playLoop('bass');
-    this.hud.message.hideMessage();
+    this.hud.scoreDisplay.show();
+    this.hud.message.hideMessage(this.config.mode === MODE.MULTIPLAYER);
+    setTransparency(this.table, 1);
+    setTransparency(this.net, 1);
+
     this.config.state = STATE.COUNTDOWN;
     // countdown from 3, start game afterwards
     this.hud.countdown.showCountdown();
@@ -888,13 +908,13 @@ export default class Scene {
       if (this.pointerIsLocked) {
         paddlePosition =  {
           x: this.ghostPaddlePosition.x + 0.0015 * this.mouseMoveSinceLastFrame.x,
-          y: 1,
+          y: this.config.tableHeight + 0.24,
           z: this.ghostPaddlePosition.z + 0.0015 * this.mouseMoveSinceLastFrame.y,
         };
       } else {
         paddlePosition = {
           x: 1.4 * this.mousePosition.x * this.config.tableWidth,
-          y: 1,
+          y: this.config.tableHeight + 0.24,
           z: -this.config.tableDepth * 0.5 * (this.mousePosition.y + 0.5),
         };
       }
@@ -904,6 +924,8 @@ export default class Scene {
       const z = cap(paddlePosition.z, this.config.tablePositionZ + 0.5, 0);
       const y = paddlePosition.y || this.config.tableHeight + 0.1 - z * 0.2;
       return {x, y, z};
+    } else {
+      return this.paddle.position.clone();
     }
   }
 
@@ -958,11 +980,7 @@ export default class Scene {
     const timestamp = Date.now();
     const delta = Math.min(timestamp - this.lastRender, 500);
     this.totaltime += delta;
-
-    if (!this.tabActive) {
-      // requestAnimationFrame(this.animate.bind(this));
-      // return;
-    }
+    this.fps.tick();
 
     if (this.ball) {
       const dist = new Vector3();
@@ -1068,8 +1086,8 @@ export default class Scene {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.viewport = {
-      width: $(document).width(),
-      height: $(document).height(),
+      width: $(this.renderer.domElement).width(),
+      height: $(this.renderer.domElement).height(),
     };
   }
 }

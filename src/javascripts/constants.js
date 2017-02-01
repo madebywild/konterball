@@ -22,6 +22,7 @@ export const EVENT = {
   EXIT_BUTTON_PRESSED: 'EXIT_BUTTON_PRESSED',
   BALL_TABLE_COLLISION: 'BALL_TABLE_COLLISION',
   BALL_PADDLE_COLLISION: 'BALL_PADDLE_COLLISION',
+  BALL_NET_COLLISION: 'BALL_NET_COLLISION',
   INIT_BALL: 'INIT_BALL',
   LOAD_PROGRESS: 'LOAD_PROGRESS',
 };
@@ -44,7 +45,7 @@ export const INITIAL_CONFIG = {
   netThickness: 0.02,
   tableWidth: 1.52,
   tableDepth: 2.74,
-  tableHeight: 0.762,
+  tableHeight: 0.76,
   netHeight: 0.15,
   tablePositionZ: -2,
   tableThickness: 0.1,

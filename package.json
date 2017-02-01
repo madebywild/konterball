@@ -18,6 +18,7 @@
     "production": "gulp production",
     "deploy": "gulp deploy",
     "demo": "gulp production && gulp server",
+    "lint": "eslint src",
     "test": "gulp production && karma start --single-run",
     "prod": "gulp production && node server.js",
     "test:watch": "karma start",
@@ -100,6 +101,7 @@
     "event-emitter": "^0.3.4",
     "express": "^4.13.4",
     "express-history-api-fallback": "^2.0.0",
+    "fps": "0.0.3",
     "gsap": "^1.19.0",
     "howler": "^2.0.0",
     "jquery": "^3.1.1",
@@ -108,10 +110,13 @@
     "lodash.chunk": "^4.2.0",
     "normalize.css": "^4.0.0",
     "nosleep": "github:bhspitmonkey/NoSleep.js",
+    "object.values": "^1.0.3",
     "randomstring": "^1.1.5",
     "three": "^0.82.1",
     "webvr-polyfill": "^0.9.20",
     "wordwrap": "^1.0.0",
-    "worker-loader": "^0.7.1"
+    "worker-loader": "^0.7.1",
+    "zepto": "^1.2.0",
+    "zepto-modules": "^1.0.1"
   }
 }

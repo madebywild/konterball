@@ -69,9 +69,6 @@ button.inactive {
   @extend .screen;
   z-index: 2;
 }
-.intro-wrapper {
-  background-color: $blue-background;
-}
 .game-over-screen-wrapper {
   z-index: 20;
 }
@@ -88,6 +85,7 @@ button.inactive {
   height: calc(100vh + 1px);
   top: 0;
   left: 0;
+  overflow: hidden;
 }
 .about-button {
   display: none;

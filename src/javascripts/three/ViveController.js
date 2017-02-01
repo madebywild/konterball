@@ -3,7 +3,7 @@
  * @author stewdio / http://stewd.io
  */
 
-import {Object3D} from 'three';
+import {Object3D, Matrix4} from 'three';
 
 let ViveController = function ( id ) {
 
@@ -25,7 +25,6 @@ let ViveController = function ( id ) {
 
 		var gamepads = navigator.getGamepads();
 
-    console.log(gamepads);
 		for ( var i = 0, j = 0; i < 4; i ++ ) {
 
 			var gamepad = gamepads[ i ];

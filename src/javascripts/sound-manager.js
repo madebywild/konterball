@@ -1,7 +1,7 @@
 import {Howler} from 'howler';
 import {rand, cap} from 'util/helpers';
 import {MODE} from './constants';
-import $ from 'jquery';
+import $ from 'zepto-modules';
 
 export default class SoundManager {
   constructor(config) {
@@ -9,7 +9,7 @@ export default class SoundManager {
     this.muted = false;
     this.paddleSounds = [];
     this.tableSounds = [];
-    let url = `/audio/menu/`;
+    let url = `https://s3.eu-central-1.amazonaws.com/pingpongsound/menu/`;
     for (let i = 1; i <= 3; i++) {
       this.paddleSounds.push(new Howl({
         src: `${url}racket0${i}.mp3`,
@@ -29,11 +29,12 @@ export default class SoundManager {
     this.uiSounds.set('miss', new Howl({src: `${url}miss.mp3`}));
     this.uiSounds.set('point', new Howl({src: `${url}point.mp3`}));
     this.uiSounds.set('net', new Howl({src: `${url}net.mp3`}));
+    this.uiSounds.set('type', new Howl({src: `${url}type.mp3`}));
 
-    url = `/audio/loops/`;
+    url = `https://s3.eu-central-1.amazonaws.com/pingpongsound/loops/`;
     this.loopSounds = new Map();
     this.loopSounds.set('bass', new Howl({loop: true, src: `${url}loop1-bass.mp3`}));
-    this.loopSounds.set('bass-pad', new Howl({loop: true, src: `${url}loop1-bass-pad.mp3`}));
+    this.loopSounds.set('bass-pad', new Howl({loop: true, src: `${url}loop1-bass-pad.mp3`, onloaderror: (a, b) => {this.error = true;}}));
     this.loopSounds.set('bass-pad-synth', new Howl({loop: true, src: `${url}loop1-bass-pad-synth.mp3`}));
     this.loopSounds.set('waiting', new Howl({loop: true, src: `${url}waiting.mp3`}));
     this.loopSounds.get('bass').play();
@@ -43,6 +44,7 @@ export default class SoundManager {
   }
 
   playLoop(keyLoop) {
+    if (this.error) return;
     let key = '';
     let pos = 0;
     for (key of this.loopSounds.keys()) {
@@ -56,17 +58,20 @@ export default class SoundManager {
   }
 
   playUI(id) {
+    if (this.error) return;
     console.log('play ' + id);
     this.uiSounds.get(id).play();
   }
 
   paddle(point={x: 0, y: 0, z: 0}) {
+    if (this.error) return;
     let i = rand(0, this.paddleSounds.length);
     this.paddleSounds[i].pos(point.x, point.y, point.z);
     this.paddleSounds[i].play();
   }
 
   table(point={x: 0, y: 0, z: 0}, velocity={x: 0, y: -1, z: -1}) {
+    if (this.error) return;
     if (point.y > this.config.tableHeight + 0.1 && this.config.mode === MODE.MULTIPLAYER) {
       // ball hit vertical table but its not visible
       return;
