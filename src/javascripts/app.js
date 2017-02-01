@@ -271,16 +271,16 @@ class PingPong {
   }
 
   setupHandlers() {
-    $(window).on('blur', () => {
-      this.scene.tabActive = false;
-      this.scene.sound.blur();
-    });
-
-    $(window).on('focus', () => {
-      this.scene.tabActive = true;
-      this.scene.firstActiveFrame = this.scene.frameNumber;
-      this.scene.sound.focus();
-    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        this.scene.tabActive = false;
+        this.scene.sound.blur();
+      } else {
+        this.scene.tabActive = true;
+        this.scene.firstActiveFrame = this.scene.frameNumber;
+        this.scene.sound.focus();
+      }
+    }, false);
 
     $('#start').on('click', () => {
       $('body').scrollTop(80);
