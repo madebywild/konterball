@@ -1,7 +1,9 @@
-import {MODE, EVENT} from './constants';
 import {Raycaster} from 'three';
+import {MODE, EVENT} from './constants';
 import {cap} from './util/helpers';
 import Util from './webvr-manager/util';
+
+/* global CANNON */
 
 export default class Physics {
   constructor(config, emitter) {
@@ -26,7 +28,6 @@ export default class Physics {
     this.world.broadphase = new CANNON.NaiveBroadphase();
     this.world.solver.iterations = 20;
     this.setupTable();
-    this.setupPaddle();
     this.setupNet();
   }
 
@@ -42,6 +43,7 @@ export default class Physics {
       ),
       material: new CANNON.Material(),
     });
+    // eslint-disable-next-line
     this.net._name = 'NET';
     this.net.position.set(
       0,
@@ -51,29 +53,11 @@ export default class Physics {
     this.world.add(this.net);
   }
 
-  setupPaddle() {
-    return;
-    this.paddle = new CANNON.Body({
-      mass: 0,
-      shape: new CANNON.Cylinder(
-        this.config.paddleSize,
-        this.config.paddleSize,
-        this.config.paddleThickness,
-        10
-      ),
-      material: new CANNON.Material(),
-    });
-    this.paddle._name = 'PADDLE';
-    this.paddle.position.set(0, 1, this.config.paddlePositionZ);
-    this.paddle.collisionResponse = 0;
-    this.world.add(this.paddle);
-  }
-
   addContactMaterial(mat1, mat2, bounce, friction) {
-     const contact = new CANNON.ContactMaterial(
+    const contact = new CANNON.ContactMaterial(
       mat1,
       mat2,
-      {friction: friction, restitution: bounce}
+      {friction, restitution: bounce}
     );
     this.world.addContactMaterial(contact);
     return contact;
@@ -93,6 +77,7 @@ export default class Physics {
     });
     this.table.position.y = this.config.tableHeight / 2;
     this.table.position.z = this.config.tablePositionZ;
+    // eslint-disable-next-line
     this.table._name = 'table-2-player';
     this.table.addEventListener('collide', this.tableCollision.bind(this));
     this.world.add(this.table);
@@ -108,7 +93,7 @@ export default class Physics {
       ),
       material: new CANNON.Material(),
     });
-    this.upwardsTable.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), Math.PI / 2);
+    this.upwardsTable.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
     this.upwardsTable.position.z = this.config.tablePositionZ - this.config.tableHeight / 2;
     this.upwardsTable.position.y = this.config.tableHeight + this.config.tableDepth / 4;
     this.upwardsTable.collisionResponse = 0;
@@ -145,10 +130,10 @@ export default class Physics {
     this.emitter.emit(EVENT.BALL_PADDLE_COLLISION, e.body);
 
     let hitpointX = e.body.position.x - e.target.position.x;
-    let hitpointY = e.body.position.y - e.target.position.y;
+    // let hitpointY = e.body.position.y - e.target.position.y;
     // normalize to -1 to 1
     hitpointX = cap(hitpointX / this.config.paddleSize, -1, 1);
-    hitpointY = cap(hitpointY / this.config.paddleSize, -1, 1);
+    // hitpointY = cap(hitpointY / this.config.paddleSize, -1, 1);
 
     const distFromRim = e.body.position.z - (this.config.tablePositionZ + this.config.tableDepth / 2);
     if (this.config.mode === MODE.MULTIPLAYER) {

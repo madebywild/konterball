@@ -1,11 +1,11 @@
-import {MODE} from '../constants';
 import {Group, BoxGeometry, Mesh, MeshLambertMaterial} from 'three';
+import {MODE} from '../constants';
 
 export default (parent, config) => {
   let geometry = null;
   let mesh = null;
   let material = null;
-  let group = new Group();
+  const group = new Group();
   group.position.y = config.tableHeight / 2;
   group.position.z = config.tablePositionZ;
 
@@ -25,7 +25,7 @@ export default (parent, config) => {
   mesh.receiveShadow = true;
   group.add(mesh);
 
-  let upwardsTableGroup = new Group();
+  const upwardsTableGroup = new Group();
   const upwardsTableHeight = config.tableDepth * 0.37;
   upwardsTableGroup.name = 'upwardsTableGroup';
   upwardsTableGroup.visible = false;

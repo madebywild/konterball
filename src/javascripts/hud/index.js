@@ -1,9 +1,7 @@
 import {FontLoader, Group} from 'three';
-import TweenMax from 'gsap';
 import ScoreDisplay from './score-display';
 import Countdown from './countdown';
 import Message from './message';
-import {MODE, EVENT} from '../constants';
 import Arrows from './arrows';
 
 export default class Hud {
@@ -27,22 +25,22 @@ export default class Hud {
   }
 
   setup() {
-    let fontloader = new FontLoader();
-    return new Promise((resolve, reject) => {
+    const fontloader = new FontLoader();
+    return new Promise(resolveOuter => {
       Promise.all([
-        new Promise((resolve, reject) => {
+        new Promise(resolve => {
           fontloader.load('fonts/AntiqueOlive.json', font => {
             this.antique = font;
             resolve();
           });
         }),
-        new Promise((resolve, reject) => {
+        new Promise(resolve => {
           fontloader.load('fonts/Futura.json', font => {
             this.font = font;
             resolve();
           });
         }),
-      ]).then(result => {
+      ]).then(() => {
         this.container = new Group();
         this.container.position.z = 1;
         this.container.position.y = 1.6;
@@ -60,15 +58,18 @@ export default class Hud {
         Arrows(this.font, this.loader).then(arrow => {
           this.arrows = arrow;
           this.scene.add(arrow);
-          resolve();
+          resolveOuter();
         }).catch(e => {
-          console.log(e);
+          // elint-disable-next-line
+          console.warn(e);
         });
       }).catch(e => {
-        console.log(e);
+        // elint-disable-next-line
+        console.warn(e);
       });
     }).catch(e => {
-      console.log(e);
+      // elint-disable-next-line
+      console.warn(e);
     });
   }
 }

@@ -4,14 +4,11 @@ module.exports = {
   cap: (value, cap1, cap2) => {
     if (cap1 > cap2) {
       return Math.max(cap2, Math.min(cap1, value));
-    } else {
-      return Math.max(cap1, Math.min(cap2, value));
     }
+    return Math.max(cap1, Math.min(cap2, value));
   },
 
-  rand: (min, max) => {
-    return min + Math.floor(Math.random() * (max - min));
-  },
+  rand: (min, max) => min + Math.floor(Math.random() * (max - min)),
 
   mirrorPosition: (pos, xAxis = 0) => {
     let z = pos.z;

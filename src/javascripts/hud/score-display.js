@@ -1,8 +1,5 @@
-import TweenMax from 'gsap';
-import {MeshBasicMaterial, TextGeometry, Mesh, Group, CircleGeometry, DoubleSide}  from 'three';
+import {MeshBasicMaterial, TextGeometry, Mesh, Group, CircleGeometry, DoubleSide} from 'three';
 import {MODE} from '../constants';
-
-const scoreSpacing = 0.3;
 
 export default class ScoreDisplay {
   constructor(parent, config, font) {
@@ -41,15 +38,15 @@ export default class ScoreDisplay {
     this.opponentScore.visible = this.config.mode === MODE.MULTIPLAYER;
 
     this.lifeGroup = new Group();
-    for (let i = 0; i < this.config.startLives; i++) {
-      geometry = new CircleGeometry(.025, 32);
+    for (let i = 0; i < this.config.startLives; i += 1) {
+      geometry = new CircleGeometry(0.025, 32);
       material = new MeshBasicMaterial({
         color: 0xffffff,
         transparent: true,
         side: DoubleSide,
         opacity: 1,
       });
-      let life = new Mesh(geometry, material);
+      const life = new Mesh(geometry, material);
       life.position.x = i * 0.12;
       this.lives.push(life);
       this.lifeGroup.add(life);
@@ -65,9 +62,9 @@ export default class ScoreDisplay {
   }
 
   setSelfScore(value) {
-     this.selfScore.geometry.dynamic = true;
+    this.selfScore.geometry.dynamic = true;
 
-    this.selfScore.geometry = new TextGeometry('' + value, {
+    this.selfScore.geometry = new TextGeometry(`${value}`, {
       font: this.font,
       size: 0.35,
       height: 0.001,
@@ -85,7 +82,7 @@ export default class ScoreDisplay {
   }
 
   setOpponentScore(value) {
-    this.opponentScore.geometry = new TextGeometry('' + value, {
+    this.opponentScore.geometry = new TextGeometry(`${value}`, {
       font: this.font,
       size: 0.35,
       height: 0.001,

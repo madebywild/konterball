@@ -1,8 +1,8 @@
 import wrap from 'wordwrap';
-import {Group, MeshBasicMaterial, FontLoader, TextGeometry, Mesh} from 'three';
+import values from 'object.values';
+import {Group, MeshBasicMaterial, TextGeometry, Mesh} from 'three';
 import $ from 'zepto-modules';
 import Button from './button';
-import values from 'object.values';
 
 const CHAR_LIMIT = 16;
 const FONT_SIZE = 0.07;
@@ -32,27 +32,27 @@ export default class Message {
     } else {
       splitText = this.wrap(text).split('\n').reverse();
     }
-    let material = new MeshBasicMaterial({
+    const material = new MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
     });
     let lineHeight = 0;
-    splitText.forEach((text, index) => {
-      let geometry = new TextGeometry(text, {
+    splitText.forEach((split, index) => {
+      const geometry = new TextGeometry(split, {
         font: this.font,
         size: FONT_SIZE,
         height: 0.001,
         curveSegments: 3,
       });
       geometry.computeBoundingBox();
-      let message = new Mesh(geometry, material);
+      const message = new Mesh(geometry, material);
       message.geometry = geometry;
       message.position.x = -geometry.boundingBox.max.x / 2;
       message.position.y = index * (geometry.boundingBox.max.y + LINE_SPACING);
       this.messageGroup.add(message);
       lineHeight = geometry.boundingBox.max.y;
     });
-    let height = splitText.length * (LINE_SPACING + lineHeight);
+    const height = splitText.length * (LINE_SPACING + lineHeight);
     this.messageGroup.position.y = this.config.tableHeight + height / 2 + 0.4;
     this.messageGroup.position.z = this.config.tablePositionZ + 0.5;
   }
@@ -60,11 +60,16 @@ export default class Message {
   gameOver(score) {
     const multiplayer = score.self || score.opponent;
     this.messageGroup.remove(...this.messageGroup.children);
-    let material = new MeshBasicMaterial({
+    const material = new MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
     });
-    const text = multiplayer ? (score.self > score.opponent ? 'YOU WON' : 'YOU LOST') : `${score.highest} ${score.highest === 1 ? 'PT' : 'PTS'}`;
+    let text = '';
+    if (multiplayer) {
+      text = score.self > score.opponent ? 'YOU WON' : 'YOU LOST';
+    } else {
+      text = `${score.highest} ${score.highest === 1 ? 'PT' : 'PTS'}`;
+    }
     let geometry = new TextGeometry(text, {
       font: this.antique,
       size: FONT_SIZE * (multiplayer ? 2.5 : 3.5),
@@ -111,6 +116,7 @@ export default class Message {
   intersect(raycaster, mouseControls) {
     const intersects = raycaster.intersectObjects(values(this.buttons).map(button => button.hitbox), false);
     if (intersects.length > 0 && !this.intersectedButton) {
+      // eslint-disable-next-line
       this.intersectedButton = intersects[0].object._name;
       if (!mouseControls) {
         this.buttons[this.intersectedButton].enter();

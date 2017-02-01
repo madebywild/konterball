@@ -7,10 +7,10 @@ import {
   TextGeometry,
   Group,
 } from 'three';
-import TweenMax from 'gsap';
+import {Power0, TimelineMax} from 'gsap';
 import {EVENT} from '../constants';
 
-const root = location.protocol + '//' + location.host;
+const root = `${location.protocol}//${location.host}`;
 
 export default class Button {
   constructor(parent, font, name, x, y, emitter) {
@@ -38,8 +38,6 @@ export default class Button {
   }
 
   makeButton(x, y) {
-    const borderColor = 0xFFFFFF;
-
     let material = new MeshBasicMaterial({
       color: 0xFFFFFF,
       side: DoubleSide,
@@ -118,6 +116,7 @@ export default class Button {
     material = new MeshBasicMaterial({transparent: true, opacity: 0});
     this.hitbox = new Mesh(geometry, material);
     this.hitbox.position.z = -0.001;
+    // eslint-disable-next-line
     this.hitbox._name = this.name;
     this.buttonGroup.add(this.hitbox);
 
@@ -142,10 +141,10 @@ export default class Button {
   }
 
   setupText() {
-    let material = new MeshBasicMaterial({
+    const material = new MeshBasicMaterial({
       color: 0xffffff,
     });
-    let geometry = new TextGeometry(this.name.toUpperCase(), {
+    const geometry = new TextGeometry(this.name.toUpperCase(), {
       font: this.font,
       size: 0.04,
       height: 0.001,
@@ -194,21 +193,29 @@ export default class Button {
       case 'exit':
         this.emitter.emit(EVENT.EXIT_BUTTON_PRESSED);
         break;
-      case 'google':
+      case 'google': {
         let googleUrl = 'https://plus.google.com/share?url=';
         googleUrl += encodeURIComponent('http://pong.wild.plus');
         window.open(googleUrl);
-      case 'facebook':
+        break;
+      }
+      case 'facebook': {
         let fbUrl = 'https://www.facebook.com/dialog/feed?';
-        fbUrl += '&link=' + encodeURIComponent(root);
+        fbUrl += `&link=${encodeURIComponent(root)}`;
         fbUrl += '&app_id=674070926074386';
         window.open(fbUrl);
         break;
-      case 'twitter':
+      }
+      case 'twitter': {
         let twitterUrl = 'http://twitter.com/intent/tweet?status=';
         twitterUrl += encodeURIComponent(root);
         window.open(twitterUrl);
         break;
+      }
+      default: {
+        // eslint-disable-next-line
+        console.error('unknown button');
+      }
     }
   }
 

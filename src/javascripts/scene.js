@@ -1,31 +1,26 @@
-import TweenMax from 'gsap';
+import {TweenMax, TimelineMax, Power0, Power1, Power2, Power4} from 'gsap';
 import $ from 'zepto-modules';
 import FPS from 'fps';
 import {
   Scene as ThreeScene,
   WebGLRenderer,
   TextureLoader,
-  PCFSoftShadowMap,
   BasicShadowMap,
   PerspectiveCamera,
   DirectionalLight,
-  CameraHelper,
   AmbientLight,
   Raycaster,
   PlaneGeometry,
   Mesh,
   MeshBasicMaterial,
-  LineBasicMaterial,
-  Geometry,
   Vector3,
   Vector2,
-  Line,
   Euler,
 } from 'three';
-import OBJLoader from 'three/OBJLoader.js';
-import VREffect from 'three/VREffect.js';
-import VRControls from 'three/VRControls.js';
-import ViveController from 'three/ViveController.js';
+import OBJLoader from './three/OBJLoader';
+import VREffect from './three/VREffect';
+import VRControls from './three/VRControls';
+import ViveController from './three/ViveController';
 
 import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
 import {cap, mirrorPosition, mirrorVelocity, setTransparency} from './util/helpers';
@@ -45,9 +40,10 @@ import setupPaddles from './models/paddle';
 
 const DEBUG_MODE = false;
 
+/* global CannonDebugRenderer */
+
 export default class Scene {
   constructor(emitter, communication) {
-
     this.emitter = emitter;
     this.time = new Time();
     this.controlMode = 'MOUSE';
@@ -130,12 +126,12 @@ export default class Scene {
   }
 
   setup() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.setupThree();
       this.setupVR();
       this.net = Net(this.scene, this.config);
 
-      this.renderer.domElement.requestPointerLock 
+      this.renderer.domElement.requestPointerLock
         = this.renderer.domElement.requestPointerLock
         || this.renderer.domElement.mozRequestPointerLock;
 
@@ -178,9 +174,9 @@ export default class Scene {
     if (!this.paddle || !this.viewport) {
       return;
     }
-    //console.log(e);
+    // console.log(e);
     if (this.pointerIsLocked) {
-      //console.log('pointer is locked');
+      // console.log('pointer is locked');
       this.mouseMoveSinceLastFrame.x += e.movementX;
       this.mouseMoveSinceLastFrame.y += e.movementY;
     } else {
@@ -190,7 +186,7 @@ export default class Scene {
   }
 
   setupEventListeners() {
-    this.emitter.on(EVENT.GAME_OVER, e => {
+    this.emitter.on(EVENT.GAME_OVER, () => {
       this.sound.playLoop('bass-pad-synth');
       this.ball.visible = false;
       this.paddle.visible = false;
@@ -215,7 +211,7 @@ export default class Scene {
       this.hud.message.showMessage();
     });
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
-    this.emitter.on(EVENT.RESTART_BUTTON_PRESSED, e => {
+    this.emitter.on(EVENT.RESTART_BUTTON_PRESSED, () => {
       this.hud.message.hideMessage();
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.playerRequestedRestart = true;
@@ -225,10 +221,10 @@ export default class Scene {
       }
       this.restartGame();
     });
-    this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, e => {
+    this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
       this.hud.message.setMessage('take off vr device');
     });
-    this.emitter.on(EVENT.BALL_NET_COLLISION, e => {
+    this.emitter.on(EVENT.BALL_NET_COLLISION, () => {
       this.sound.playUI('net');
     });
 
@@ -239,15 +235,15 @@ export default class Scene {
       this.hud.message.click();
     });
 
-    if ("onpointerlockchange" in document) {
+    if ('onpointerlockchange' in document) {
       document.addEventListener('pointerlockchange', this.pointerLockChange.bind(this), false);
-    } else if ("onmozpointerlockchange" in document) {
+    } else if ('onmozpointerlockchange' in document) {
       document.addEventListener('mozpointerlockchange', this.pointerLockChange.bind(this), false);
     }
 
     this.fps.on('data', framerate => {
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
-        console.log('reducing quality, fps was ' + framerate);
+        console.log(`reducing quality, fps was ${framerate}`);
         // TODO maybe reduce shadow map size first
         this.renderer.setPixelRatio(window.devicePixelRatio / 2);
       }
@@ -255,7 +251,6 @@ export default class Scene {
   }
 
   pointerLockChange() {
-    console.log(document.pointerLockElement);
     if (document.pointerLockElement === this.renderer.domElement
       || document.mozPointerLockElement === this.renderer.domElement) {
       this.pointerIsLocked = true;
@@ -355,7 +350,7 @@ export default class Scene {
           this.scene.add(this.controller2);
 
           this.objLoader.load('vr_controller_vive_1_5.obj', object => {
-            this.controller = object.children[ 0 ];
+            this.controller = object.children[0];
             this.controller.material.map = this.textureLoader.load('onepointfive_texture.png');
             this.controller.material.specularMap = this.textureLoader.load('onepointfive_spec.png');
 
@@ -413,7 +408,7 @@ export default class Scene {
 
   introPanAnimation() {
     this.animate();
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       const tl = new TimelineMax();
       this.camera.lookAt(
         new Vector3().lerpVectors(
@@ -481,7 +476,7 @@ export default class Scene {
     let n = 2;
     const countdown = this.time.setInterval(() => {
       this.hud.countdown.setCountdown(n);
-      n--;
+      n -= 1;
       if (n < 0) {
         // stop the countdown
         this.time.clearInterval(countdown);
@@ -491,7 +486,7 @@ export default class Scene {
           this.addBall();
           this.physics.initBallPosition();
         } else if (this.config.mode === MODE.MULTIPLAYER
-            && !this.communication.isHost) {
+            && !this.communication.isHost) {
           this.addBall();
           // if multiplayer, also send the other player a hit so the ball is synced
           this.communication.sendMiss({
@@ -590,8 +585,11 @@ export default class Scene {
       x: pos.x,
       y: pos.y,
       z: pos.z - 0.1,
+      // eslint-disable-next-line
       rotationX: -move.rotation._x,
+      // eslint-disable-next-line
       rotationY: move.rotation._y,
+      // eslint-disable-next-line
       rotationZ: -move.rotation._z,
       onUpdate: () => {
         this.paddleOpponent.position.x = no.x;
@@ -610,7 +608,7 @@ export default class Scene {
     this.restartGame();
   }
 
-  receivedHit(data, wasMiss=false) {
+  receivedHit(data, wasMiss = false) {
     this.time.clearTimeout(this.resetBallTimeout);
     // we might not have a ball yet
     if (!this.ball) {
@@ -653,11 +651,11 @@ export default class Scene {
     // and set game to be over if the score is high enough
     if (!data.isInit) {
       if (data.ballHasHitEnemyTable) {
-        this.score.opponent++;
+        this.score.opponent += 1;
         this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
         this.sound.playUI('miss');
       } else {
-        this.score.self++;
+        this.score.self += 1;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
         this.sound.playUI('point');
       }
@@ -666,7 +664,7 @@ export default class Scene {
     }
     if (this.score.self >= this.config.POINTS_FOR_WIN
       || this.score.opponent >= this.config.POINTS_FOR_WIN) {
-        this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
+      this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
     } else {
       this.physics.ball.angularVelocity.x = 0;
       this.physics.ball.angularVelocity.y = 0;
@@ -688,9 +686,9 @@ export default class Scene {
     }
     const velocity = this.physics.ball.velocity.length();
     const dist = new Vector3().subVectors(this.ball.position, this.paddleOpponent.position).length();
-    const eta = dist/velocity;
+    const eta = dist / velocity;
     const desirableEta = eta + (this.communication.latency / 1000);
-    this.physicsTimeStep = 1000 * (desirableEta/eta) * 1;
+    this.physicsTimeStep = 1000 * (desirableEta / eta) * 1;
   }
 
   restartPingpongTimeout() {
@@ -704,11 +702,11 @@ export default class Scene {
       if (this.config.mode === MODE.MULTIPLAYER) {
         this.physicsTimeStep = 1000;
         if (this.ballHasHitEnemyTable) {
-          this.score.self++;
+          this.score.self += 1;
           this.hud.scoreDisplay.setSelfScore(this.score.self);
           this.sound.playUI('point');
         } else {
-          this.score.opponent++;
+          this.score.opponent += 1;
           this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
           this.sound.playUI('miss');
         }
@@ -738,7 +736,7 @@ export default class Scene {
         this.score.self = 0;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
         this.physics.initBallPosition();
-        this.score.lives--;
+        this.score.lives -= 1;
         this.hud.scoreDisplay.setLives(this.score.lives);
         this.sound.playUI('miss');
         if (this.score.lives < 1) {
@@ -761,7 +759,7 @@ export default class Scene {
     this.ballHasHitEnemyTable = false;
     this.sound.paddle(point);
     if (this.config.mode === MODE.SINGLEPLAYER) {
-      this.score.self++;
+      this.score.self += 1;
       this.hud.scoreDisplay.setSelfScore(this.score.self);
       return;
     }
@@ -779,6 +777,7 @@ export default class Scene {
 
   ballTableCollision(body, target) {
     this.sound.table(body.position, this.physics.ball.velocity);
+    // eslint-disable-next-line
     if (target._name === 'table-2-player' && body.position.z < this.config.tablePositionZ) {
       this.ballHasHitEnemyTable = true;
     }
@@ -812,7 +811,7 @@ export default class Scene {
       if (this.camera.position.x === 0
         && this.camera.position.z === 0) {
           // no position sensor in the device, put it behind the table
-          this.camera.position.z = 1;
+        this.camera.position.z = 1;
       }
     }
     if (this.hitTween && this.hitTween.isActive()) {
@@ -901,32 +900,29 @@ export default class Scene {
         }
       }
       if (intersects.length > 0) {
-        paddlePosition =  intersects[0].point;
+        paddlePosition = intersects[0].point;
       }
-    } else {
+    } else if (this.pointerIsLocked) {
       // MOUSE
-      if (this.pointerIsLocked) {
-        paddlePosition =  {
-          x: this.ghostPaddlePosition.x + 0.0015 * this.mouseMoveSinceLastFrame.x,
-          y: this.config.tableHeight + 0.24,
-          z: this.ghostPaddlePosition.z + 0.0015 * this.mouseMoveSinceLastFrame.y,
-        };
-      } else {
-        paddlePosition = {
-          x: 1.4 * this.mousePosition.x * this.config.tableWidth,
-          y: this.config.tableHeight + 0.24,
-          z: -this.config.tableDepth * 0.5 * (this.mousePosition.y + 0.5),
-        };
-      }
+      paddlePosition = {
+        x: this.ghostPaddlePosition.x + 0.0015 * this.mouseMoveSinceLastFrame.x,
+        y: this.config.tableHeight + 0.24,
+        z: this.ghostPaddlePosition.z + 0.0015 * this.mouseMoveSinceLastFrame.y,
+      };
+    } else {
+      paddlePosition = {
+        x: 1.4 * this.mousePosition.x * this.config.tableWidth,
+        y: this.config.tableHeight + 0.24,
+        z: -this.config.tableDepth * 0.5 * (this.mousePosition.y + 0.5),
+      };
     }
     if (paddlePosition) {
       const x = cap(paddlePosition.x, this.config.tableWidth, -this.config.tableWidth);
       const z = cap(paddlePosition.z, this.config.tablePositionZ + 0.5, 0);
       const y = paddlePosition.y || this.config.tableHeight + 0.1 - z * 0.2;
       return {x, y, z};
-    } else {
-      return this.paddle.position.clone();
     }
+    return this.paddle.position.clone();
   }
 
   computePaddleRotation(pos) {
@@ -991,7 +987,7 @@ export default class Scene {
           && Math.abs(dist.x) < 0.2
           && Math.abs(dist.z) < 0.1
         || this.isMobile && dist.length() < 0.8
-          && Math.abs(dist.x) < 0.3 
+          && Math.abs(dist.x) < 0.3
           && Math.abs(dist.z) < 0.1)
         // and ball is moving towards us, it could move away from us
         // immediately after the opponent reset the ball and it that case
@@ -1010,7 +1006,6 @@ export default class Scene {
     if (this.config.state === STATE.PLAYING
       || this.config.state === STATE.COUNTDOWN
       || this.config.state === STATE.GAME_OVER) {
-
       if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
         // for multiplayer testing
         // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
@@ -1037,7 +1032,7 @@ export default class Scene {
     if (this.config.state === STATE.GAME_OVER) {
       // raycaster wants mouse from -1 to 1, not -0.5 to 0.5 like mousePosition is normalized
       let mouse = {};
-      if (this.controlMode === 'VR' || this.isMobile) {
+      if (this.controlMode === 'VR' || this.isMobile) {
         const zCamVec = new Vector3(0, 0, -1);
         const position = this.camera.localToWorld(zCamVec);
         this.crosshair.position.set(position.x, position.y, position.z);
@@ -1062,7 +1057,7 @@ export default class Scene {
     this.time.step();
 
     this.lastRender = timestamp;
-    this.frameNumber++;
+    this.frameNumber += 1;
     this.mouseMoveSinceLastFrame.x = 0;
     this.mouseMoveSinceLastFrame.y = 0;
 
@@ -1080,9 +1075,9 @@ export default class Scene {
     }
   }
 
-  onResize(e) {
+  onResize() {
     this.effect.setSize(window.innerWidth, window.innerHeight, true);
-    //this.renderer.setSize(window.innerWidth, window.innerHeight);
+    // this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
     this.viewport = {

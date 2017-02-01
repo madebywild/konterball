@@ -1,13 +1,12 @@
-import Scene from './scene';
-import TweenMax from 'gsap';
-import {EVENT, MODE, INITIAL_CONFIG} from './constants';
+import NoSleep from 'nosleep';
+import {TweenMax, TimelineMax, Power0, Power1, Power4, SlowMo, Back} from 'gsap';
 import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
-import Util from 'webvr-manager/util';
-import Modes from 'webvr-manager/modes';
-import NoSleep from 'nosleep';
+import {EVENT, MODE, INITIAL_CONFIG} from './constants';
+import Scene from './scene';
+import Util from './webvr-manager/util';
 import Communication from './communication';
 
 document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
@@ -72,7 +71,7 @@ class PingPong {
   startLoading() {
     this.startedLoading = true;
     Promise.all([
-      this.scene.setup(), 
+      this.scene.setup(),
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
@@ -80,8 +79,9 @@ class PingPong {
     });
   }
 
+  // eslint-disable-next-line
   loadingAnimation() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       TweenMax.to('header span', 0.5, {
         ease: SlowMo.ease.config(0.3, 0.7, false),
         width: '100%',
@@ -106,7 +106,7 @@ class PingPong {
   }
 
   startBallTween() {
-    const ballRadius = parseInt($('#ball').attr('r'));
+    const ballRadius = parseInt($('#ball').attr('r'), 10);
     const no = {
       x: Math.random() > 0.5 ? -ballRadius : 1920 + ballRadius,
       y: Math.random() * 800 - 400,
@@ -122,7 +122,6 @@ class PingPong {
     });
     const $ball = $('#ball');
     const $shadow = $('#ball-shadow');
-    const width = $('.intro-screen svg').width();
     const startY = no.y;
     const shadowPos = 840;
     this.introBallTween.to(no, 1, {
@@ -132,8 +131,8 @@ class PingPong {
         $ball.attr('cx', no.x);
         $shadow.attr('cx', no.x);
         $shadow.attr('cy', shadowPos);
-        let rx = 40 + 15 * (1 - (shadowPos - no.y) / shadowPos);
-        let ry = rx / 2;
+        const rx = 40 + 15 * (1 - (shadowPos - no.y) / shadowPos);
+        const ry = rx / 2;
         $shadow.attr('rx', rx);
         $shadow.attr('ry', ry);
       },
@@ -160,7 +159,7 @@ class PingPong {
   }
 
   setupListeners() {
-    this.emitter.on(EVENT.GAME_OVER, (score, mode) => {
+    this.emitter.on(EVENT.GAME_OVER, () => {
       if (document.exitPointerLock) {
         document.exitPointerLock();
       }
@@ -243,10 +242,10 @@ class PingPong {
       opacity: 1,
     }, 0.1, '+=0.2');
   }
-  
+
   loadModeChooserAnimation() {
     return Promise.all([
-      new Promise((resolve, reject) => {
+      new Promise(resolve => {
         $.getJSON('/animations/1player.json', data => {
           this.singleplayerAnimation = bodymovin.loadAnimation({
             container: document.getElementById('singleplayer-animation'),
@@ -257,7 +256,7 @@ class PingPong {
           resolve();
         });
       }),
-      new Promise((resolve, reject) => {
+      new Promise(resolve => {
         $.getJSON('/animations/2player.json', data => {
           this.multiplayerAnimation = bodymovin.loadAnimation({
             container: document.getElementById('multiplayer-animation'),
@@ -288,7 +287,7 @@ class PingPong {
       this.viewModeChooserScreen();
     });
 
-    $('#start-singleplayer').on('click', e => {
+    $('#start-singleplayer').on('click', () => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
@@ -311,11 +310,11 @@ class PingPong {
       });
     });
 
-    $('#reload').on('click', e => {
+    $('#reload').on('click', () => {
       window.location.reload();
     });
 
-    $('#open-room').on('click', e => {
+    $('#open-room').on('click', () => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
@@ -336,7 +335,7 @@ class PingPong {
       });
     });
 
-    $('#join-room').on('click', e => {
+    $('#join-room').on('click', () => {
       if (this.scene.manager.isVRCompatible) {
         if (Util.isMobile()) {
           $('#cardboard img').attr('src', '/images/cardboard-green.gif');
@@ -391,12 +390,14 @@ class PingPong {
     $('#cardboard').on('click', () => {
       this.scene.setupVRControls();
       this.scene.controlMode = 'VR';
+        // eslint-disable-next-line
       this.scene.manager.enterVRMode_();
       this.scene.startGame();
     });
 
     $('#tilt').on('click', () => {
       if (Util.isMobile()) {
+        // eslint-disable-next-line
         this.scene.manager.onFSClick_();
         this.scene.setupVRControls();
         this.scene.controlMode = 'VR';
@@ -410,7 +411,7 @@ class PingPong {
       this.scene.sound.playUI('button');
     });
 
-    $('button.btn').on('click', function() {
+    $('button.btn').on('click', function onButtonClick() {
       const duration = 0.1;
       TweenMax.to($(this), duration, {
         backgroundColor: '#fff',
@@ -435,7 +436,7 @@ class PingPong {
   }
 
   viewVRChooserScreen() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       if (!this.scene.manager.isVRCompatible) {
         this.scene.startGame();
         resolve();
@@ -450,7 +451,7 @@ class PingPong {
       this.scene.sound.playUI('transition');
       const tl = new TimelineMax();
       tl.set('.choose-vr-mode-screen, .transition-color-screen', {
-        'left': '-100%',
+        left: '-100%',
       });
       tl.set([
         '.open-room-screen',
@@ -481,7 +482,7 @@ class PingPong {
   }
 
   viewJoinRoomScreenAnimation() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       $('#room-code').focus();
       $('#room-code').bind('input', () => {
         this.scene.sound.playUI('type');
@@ -502,7 +503,7 @@ class PingPong {
         $('#room-form .grey-text').css('color', '#fff');
         e.preventDefault();
         $('#room-form .grey-text').text('connecting to server');
-        this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(e => {
+        this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(() => {
           console.log('resolved');
           $('#room-form .grey-text').text('game starts');
           $('#room-form #join-room-button').css('visibility', 'hidden');
@@ -510,8 +511,8 @@ class PingPong {
           setTimeout(() => {
             this.viewVRChooserScreen();
           }, 1000);
-        }).catch(e => {
-          $('#room-form .grey-text').text(e);
+        }).catch(err => {
+          $('#room-form .grey-text').text(err);
         });
       });
 
@@ -548,6 +549,7 @@ class PingPong {
         y: 0,
         opacity: 1,
       }, 0.1);
+      tl.call(resolve);
     });
   }
 
@@ -555,14 +557,14 @@ class PingPong {
     this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
     tl.set('.choose-mode-screen', {zIndex: 10});
-    tl.set('.transition-color-screen.' + (from === 'join' ? 'blue' : 'green'), {zIndex: 11, left: '0'});
-    tl.set('.transition-color-screen.' + (from === 'join' ? 'green' : 'blue'), {zIndex: 11, left: '-100%'});
+    tl.set(`.transition-color-screen.${from === 'join' ? 'blue' : 'green'}`, {zIndex: 11, left: '0'});
+    tl.set(`.transition-color-screen.${from === 'join' ? 'green' : 'blue'}`, {zIndex: 11, left: '-100%'});
     tl.set('.transition-color-screen.pink', {zIndex: 12, left: '0'});
     tl.set('.join-room-screen, .open-room-screen', {zIndex: 13});
     tl.staggerTo([
       '.join-room-screen, .open-room-screen',
       '.transition-color-screen.pink',
-      '.transition-color-screen.' + (from === 'join' ? 'blue' : 'green'),
+      `.transition-color-screen.${from === 'join' ? 'blue' : 'green'}`,
     ], screenTransitionDuration, {
       left: '-100%',
       ease: screenTransitionEase,
@@ -573,13 +575,14 @@ class PingPong {
       left: '0%',
       ease: screenTransitionEase,
     }, `-=${screenTransitionDuration - screenTransitionInterval}`);
+    this.loadModeChooserAnimation();
     this.scene.sound.playLoop('bass-pad');
   }
 
   viewOpenRoomScreenAnimation() {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       this.communication.chooseClosestServer().then(() => {
-        let id = this.communication.openRoom();
+        const id = this.communication.openRoom();
         $('#generated-room-code').val(id);
         $('#generated-room-url').val(`pong.wild.plus/${id}`);
         $('.opponent-joined').text('waiting for opponent');
@@ -609,9 +612,12 @@ class PingPong {
       $('.intro-wrapper').removeClass('green blue pink');
       $('.intro-wrapper').addClass('pink');
 
-      new Clipboard('#generated-room-url');
-      new Clipboard('#generated-room-code');
+      // eslint-disable-next-line
+      let clip1 = new Clipboard('#generated-room-url');
+      // eslint-disable-next-line
+      let clip2 = new Clipboard('#generated-room-code');
       const tl = new TimelineMax();
+      console.log('go timelint');
       tl.set('.open-room-screen > div > *', {
         opacity: 0,
         y: 10,
@@ -645,6 +651,7 @@ class PingPong {
       tl.to(['.open-room-screen .present-players', '.open-room-screen .opponent-joined'], 0.3, {
         opacity: 1,
       }, '+=0.5');
+      tl.call(resolve);
 
       const blinkSpeed = 1;
       const blinkTL = new TimelineMax({repeat: -1, repeatDelay: blinkSpeed});
@@ -654,8 +661,12 @@ class PingPong {
       blinkTL.set('.opponent-joined', {
         visibility: 'visible',
       }, blinkSpeed);
+    }).catch(e => {
+      // eslint-disable-next-line
+      console.warn(e);
     });
   }
 }
 
-let p = new PingPong();
+// eslint-disable-next-line
+const p = new PingPong();

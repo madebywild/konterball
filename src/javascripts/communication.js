@@ -1,9 +1,9 @@
 import deepstream from 'deepstream.io-client-js';
-import randomstring from 'randomstring';
-import {ACTION, INITIAL_CONFIG, EVENT} from './constants';
-import {rand} from 'util/helpers';
 import $ from 'zepto-modules';
 import chunk from 'lodash.chunk';
+import randomstring from 'randomstring';
+import {ACTION, EVENT} from './constants';
+import {rand} from './util/helpers';
 
 const availableChars = '23456789QWERTZUPASDFGHJKLYXCVBNM';
 
@@ -57,13 +57,13 @@ export default class Communication {
   }
 
   pingServer(hostIndex) {
-    return new Promise((resolve, reject) => {
-      let client = deepstream(this.availableServers[hostIndex]);
-      let timeout = setTimeout(() => {
+    return new Promise(resolve => {
+      const client = deepstream(this.availableServers[hostIndex]);
+      const timeout = setTimeout(() => {
         client.close();
         resolve('timeout');
       }, 3000);
-      client.on('error', e => {
+      client.on('error', () => {
         // in case a server is down it will throw an error
         // ignore these and use timeout for determining that
       });
@@ -73,7 +73,6 @@ export default class Communication {
           clearTimeout(timeout);
           client.close();
           resolve(hostIndex);
-          return;
         }
       });
     });
@@ -81,20 +80,19 @@ export default class Communication {
 
   chooseClosestServer() {
     return new Promise((resolve, reject) => {
-      Promise.race(this.availableServers.map((server, index) => {
-        return this.pingServer(index);
-      })).then(fastestServer => {
+      Promise.race(this.availableServers.map((server, index) => this.pingServer(index))).then(fastestServer => {
         if (fastestServer === 'timeout') {
           reject(fastestServer);
           return;
         }
         this.chosenServer = fastestServer;
         console.log(`fastest response from: ${this.availableServers[fastestServer]}`);
+        // eslint-disable-next-line
         return this.connectToServer(this.availableServers[fastestServer]);
       }).then(() => {
         resolve();
       }).catch(e => {
-        console.log('error:  ' + e);
+        console.log(`error:  ${e}`);
         reject(e);
       });
     });
@@ -106,7 +104,7 @@ export default class Communication {
       setTimeout(() => {
         reject('timeout');
       }, 2000);
-      console.log('connecting to server: ' + host);
+      console.log(`connecting to server: ${host}`);
       this.client = deepstream(host, {
         mergeStrategy: deepstream.MERGE_STRATEGIES.REMOTE_WINS
       });
@@ -165,9 +163,7 @@ export default class Communication {
   openRoom() {
     this.isHost = true;
     // pick a random prefix which belongs to the available prefixes for this server
-    const prefix = this.availablePrefixes
-      [this.chosenServer]
-      [rand(0, this.availablePrefixes[this.chosenServer].length)];
+    const prefix = this.availablePrefixes[this.chosenServer][rand(0, this.availablePrefixes[this.chosenServer].length)];
     this.GAME_ID = prefix + randomstring.generate({
       length: 3,
       charset: availableChars,
@@ -194,7 +190,7 @@ export default class Communication {
         index: this.pingNumber,
         ping: true
       });
-      this.pingNumber++;
+      this.pingNumber += 1;
       if (this.pingNumber >= 20) {
         clearInterval(this.pingInterval);
         console.log(this.latency);
@@ -203,7 +199,7 @@ export default class Communication {
   }
 
   receivedPong(data) {
-    let rtt = Date.now() - this.pings[data.index];
+    const rtt = Date.now() - this.pings[data.index];
     this.roundTripTimes.push(rtt);
     this.roundTripTimes.sort((a, b) => a - b);
     // get median of all received roundtrips, divide by 2 to get the one-way-latency
@@ -216,7 +212,7 @@ export default class Communication {
       switch (value.action) {
         case ACTION.CONNECT:
           setTimeout(this.sendPings.bind(this), 1000);
-          this.statusRecord.set(`room-is-open`, false);
+          this.statusRecord.set('room-is-open', false);
           this.opponentConnected = true;
           this.emitter.emit(EVENT.OPPONENT_CONNECTED);
           break;
@@ -231,14 +227,17 @@ export default class Communication {
         case ACTION.RESTART_GAME:
           this.callbacks.restartGame();
           break;
+        default:
+          // eslint-disable-next-line
+          console.warn('unknown action');
       }
     });
     if (this.isHost) {
-      this.paddle2Record.subscribe(`position`, value => {
+      this.paddle2Record.subscribe('position', value => {
         this.callbacks.move(value);
       });
     } else {
-      this.paddle1Record.subscribe(`position`, value => {
+      this.paddle1Record.subscribe('position', value => {
         this.callbacks.move(value);
       });
     }
@@ -248,7 +247,7 @@ export default class Communication {
     this.missRecord.subscribe(`player-${this.isHost ? 2 : 1}`, value => {
       this.callbacks.miss(value);
     });
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 20; i += 1) {
       this.pingRecord.subscribe(`player-${this.isHost ? 2 : 1}-ping-${i}`, value => {
         if (value.ping) {
           this.pingRecord.set(`player-${this.isHost ? 1 : 2}-ping-${value.index}`, {
@@ -264,9 +263,9 @@ export default class Communication {
 
   sendMove(position, rotation) {
     if (this.isHost) {
-      this.paddle1Record.set(`position`, {position, rotation});
+      this.paddle1Record.set('position', {position, rotation});
     } else {
-      this.paddle2Record.set(`position`, {position, rotation});
+      this.paddle2Record.set('position', {position, rotation});
     }
   }
 
@@ -275,8 +274,8 @@ export default class Communication {
     this.hitRecord.set(`player-${this.isHost ? 1 : 2}`, {point, velocity, time: Date.now()});
   }
 
-  sendMiss(point, velocity, ballHasHitEnemyTable, isInit=false) {
-    // insert random value so the record is actually updated 
+  sendMiss(point, velocity, ballHasHitEnemyTable, isInit = false) {
+    // insert random value so the record is actually updated
     // in case we reset it twice with the same values
     this.missRecord.set(`player-${this.isHost ? 1 : 2}`, {
       point,

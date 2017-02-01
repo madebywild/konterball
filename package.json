@@ -19,6 +19,7 @@
     "deploy": "gulp deploy",
     "demo": "gulp production && gulp server",
     "lint": "eslint src",
+    "lintfix": "eslint --fix src",
     "test": "gulp production && karma start --single-run",
     "prod": "gulp production && node server.js",
     "test:watch": "karma start",

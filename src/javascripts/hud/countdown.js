@@ -1,5 +1,4 @@
 import {Mesh, MeshBasicMaterial, TextGeometry} from 'three';
-import TweenMax from 'gsap';
 
 const FONT_SIZE = 0.4;
 
@@ -9,11 +8,11 @@ export default class Countdown {
     this.font = font;
     this.config = config;
 
-    let material = new MeshBasicMaterial({
+    const material = new MeshBasicMaterial({
       color: 0xffffff,
       transparent: true,
     });
-    let geometry = new TextGeometry('3', {
+    const geometry = new TextGeometry('3', {
       font: this.font,
       size: FONT_SIZE,
       height: 0.001,
@@ -28,7 +27,7 @@ export default class Countdown {
   }
 
   setCountdown(n) {
-    let geometry = new TextGeometry(n, {
+    const geometry = new TextGeometry(n, {
       font: this.font,
       size: FONT_SIZE,
       height: 0.001,
