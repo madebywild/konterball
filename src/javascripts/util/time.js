@@ -49,21 +49,21 @@ export default class Time {
   }
 
   step() {
-    let now = Date.now();
-    for (let key in this.timeouts) {
+    const now = Date.now();
+    Object.keys(this.timeouts).forEach(key => {
       if (now >= this.timeouts[key].delay) {
         this.timeouts[key].callback();
         delete this.timeouts[key];
       }
-    }
+    });
 
-    for (let key in this.intervals) {
+    Object.keys(this.intervals).forEach(key => {
       if (now >= this.intervals[key].next) {
         this.intervals[key].callback();
         while (this.intervals[key] && now >= this.intervals[key].next) {
           this.intervals[key].next += this.intervals[key].interval;
         }
       }
-    }
+    });
   }
 }

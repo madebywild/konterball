@@ -13,13 +13,13 @@ module.exports = {
     return min + Math.floor(Math.random() * (max - min));
   },
 
-  mirrorPosition: (pos, xAxis=0) => {
+  mirrorPosition: (pos, xAxis = 0) => {
     let z = pos.z;
     z -= (z - xAxis) * 2;
     return {
-      x: -pos.x, 
+      x: -pos.x,
       y: pos.y,
-      z: z,
+      z,
     };
   },
 
@@ -34,11 +34,11 @@ module.exports = {
   setTransparency: (object, transparency) => {
     object.traverse(child => {
       if (child instanceof Mesh) {
-        child.material.transparent = transparency === 1 ? false : true;
+        child.material.transparent = transparency !== 1;
         child.material.opacity = transparency;
       }
       if (child instanceof Line) {
-        child.material.transparent = transparency === 1 ? false : true;
+        child.material.transparent = transparency !== 1;
         child.material.opacity = transparency;
       }
     });
