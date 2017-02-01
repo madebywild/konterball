@@ -14,7 +14,8 @@ body {
   background-color: $blue-background;
   height: 100vh;
   // +80 to enable ios users to scroll up and down to view/hide the menu bar
-  padding-bottom: 80px;
+  // disable for now
+  // padding-bottom: 80px;
   color: #fff;
 }
 .pink {
