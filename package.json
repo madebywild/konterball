@@ -16,7 +16,6 @@
     "gulp": "gulp",
     "development": "gulp",
     "production": "gulp production",
-    "deploy": "gulp deploy",
     "demo": "gulp production && gulp server",
     "lint": "eslint src",
     "lintfix": "eslint --fix src",
