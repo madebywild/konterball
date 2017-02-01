@@ -1,5 +1,6 @@
 {
   "plugins": [],
+  "extends": "airbnb",
   "parserOptions": {
     "sourceType": "module",
     "ecmaVersion": 6,
