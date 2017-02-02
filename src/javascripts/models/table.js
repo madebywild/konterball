@@ -50,7 +50,7 @@ export default (parent, config) => {
   const lineGroup = new Group();
 
   material = new MeshLambertMaterial({
-    color: 0xFFFFFF
+    color: 0xFFFFFF,
   });
   geometry = new BoxGeometry(lineWidth, epsilon, tableDepth);
   mesh = new Mesh(geometry, material);

@@ -53,16 +53,6 @@ export default class Physics {
     this.world.add(this.net);
   }
 
-  addContactMaterial(mat1, mat2, bounce, friction) {
-    const contact = new CANNON.ContactMaterial(
-      mat1,
-      mat2,
-      {friction, restitution: bounce}
-    );
-    this.world.addContactMaterial(contact);
-    return contact;
-  }
-
   setupTable() {
     this.table = new CANNON.Body({
       mass: 0,
@@ -79,7 +69,7 @@ export default class Physics {
     this.table.position.z = this.config.tablePositionZ;
     // eslint-disable-next-line
     this.table._name = 'table-2-player';
-    this.table.addEventListener('collide', this.tableCollision.bind(this));
+    this.table.addEventListener('collide', this.onBallTableCollision.bind(this));
     this.world.add(this.table);
 
     this.upwardsTable = new CANNON.Body({
@@ -97,8 +87,18 @@ export default class Physics {
     this.upwardsTable.position.z = this.config.tablePositionZ - this.config.tableHeight / 2;
     this.upwardsTable.position.y = this.config.tableHeight + this.config.tableDepth / 4;
     this.upwardsTable.collisionResponse = 0;
-    this.upwardsTable.addEventListener('collide', this.tableCollision.bind(this));
+    this.upwardsTable.addEventListener('collide', this.onBallTableCollision.bind(this));
     this.world.add(this.upwardsTable);
+  }
+
+  addContactMaterial(mat1, mat2, bounce, friction) {
+    const contact = new CANNON.ContactMaterial(
+      mat1,
+      mat2,
+      {friction, restitution: bounce}
+    );
+    this.world.addContactMaterial(contact);
+    return contact;
   }
 
   addBall() {
@@ -125,15 +125,18 @@ export default class Physics {
     this.speed = Math.min(this.speed * 1.01, 1.5);
   }
 
-  paddleCollision(e) {
+  onBallPaddleCollision(e) {
     this.increaseSpeed();
     this.emitter.emit(EVENT.BALL_PADDLE_COLLISION, e.body);
+    // in here we calculate where the ball should fly after hitting it with the
+    // paddle. if the ball hits the paddle on the left, it flies to the left
+    // and vice versa.
+    // e.body is the ball and e.target is the paddle
 
     let hitpointX = e.body.position.x - e.target.position.x;
-    // let hitpointY = e.body.position.y - e.target.position.y;
+
     // normalize to -1 to 1
     hitpointX = cap(hitpointX / this.config.paddleSize, -1, 1);
-    // hitpointY = cap(hitpointY / this.config.paddleSize, -1, 1);
 
     const distFromRim = e.body.position.z - (this.config.tablePositionZ + this.config.tableDepth / 2);
     if (this.config.mode === MODE.MULTIPLAYER) {
@@ -159,7 +162,7 @@ export default class Physics {
     }
   }
 
-  tableCollision(e) {
+  onBallTableCollision(e) {
     this.emitter.emit(EVENT.BALL_TABLE_COLLISION, e.body, e.target);
   }
 
@@ -191,13 +194,14 @@ export default class Physics {
   predictCollisions(net, delta) {
     // predict ball position in the next frame
     this.raycaster.set(this.ball.position.clone(), this.ball.velocity.clone().unit());
-    // divide by 50 at 60fps so we dont accidentally miss the frame
+    // times 1.1 so we don't accidentally miss a frame in case the fps rise
     this.raycaster.far = this.ball.velocity.clone().length() * (delta / 1000) * 1.1;
 
     const arr = this.raycaster.intersectObjects([net], true);
     if (arr.length) {
       this.emitter.emit(EVENT.BALL_NET_COLLISION);
       this.ball.position.copy(arr[0].point);
+      // slowing down the ball after a net hit feels more realistic
       this.ball.velocity.x *= 0.2;
       this.ball.velocity.y *= 0.2;
       this.ball.velocity.z *= 0.2;

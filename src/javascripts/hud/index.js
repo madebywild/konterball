@@ -60,15 +60,12 @@ export default class Hud {
           this.scene.add(arrow);
           resolveOuter();
         }).catch(e => {
-          // elint-disable-next-line
           console.warn(e);
         });
       }).catch(e => {
-        // elint-disable-next-line
         console.warn(e);
       });
     }).catch(e => {
-      // elint-disable-next-line
       console.warn(e);
     });
   }

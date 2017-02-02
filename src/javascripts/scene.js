@@ -22,7 +22,7 @@ import VREffect from './three/VREffect';
 import VRControls from './three/VRControls';
 import ViveController from './three/ViveController';
 
-import {STATE, MODE, INITIAL_CONFIG, EVENT} from './constants';
+import {STATE, MODE, INITIAL_CONFIG, EVENT, CONTROLMODE} from './constants';
 import {cap, mirrorPosition, mirrorVelocity, setTransparency} from './util/helpers';
 import VR_MODES from './webvr-manager/modes';
 import Physics from './physics';
@@ -45,70 +45,11 @@ const DEBUG_MODE = false;
 export default class Scene {
   constructor(emitter, communication) {
     this.emitter = emitter;
-    this.time = new Time();
-    this.controlMode = 'MOUSE';
-
     this.communication = communication;
-    this.renderer = null;
-    this.scene = null;
-    this.camera = null;
-    this.controls = null;
-    this.controller = null;
-    this.effect = null;
-    this.textureLoader = new TextureLoader();
-    this.textureLoader.setPath('/textures/');
-    this.objLoader = new OBJLoader();
-    this.objLoader.setPath('/models/');
-    this.table = null;
-    this.display = null;
-    this.manager = null;
-    this.gamePad = null;
-    this.controller1 = null;
-    this.controller2 = null;
-    this.raycaster = null;
-    this.tablePlane = null;
-    this.net = null;
-    this.tabActive = true;
-    this.ball = null;
-    this.physicsDebugRenderer = null;
-    this.resetBallTimeout = null;
-    this.ballHasHitEnemyTable = false;
-    this.resetTimeoutDuration = 1500;
-    this.physicsTimeStep = 1000;
-    this.lastOpponentHitPosition = null;
-    this.lastHitPosition = null;
-    this.crossHair = null;
-    this.paddleInterpolationAlpha = 0;
-    this.ballInterpolationAlpha = 0;
-    this.ghostPaddlePosition = new Vector3();
-    this.pointerIsLocked = false;
-    this.fps = FPS({
-      every: 10,
-      decay: 0.1,
-    });
-
-    this.mouseMoveSinceLastFrame = {
-      x: 0,
-      y: 0,
-    };
-    this.mousePosition = {
-      x: 0,
-      y: 0,
-    };
-
-    this.hitAvailable = true;
-
-    this.playerRequestedRestart = false;
-    this.opponentRequestedRestart = false;
-
-    this.playerRequestedCountdown = false;
-    this.opponentRequestedCountdown = false;
-    this.mousemove = this.mousemove.bind(this);
-
-    this.isMobile = Util.isMobile();
-
     this.config = Object.assign({}, INITIAL_CONFIG);
-
+    // for requestanimationframe-based timeouts and intervals
+    this.time = new Time();
+    this.sound = new SoundManager(this.config);
     this.score = {
       self: 0,
       opponent: 0,
@@ -116,13 +57,103 @@ export default class Scene {
       highest: 0,
     };
 
-    this.physics = new Physics(this.config, this.emitter);
-    this.sound = new SoundManager(this.config);
+    // THREE.JS
+    // can be MOUSE or VR
+    this.controlMode = CONTROLMODE.MOUSE;
+    this.renderer = null;
+    this.scene = null;
+    this.camera = null;
+    // three.js VRControls
+    this.controls = null;
+    // the active vive controller
+    this.controller = null;
+    // three.js VREffect
+    this.effect = null;
+    // VR display
+    this.display = null;
+    this.textureLoader = new TextureLoader();
+    this.textureLoader.setPath('/textures/');
+    this.objLoader = new OBJLoader();
+    this.objLoader.setPath('/models/');
+    // three.js meshes
+    this.table = null;
+    this.tablePlane = null;
+    this.net = null;
+    this.ball = null;
+    this.crossHair = null;
+    // vive controllers
+    this.controller1 = null;
+    this.controller2 = null;
+    // vr manager
+    this.manager = null;
+    // three.js raycaster
+    this.raycaster = null;
 
+    // PHYSICS
+    // when enabled, renders all cannon objects as wireframes
+    this.physicsDebugRenderer = null;
+    this.physicsTimeStep = 1000;
+    this.physics = new Physics(this.config, this.emitter);
+
+    // MULTIPLAYER
+    // resetBallTimeout is used to reset the ball after it landed on the floor
+    this.resetBallTimeout = null;
+    // for determining whose point it is
+    this.ballHasHitEnemyTable = false;
+    // changes to 3000 in multiplayer mode, because it takes the ball longer to
+    // travel to the other side of the table than just the folded table half
+    this.resetTimeoutDuration = 1500;
+    // used to coordinate restarts
+    this.playerRequestedRestart = false;
+    this.opponentRequestedRestart = false;
+    // used to coordinate countdowns
+    this.playerRequestedCountdown = false;
+    this.opponentRequestedCountdown = false;
+    // used to animate the ball from the position
+    // where it should be to the position that was received over the wire
+    this.ballInterpolationAlpha = 0;
+
+    // ANIMATION
+    // stores the last hit for the hit animation
+    this.lastHitPosition = null;
+    // used to animate a hit (the paddle quickly moves towards the ball and
+    // back to the position it should be in according to the controller
+    this.paddleInterpolationAlpha = 0;
+    // we need this also for the hit animation. always stores where the paddle
+    // is according to the controls, so we can interpolate between that and the
+    // hit position
+    this.ghostPaddlePosition = new Vector3();
+    // so the paddle doesn't repeatedly hit the ball during the animation
+    this.hitAvailable = true;
+
+    // CONTROLS
+    this.pointerIsLocked = false;
+    // mouse moves for when the pointer is locked
+    this.mouseMoveSinceLastFrame = {
+      x: 0,
+      y: 0,
+    };
+    // mouse position for when the pointer is not locked
+    this.mousePosition = {
+      x: 0,
+      y: 0,
+    };
+    this.isMobile = Util.isMobile();
+
+    // store fps for reducing image quality if too low
+    this.fps = FPS({
+      every: 10,
+      decay: 0.1,
+    });
+    // count the frames
     this.frameNumber = 0;
+    // first frame after tab became active again, when tab is in background the
+    // framerate drops so we have to ignore that in the fps counter
     this.firstActiveFrame = 0;
-    this.totaltime = 0;
+    // timestamp of when the scene was last rendered
     this.lastRender = 0;
+    // false if tab is switched, window hidden, app closed etc.
+    this.tabActive = true;
   }
 
   setup() {
@@ -158,69 +189,22 @@ export default class Scene {
       Promise.all([
         setupPaddles(this.objLoader, this.config, this.scene),
         this.hud.setup(),
-      ]).then(response => {
-        this.paddle = response[0].paddle;
-        this.paddleOpponent = response[0].paddleOpponent;
+      ]).then(([{paddle, paddleOpponent}]) => {
+        this.paddle = paddle;
+        this.paddleOpponent = paddleOpponent;
         this.paddle.position.copy(this.computePaddlePosition() || new Vector3());
         this.ghostPaddlePosition.copy(this.paddle.position);
         resolve('loaded');
       }).catch(e => {
-        console.log(e);
+        console.warn(e);
       });
     });
   }
 
-  mousemove(e) {
-    if (!this.paddle || !this.viewport) {
-      return;
-    }
-    // console.log(e);
-    if (this.pointerIsLocked) {
-      // console.log('pointer is locked');
-      this.mouseMoveSinceLastFrame.x += e.movementX;
-      this.mouseMoveSinceLastFrame.y += e.movementY;
-    } else {
-      this.mousePosition.x = e.offsetX / this.viewport.width - 0.5;
-      this.mousePosition.y = -(e.offsetY / this.viewport.height - 0.5);
-    }
-  }
-
   setupEventListeners() {
-    this.emitter.on(EVENT.GAME_OVER, () => {
-      this.sound.playLoop('bass-pad-synth');
-      this.ball.visible = false;
-      this.paddle.visible = false;
-      this.paddleOpponent.visible = false;
-      this.config.state = STATE.GAME_OVER;
-      this.time.clearTimeout(this.resetBallTimeout);
-      this.crosshair.visible = true;
-      if (this.config.mode === MODE.SINGLEPLAYER) {
-        this.hud.message.gameOver(this.score);
-        this.sound.playUI('win');
-      } else {
-        this.hud.message.gameOver(this.score);
-        if (this.score.self > this.score.opponent) {
-          this.sound.playUI('win');
-        } else {
-          this.sound.playUI('lose');
-        }
-      }
-      setTransparency(this.table, 0.2);
-      setTransparency(this.net, 0.2);
-      this.hud.scoreDisplay.hide();
-      this.hud.message.showMessage();
-    });
-    this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.ballTableCollision.bind(this));
-    this.emitter.on(EVENT.RESTART_BUTTON_PRESSED, () => {
-      this.hud.message.hideMessage();
-      if (this.config.mode === MODE.MULTIPLAYER) {
-        this.playerRequestedRestart = true;
-        this.hud.message.setMessage('waiting');
-        this.hud.message.showMessage();
-        this.communication.sendRestartGame();
-      }
-      this.restartGame();
-    });
+    this.emitter.on(EVENT.GAME_OVER, this.onGameOver.bind(this));
+    this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.onBallTableCollision.bind(this));
+    this.emitter.on(EVENT.RESTART_BUTTON_PRESSED, this.onRestartButtonPressed.bind(this));
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
       this.hud.message.setMessage('take off vr device');
     });
@@ -228,9 +212,7 @@ export default class Scene {
       this.sound.playUI('net');
     });
 
-    // $(document).mousemove(this.mousemove.bind(this));
-    this.renderer.domElement.addEventListener('mousemove', this.mousemove, false);
-    // $('canvas').mousemove(this.mousemove.bind(this));
+    this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this), false);
     $(this.renderer.domElement).click(() => {
       this.hud.message.click();
     });
@@ -243,11 +225,113 @@ export default class Scene {
 
     this.fps.on('data', framerate => {
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
-        console.log(`reducing quality, fps was ${framerate}`);
+        // set only half pixel density, this brings a huge speed boost for a
+        // loss of image quality
         // TODO maybe reduce shadow map size first
         this.renderer.setPixelRatio(window.devicePixelRatio / 2);
       }
     });
+
+    window.addEventListener('resize', this.onResize.bind(this), true);
+    window.addEventListener('vrdisplaypresentchange', this.onResize.bind(this), true);
+  }
+
+  onBallPaddleCollision(point) {
+    // the ball collided with the players paddle
+    if (this.hitTween && this.hitTween.isActive()) {
+      return;
+    }
+    this.physics.onBallPaddleCollision({body: this.physics.ball, target: this.paddle});
+    this.ballHitAnimation();
+    this.ballPositionDifference = null;
+    this.restartPingpongTimeout();
+    this.ballHasHitEnemyTable = false;
+    this.sound.paddle(point);
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.score.self += 1;
+      this.hud.scoreDisplay.setSelfScore(this.score.self);
+      return;
+    }
+    this.slowdownBall();
+    this.communication.sendHit({
+      x: point.x,
+      y: point.y,
+      z: point.z,
+    }, {
+      x: this.physics.ball.velocity.x,
+      y: this.physics.ball.velocity.y,
+      z: this.physics.ball.velocity.z,
+    });
+  }
+
+  onBallTableCollision(body, target) {
+    this.sound.table(body.position, this.physics.ball.velocity);
+    // eslint-disable-next-line
+    if (target._name === 'table-2-player' && body.position.z < this.config.tablePositionZ) {
+      this.ballHasHitEnemyTable = true;
+    }
+  }
+
+  onGameOver() {
+    this.sound.playLoop('bass-pad-synth');
+    this.ball.visible = false;
+    this.paddle.visible = false;
+    this.paddleOpponent.visible = false;
+    this.config.state = STATE.GAME_OVER;
+    this.time.clearTimeout(this.resetBallTimeout);
+    this.crosshair.visible = true;
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.hud.message.gameOver(this.score);
+      this.sound.playUI('win');
+    } else {
+      this.hud.message.gameOver(this.score);
+      if (this.score.self > this.score.opponent) {
+        this.sound.playUI('win');
+      } else {
+        this.sound.playUI('lose');
+      }
+    }
+    // make it look like there is an overlay between the ui layer and the table
+    setTransparency(this.table, 0.2);
+    setTransparency(this.net, 0.2);
+    this.hud.scoreDisplay.hide();
+    this.hud.message.showMessage();
+  }
+
+  onRestartButtonPressed() {
+    this.hud.message.hideMessage();
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      this.playerRequestedRestart = true;
+      this.hud.message.setMessage('waiting');
+      this.hud.message.showMessage();
+      this.communication.sendRestartGame();
+    }
+    this.restartGame();
+  }
+
+  onResize() {
+    this.effect.setSize(window.innerWidth, window.innerHeight, true);
+    this.camera.aspect = window.innerWidth / window.innerHeight;
+    this.camera.updateProjectionMatrix();
+    this.viewport = {
+      width: $(this.renderer.domElement).width(),
+      height: $(this.renderer.domElement).height(),
+    };
+  }
+
+  onMouseMove(e) {
+    if (!this.paddle || !this.viewport) {
+      return;
+    }
+    if (this.pointerIsLocked) {
+      // mouse can move infinitely in all directions
+      this.mouseMoveSinceLastFrame.x += e.movementX;
+      this.mouseMoveSinceLastFrame.y += e.movementY;
+    } else {
+      // mouse is confined to viewport
+      this.mousePosition.x = e.offsetX / this.viewport.width - 0.5;
+      this.mousePosition.y = -(e.offsetY / this.viewport.height - 0.5);
+    }
   }
 
   pointerLockChange() {
@@ -272,24 +356,19 @@ export default class Scene {
     this.effect = new VREffect(this.renderer);
     this.effect.setSize(window.innerWidth, window.innerHeight);
 
-    // Create a VR manager helper to enter and exit VR mode.
+    // create a VR manager helper to enter and exit VR mode.
     const params = {
-      hideButton: false, // Default: false.
-      isUndistorted: false // Default: false.
+      hideButton: false,
+      isUndistorted: false,
     };
 
     this.manager = new WebVRManager(this.renderer, this.effect, params);
-
-    window.addEventListener('resize', this.onResize.bind(this), true);
-    window.addEventListener('vrdisplaypresentchange', this.onResize.bind(this), true);
   }
 
   setupThree() {
     this.renderer = new WebGLRenderer({antialias: true});
     this.renderer.setPixelRatio(window.devicePixelRatio);
-    // this.renderer.setPixelRatio(0.5);
     this.renderer.shadowMap.enabled = true;
-    // this.renderer.shadowMap.type = PCFSoftShadowMap;
     this.renderer.shadowMap.type = BasicShadowMap;
 
     document.body.appendChild(this.renderer.domElement);
@@ -318,7 +397,6 @@ export default class Scene {
     light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
     light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
     this.scene.add(light);
-    // this.scene.add(new CameraHelper(light.shadow.camera));
 
     light = new AmbientLight(0xFFFFFF, 0.9);
     this.scene.add(light);
@@ -350,9 +428,9 @@ export default class Scene {
           this.scene.add(this.controller2);
 
           this.objLoader.load('vr_controller_vive_1_5.obj', object => {
-            this.controller = object.children[0];
-            this.controller.material.map = this.textureLoader.load('onepointfive_texture.png');
-            this.controller.material.specularMap = this.textureLoader.load('onepointfive_spec.png');
+            const controller = object.children[0];
+            controller.material.map = this.textureLoader.load('onepointfive_texture.png');
+            controller.material.specularMap = this.textureLoader.load('onepointfive_spec.png');
 
             this.controller1.add(object.clone());
             this.controller2.add(object.clone());
@@ -424,8 +502,7 @@ export default class Scene {
       this.camera.position.y = 5;
       tl.set(this.renderer.domElement, {display: 'block'});
 
-      if (this.config.mode === MODE.MULTIPLAYER && !this.isMobile && this.controlMode === 'MOUSE') {
-        console.log('stagger');
+      if (this.config.mode === MODE.MULTIPLAYER && !this.isMobile && this.controlMode === CONTROLMODE.MOUSE) {
         tl.staggerTo([
           '.present-players',
           '#generated-room-code, #generated-room-url, #room-code',
@@ -446,11 +523,6 @@ export default class Scene {
       }, 0.6);
       tl.call(resolve, [], null, '+=1');
     });
-  }
-
-  receivedRequestCountdown() {
-    this.opponentRequestedCountdown = true;
-    this.requestCountdown();
   }
 
   requestCountdown() {
@@ -546,11 +618,11 @@ export default class Scene {
     this.scene.getObjectByName('net-collider').visible = true;
     // add callbacks for received actions
     this.communication.setCallbacks({
-      move: this.receivedMove.bind(this),
-      hit: this.receivedHit.bind(this),
-      miss: this.receivedMiss.bind(this),
-      restartGame: this.receivedRestartGame.bind(this),
-      requestCountdown: this.receivedRequestCountdown.bind(this),
+      receivedMove: this.onReceivedMove.bind(this),
+      receivedHit: this.onReceivedHit.bind(this),
+      receivedMiss: this.onReceivedMiss.bind(this),
+      receivedRestartGame: this.onReceivedRestartGame.bind(this),
+      receivedRequestCountdown: this.onReceivedRequestCountdown.bind(this),
     });
   }
 
@@ -566,7 +638,7 @@ export default class Scene {
     this.scene.getObjectByName('net-collider').visible = false;
   }
 
-  receivedMove(move) {
+  onReceivedMove(move) {
     // received a move from the opponent,
     // set his paddle to the position received
     const pos = mirrorPosition(move.position, this.config.tablePositionZ);
@@ -598,17 +670,17 @@ export default class Scene {
         this.paddleOpponent.rotation.x = no.rotationX;
         this.paddleOpponent.rotation.y = no.rotationY;
         this.paddleOpponent.rotation.z = no.rotationZ;
-      }
+      },
     });
   }
 
-  receivedRestartGame() {
+  onReceivedRestartGame() {
     this.opponentRequestedRestart = true;
     // try to restart game, only does if player also requested restart
     this.restartGame();
   }
 
-  receivedHit(data, wasMiss = false) {
+  onReceivedHit(data, wasMiss = false) {
     this.time.clearTimeout(this.resetBallTimeout);
     // we might not have a ball yet
     if (!this.ball) {
@@ -626,9 +698,6 @@ export default class Scene {
         this.physics.ball.position,
         mirrorPosition(data.point, this.config.tablePositionZ)
       );
-      this.lastOpponentHitPosition = new Vector3().copy(
-        mirrorPosition(data.point, this.config.tablePositionZ)
-      );
       this.ballInterpolationAlpha = 1;
       TweenMax.to(this, 0.5, {
         ease: Power0.easeNone,
@@ -643,7 +712,7 @@ export default class Scene {
     this.physics.ball.velocity.copy(mirrorVelocity(data.velocity));
   }
 
-  receivedMiss(data) {
+  onReceivedMiss(data) {
     this.physics.speed = 1;
     this.ballPositionDifference = null;
     this.time.clearTimeout(this.resetBallTimeout);
@@ -671,16 +740,21 @@ export default class Scene {
       this.physics.ball.angularVelocity.z = 0;
       // otherwise, the opponent that missed also resets the ball
       // and sends along its new position
-      this.receivedHit(data, true);
+      this.onReceivedHit(data, true);
       this.config.state = STATE.PLAYING;
     }
+  }
+
+  onReceivedRequestCountdown() {
+    this.opponentRequestedCountdown = true;
+    this.requestCountdown();
   }
 
   slowdownBall() {
     // if the ball is on the way to the opponent,
     // we slow it down so it will be on the opponents side
     // approximately at the time they actually hit it
-    // NOTE we still only receive the hit half a roundtriptime later
+    // NOTE that we still only receive the hit half a roundtriptime later
     if (this.physics.ball.velocity.z > 0) {
       return;
     }
@@ -698,89 +772,55 @@ export default class Scene {
     if (this.config.state === STATE.GAME_OVER) {
       return;
     }
-    this.resetBallTimeout = this.time.setTimeout(() => {
-      if (this.config.mode === MODE.MULTIPLAYER) {
-        this.physicsTimeStep = 1000;
-        if (this.ballHasHitEnemyTable) {
-          this.score.self += 1;
-          this.hud.scoreDisplay.setSelfScore(this.score.self);
-          this.sound.playUI('point');
-        } else {
-          this.score.opponent += 1;
-          this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
-          this.sound.playUI('miss');
-        }
-        if (this.score.opponent >= this.config.POINTS_FOR_WIN
-            || this.score.self >= this.config.POINTS_FOR_WIN) {
-          // game is over
-          // TODO maybe wait a little with this so players can enjoy their 11 points
-          this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
-        } else {
-          // the game goes on
-          this.physics.initBallPosition();
-        }
+    this.resetBallTimeout = this.time.setTimeout(this.resetTimeoutEnded.bind(this), this.resetTimeoutDuration);
+  }
 
-        this.communication.sendMiss({
-          x: this.physics.ball.position.x,
-          y: this.physics.ball.position.y,
-          z: this.physics.ball.position.z,
-        }, {
-          x: this.physics.ball.velocity.x,
-          y: this.physics.ball.velocity.y,
-          z: this.physics.ball.velocity.z,
-        }, this.ballHasHitEnemyTable);
-        this.ballHasHitEnemyTable = false;
-      } else {
-        // singleplayer
-        this.score.highest = Math.max(this.score.self, this.score.highest);
-        this.score.self = 0;
+  resetTimeoutEnded() {
+    if (this.config.mode === MODE.MULTIPLAYER) {
+      this.physicsTimeStep = 1000;
+      if (this.ballHasHitEnemyTable) {
+        this.score.self += 1;
         this.hud.scoreDisplay.setSelfScore(this.score.self);
-        this.physics.initBallPosition();
-        this.score.lives -= 1;
-        this.hud.scoreDisplay.setLives(this.score.lives);
+        this.sound.playUI('point');
+      } else {
+        this.score.opponent += 1;
+        this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
         this.sound.playUI('miss');
-        if (this.score.lives < 1) {
-          this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
-        }
       }
-      this.restartPingpongTimeout();
-    }, this.resetTimeoutDuration);
-  }
+      if (this.score.opponent >= this.config.POINTS_FOR_WIN
+          || this.score.self >= this.config.POINTS_FOR_WIN) {
+        // game is over
+        // TODO maybe wait a little with this so players can enjoy their 11 points
+        this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
+      } else {
+        // the game goes on
+        this.physics.initBallPosition();
+      }
 
-  ballPaddleCollision(point) {
-    if (this.hitTween && this.hitTween.isActive()) {
-      return;
-    }
-    this.physics.paddleCollision({body: this.physics.ball, target: this.paddle});
-    this.ballHitAnimation();
-    this.ballPositionDifference = null;
-    // the ball collided with the players paddle
-    this.restartPingpongTimeout();
-    this.ballHasHitEnemyTable = false;
-    this.sound.paddle(point);
-    if (this.config.mode === MODE.SINGLEPLAYER) {
-      this.score.self += 1;
+      this.communication.sendMiss({
+        x: this.physics.ball.position.x,
+        y: this.physics.ball.position.y,
+        z: this.physics.ball.position.z,
+      }, {
+        x: this.physics.ball.velocity.x,
+        y: this.physics.ball.velocity.y,
+        z: this.physics.ball.velocity.z,
+      }, this.ballHasHitEnemyTable);
+      this.ballHasHitEnemyTable = false;
+    } else {
+      // singleplayer
+      this.score.highest = Math.max(this.score.self, this.score.highest);
+      this.score.self = 0;
       this.hud.scoreDisplay.setSelfScore(this.score.self);
-      return;
+      this.physics.initBallPosition();
+      this.score.lives -= 1;
+      this.hud.scoreDisplay.setLives(this.score.lives);
+      this.sound.playUI('miss');
+      if (this.score.lives < 1) {
+        this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
+      }
     }
-    this.slowdownBall();
-    this.communication.sendHit({
-      x: point.x,
-      y: point.y,
-      z: point.z,
-    }, {
-      x: this.physics.ball.velocity.x,
-      y: this.physics.ball.velocity.y,
-      z: this.physics.ball.velocity.z,
-    });
-  }
-
-  ballTableCollision(body, target) {
-    this.sound.table(body.position, this.physics.ball.velocity);
-    // eslint-disable-next-line
-    if (target._name === 'table-2-player' && body.position.z < this.config.tablePositionZ) {
-      this.ballHasHitEnemyTable = true;
-    }
+    this.restartPingpongTimeout();
   }
 
   addBall() {
@@ -805,7 +845,7 @@ export default class Scene {
     if (pos) {
       this.ghostPaddlePosition.copy(pos);
     }
-    if (this.controls && this.controlMode === 'VR') {
+    if (this.controls && this.controlMode === CONTROLMODE.VR) {
       // Update VR headset position and apply to camera.
       this.controls.update();
       if (this.camera.position.x === 0
@@ -832,7 +872,7 @@ export default class Scene {
   }
 
   updateCamera() {
-    if (this.display && this.controlMode !== 'MOUSE') {
+    if (this.display && this.controlMode !== CONTROLMODE.MOUSE) {
       // user controls camera with headset in vr mode
       return;
     }
@@ -868,7 +908,7 @@ export default class Scene {
 
   computePaddlePosition() {
     let paddlePosition = null;
-    if (this.display && this.controlMode === 'VR') {
+    if (this.display && this.controlMode === CONTROLMODE.VR) {
       let controller = null;
       if (this.controller1 && this.controller1.visible) {
         controller = this.controller1;
@@ -972,10 +1012,30 @@ export default class Scene {
     }
   }
 
+  updateHudControls() {
+    // raycaster wants mouse from -1 to 1, not -0.5 to 0.5 like mousePosition is normalized
+    let mouse = {};
+    if (this.controlMode === CONTROLMODE.VR || this.isMobile) {
+      const zCamVec = new Vector3(0, 0, -1);
+      const position = this.camera.localToWorld(zCamVec);
+      this.crosshair.position.set(position.x, position.y, position.z);
+      mouse = {
+        x: 0,
+        y: 0,
+      };
+    } else {
+      mouse = {
+        x: this.mousePosition.x * 2,
+        y: this.mousePosition.y * 2,
+      };
+    }
+    this.raycaster.setFromCamera(mouse, this.camera);
+    this.hud.message.intersect(this.raycaster, this.controlMode === CONTROLMODE.MOUSE && !this.isMobile);
+  }
+
   animate() {
     const timestamp = Date.now();
     const delta = Math.min(timestamp - this.lastRender, 500);
-    this.totaltime += delta;
     this.fps.tick();
 
     if (this.ball) {
@@ -993,7 +1053,7 @@ export default class Scene {
         // immediately after the opponent reset the ball and it that case
         // we wouldnt want a hit
         && this.physics.ball.velocity.z > 0) {
-        this.ballPaddleCollision(this.ball.position);
+        this.onBallPaddleCollision(this.ball.position);
       }
     }
 
@@ -1001,11 +1061,6 @@ export default class Scene {
       || this.config.state === STATE.COUNTDOWN
       || this.config.state === STATE.GAME_OVER) {
       this.updateControls();
-    }
-
-    if (this.config.state === STATE.PLAYING
-      || this.config.state === STATE.COUNTDOWN
-      || this.config.state === STATE.GAME_OVER) {
       if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
         // for multiplayer testing
         // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
@@ -1030,24 +1085,7 @@ export default class Scene {
     }
 
     if (this.config.state === STATE.GAME_OVER) {
-      // raycaster wants mouse from -1 to 1, not -0.5 to 0.5 like mousePosition is normalized
-      let mouse = {};
-      if (this.controlMode === 'VR' || this.isMobile) {
-        const zCamVec = new Vector3(0, 0, -1);
-        const position = this.camera.localToWorld(zCamVec);
-        this.crosshair.position.set(position.x, position.y, position.z);
-        mouse = {
-          x: 0,
-          y: 0,
-        };
-      } else {
-        mouse = {
-          x: this.mousePosition.x * 2,
-          y: this.mousePosition.y * 2,
-        };
-      }
-      this.raycaster.setFromCamera(mouse, this.camera);
-      this.hud.message.intersect(this.raycaster, this.controlMode === 'MOUSE' && !this.isMobile);
+      this.updateHudControls();
     }
 
     if (DEBUG_MODE) {
@@ -1061,28 +1099,12 @@ export default class Scene {
     this.mouseMoveSinceLastFrame.x = 0;
     this.mouseMoveSinceLastFrame.y = 0;
 
-    // debug
-    // if (this.frameNumber % 100 === 0) {
-    //   console.log(this.renderer.info.render);
-    // }
-
-    // Render the scene through the manager.
+    // render the scene through the manager.
     this.manager.render(this.scene, this.camera, this.timestamp);
-    if (this.display && 'requestAnimationFrame' in this.display && this.controlMode === 'VR') {
+    if (this.display && 'requestAnimationFrame' in this.display && this.controlMode === CONTROLMODE.VR) {
       this.display.requestAnimationFrame(this.animate.bind(this));
     } else {
       requestAnimationFrame(this.animate.bind(this));
     }
-  }
-
-  onResize() {
-    this.effect.setSize(window.innerWidth, window.innerHeight, true);
-    // this.renderer.setSize(window.innerWidth, window.innerHeight);
-    this.camera.aspect = window.innerWidth / window.innerHeight;
-    this.camera.updateProjectionMatrix();
-    this.viewport = {
-      width: $(this.renderer.domElement).width(),
-      height: $(this.renderer.domElement).height(),
-    };
   }
 }

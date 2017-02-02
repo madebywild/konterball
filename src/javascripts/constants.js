@@ -3,6 +3,11 @@ export const MODE = {
   SINGLEPLAYER: 'SINGLEPLAYER',
 };
 
+export const CONTROLMODE = {
+  MOUSE: 'MOUSE',
+  VR: 'VR',
+};
+
 export const STATE = {
   PRELOADER: 'PRELOADER',
   MODE_SELECTION: 'MODE_SELECTION',

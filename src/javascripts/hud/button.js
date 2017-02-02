@@ -213,8 +213,7 @@ export default class Button {
         break;
       }
       default: {
-        // eslint-disable-next-line
-        console.error('unknown button');
+        console.warn('unknown button');
       }
     }
   }

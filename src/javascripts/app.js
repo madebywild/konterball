@@ -4,7 +4,7 @@ import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
-import {EVENT, MODE, INITIAL_CONFIG} from './constants';
+import {EVENT, MODE, INITIAL_CONFIG, CONTROLMODE} from './constants';
 import Scene from './scene';
 import Util from './webvr-manager/util';
 import Communication from './communication';
@@ -25,47 +25,56 @@ class PingPong {
     this.aboutScreenOpen = false;
     this.introBallTween = null;
 
-    if (Util.isMobile() && 'orientation' in window && $(window).width() < $(window).height()) {
-      TweenMax.set('.phone', {rotation: 90});
-      TweenMax.set('.checkmark', {visibility: 'hidden'}, 0.3);
-      const tl = new TimelineMax({repeat: -1, repeatDelay: 1});
-      tl.to('.phone', 0.5, {
-        ease: Back.easeInOut.config(1),
-        rotation: 180,
-        onComplete: () => {
-        }
-      });
-      tl.set('.x', {visibility: 'hidden'}, 0.3);
-      tl.set('.checkmark', {visibility: 'visible'}, 0.3);
-      tl.to('.phone', 0.5, {
-        ease: Back.easeInOut.config(1),
-        rotation: 90,
-      }, '+=1');
-      tl.set('.x', {visibility: 'visible'}, '-=0.2');
-      tl.set('.checkmark', {visibility: 'hidden'}, '-=0.2');
-      $('.rotate-phone-screen').css('display', 'block');
-      $(window).on('orientationchange', () => {
-        setTimeout(() => {
-          window.scrollTo(0, 80);
-          if ($(window).width() > $(window).height()) {
-            TweenMax.to('.rotate-phone-screen', 0.3, {
-              autoAlpha: 0,
-            });
-            if (!this.startedLoading) {
-              this.startLoading();
-            }
-            tl.pause();
-          } else {
-            TweenMax.to('.rotate-phone-screen', 0.3, {
-              autoAlpha: 1,
-            });
-            tl.play();
-          }
-        }, 400);
-      });
+    if (Util.isMobile() && 'orientation' in window) {
+      this.checkPhoneOrientation();
     } else {
       this.startLoading();
     }
+  }
+
+  checkPhoneOrientation() {
+    TweenMax.set('.phone', {rotation: 90});
+    TweenMax.set('.checkmark', {visibility: 'hidden'}, 0.3);
+    const tl = new TimelineMax({repeat: -1, repeatDelay: 1, paused: true});
+    tl.to('.phone', 0.5, {
+      ease: Back.easeInOut.config(1),
+      rotation: 180,
+    });
+    tl.set('.x', {visibility: 'hidden'}, 0.3);
+    tl.set('.checkmark', {visibility: 'visible'}, 0.3);
+    tl.to('.phone', 0.5, {
+      ease: Back.easeInOut.config(1),
+      rotation: 90,
+    }, '+=1');
+    tl.set('.x', {visibility: 'visible'}, '-=0.2');
+    tl.set('.checkmark', {visibility: 'hidden'}, '-=0.2');
+    if ($(window).width() < $(window).height()) {
+      TweenMax.set('.rotate-phone-screen', {
+        display: 'block',
+      });
+      tl.play();
+    } else if (!this.startedLoading) {
+      this.startLoading();
+    }
+    $(window).on('orientationchange', () => {
+      setTimeout(() => {
+        window.scrollTo(0, 80);
+        if ($(window).width() > $(window).height()) {
+          TweenMax.to('.rotate-phone-screen', 0.3, {
+            autoAlpha: 0,
+          });
+          if (!this.startedLoading) {
+            this.startLoading();
+          }
+          tl.pause();
+        } else {
+          TweenMax.to('.rotate-phone-screen', 0.3, {
+            autoAlpha: 1,
+          });
+          tl.play();
+        }
+      }, 400);
+    });
   }
 
   startLoading() {
@@ -165,21 +174,190 @@ class PingPong {
       }
     });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
-      if (this.scene.controlMode === 'VR') {
+      if (this.scene.controlMode === CONTROLMODE.VR) {
         setTimeout(() => {location.reload();}, 3000);
       } else {
         location.reload();
       }
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
-      // TODO
       this.scene.hud.message.setMessage('opponent disconnected');
       this.scene.hud.message.showMessage();
       this.scene.paddleOpponent.visible = false;
     });
   }
 
-  viewModeChooserScreen() {
+  loadModeChooserAnimation() {
+    return Promise.all([
+      new Promise(resolve => {
+        $.getJSON('/animations/1player.json', data => {
+          this.singleplayerAnimation = bodymovin.loadAnimation({
+            container: document.getElementById('singleplayer-animation'),
+            renderer: 'svg',
+            loop: true,
+            animationData: data,
+          });
+          resolve();
+        });
+      }),
+      new Promise(resolve => {
+        $.getJSON('/animations/2player.json', data => {
+          this.multiplayerAnimation = bodymovin.loadAnimation({
+            container: document.getElementById('multiplayer-animation'),
+            renderer: 'svg',
+            loop: true,
+            animationData: data,
+          });
+          resolve();
+        });
+      }),
+    ]);
+  }
+
+  setupHandlers() {
+    $(document).on('visibilitychange', this.onVisibilityChange.bind(this));
+    $('#start-singleplayer').on('click', this.onStartSingleplayerClick.bind(this));
+    $('#open-room').on('click', this.onOpenRoomClick.bind(this));
+    $('#join-room').on('click', this.onJoinRoomClick.bind(this));
+    $('#play-again').on('click', this.onPlayAgainClick.bind(this));
+    $('.about-button').on('click', this.onAboutButtonClick.bind(this));
+    $('#cardboard').on('click', this.onCardboardClick.bind(this));
+    $('#start').on('click', this.onStartClick.bind(this));
+    $('#tilt').on('click', this.onTiltClick.bind(this));
+    $('button.btn').on('click', () => {this.scene.sound.playUI('button');});
+    $('#reload').on('click', window.location.reload);
+    $('.join-room-screen .back-arrow').on('click', () => {this.backAnimation('join');});
+    $('.open-room-screen .back-arrow').on('click', () => {this.backAnimation('open');});
+    $('.mute').on('click', this.scene.sound.toggleMute.bind(this.scene.sound));
+
+    $('button.btn').on('click', function onAnyButtonClick() {
+      const duration = 0.1;
+      TweenMax.to($(this), duration, {
+        backgroundColor: '#fff',
+      });
+      TweenMax.to($(this), duration, {
+        backgroundColor: 'transparent',
+        delay: duration,
+      });
+    });
+  }
+
+  onVisibilityChange() {
+    if (document.hidden) {
+      this.scene.tabActive = false;
+      this.scene.sound.blur();
+    } else {
+      this.scene.tabActive = true;
+      this.scene.firstActiveFrame = this.scene.frameNumber;
+      this.scene.sound.focus();
+    }
+  }
+
+  onStartSingleplayerClick() {
+    if (this.scene.manager.isVRCompatible) {
+      if (Util.isMobile()) {
+        $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
+        $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
+      } else {
+        $('#cardboard img').attr('src', '/images/vive-pink.gif');
+        $('#tilt img').attr('src', '/images/desktop-pink.gif');
+      }
+      $('.choose-vr-mode-screen').removeClass('blue green');
+      $('.choose-vr-mode-screen').addClass('pink');
+    }
+    this.scene.setSingleplayer();
+    this.viewVRChooserScreen().then(() => {
+      setTimeout(() => {
+        bodymovin.stop();
+        bodymovin.destroy();
+        bodymovin.stop();
+        bodymovin.destroy();
+      }, 300);
+    });
+  }
+
+  onOpenRoomClick() {
+    if (this.scene.manager.isVRCompatible) {
+      if (Util.isMobile()) {
+        $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
+        $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
+      } else {
+        $('#cardboard img').attr('src', '/images/vive-blue.gif');
+        $('#tilt img').attr('src', '/images/desktop-blue.gif');
+      }
+      $('.choose-vr-mode-screen').removeClass('pink green');
+      $('.choose-vr-mode-screen').addClass('blue');
+    }
+    this.scene.setMultiplayer();
+    this.viewOpenRoomScreenAnimation().then(() => {
+      bodymovin.stop();
+      bodymovin.destroy();
+      bodymovin.stop();
+      bodymovin.destroy();
+    });
+  }
+
+  onJoinRoomClick() {
+    if (this.scene.manager.isVRCompatible) {
+      if (Util.isMobile()) {
+        $('#cardboard img').attr('src', '/images/cardboard-green.gif');
+        $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
+      } else {
+        $('#cardboard img').attr('src', '/images/vive-green.gif');
+        $('#tilt img').attr('src', '/images/desktop-green.gif');
+      }
+      $('.choose-vr-mode-screen').removeClass('pink blue');
+      $('.choose-vr-mode-screen').addClass('green');
+    }
+    this.scene.setMultiplayer();
+    if (window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1) {
+      $('#room-code').val(window.location.pathname.slice(1));
+    }
+    this.viewJoinRoomScreenAnimation().then(() => {
+      bodymovin.stop();
+      bodymovin.destroy();
+      bodymovin.stop();
+      bodymovin.destroy();
+    });
+  }
+
+  onPlayAgainClick() {
+    if (this.scene.config.mode === MODE.MULTIPLAYER) {
+      $('#play-again').text('waiting for opponent to restart');
+      this.scene.playerRequestedRestart = true;
+      this.communication.sendRestartGame();
+    }
+    this.scene.restartGame();
+  }
+
+  onAboutButtonClick() {
+    if (this.aboutScreenOpen) {
+      TweenMax.to('.about-screen', 0.5, {
+        autoAlpha: 0,
+      });
+      $('.about-button').text('About');
+    } else {
+      TweenMax.set('.about-screen', {
+        display: 'block',
+        opacity: 0,
+      });
+      TweenMax.to('.about-screen', 0.5, {
+        autoAlpha: 1,
+      });
+      $('.about-button').text('Close');
+    }
+    this.aboutScreenOpen = !this.aboutScreenOpen;
+  }
+
+  onCardboardClick() {
+    this.scene.setupVRControls();
+    this.scene.controlMode = CONTROLMODE.VR;
+      // eslint-disable-next-line
+    this.scene.manager.enterVRMode_();
+    this.scene.startGame();
+  }
+
+  onStartClick() {
     if (Util.isMobile()) {
       const noSleep = new NoSleep();
       noSleep.enable();
@@ -243,196 +421,16 @@ class PingPong {
     }, 0.1, '+=0.2');
   }
 
-  loadModeChooserAnimation() {
-    return Promise.all([
-      new Promise(resolve => {
-        $.getJSON('/animations/1player.json', data => {
-          this.singleplayerAnimation = bodymovin.loadAnimation({
-            container: document.getElementById('singleplayer-animation'),
-            renderer: 'svg',
-            loop: true,
-            animationData: data,
-          });
-          resolve();
-        });
-      }),
-      new Promise(resolve => {
-        $.getJSON('/animations/2player.json', data => {
-          this.multiplayerAnimation = bodymovin.loadAnimation({
-            container: document.getElementById('multiplayer-animation'),
-            renderer: 'svg',
-            loop: true,
-            animationData: data,
-          });
-          resolve();
-        });
-      })
-    ]);
-  }
-
-  setupHandlers() {
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) {
-        this.scene.tabActive = false;
-        this.scene.sound.blur();
-      } else {
-        this.scene.tabActive = true;
-        this.scene.firstActiveFrame = this.scene.frameNumber;
-        this.scene.sound.focus();
-      }
-    }, false);
-
-    $('#start').on('click', () => {
-      $('body').scrollTop(80);
-      this.viewModeChooserScreen();
-    });
-
-    $('#start-singleplayer').on('click', () => {
-      if (this.scene.manager.isVRCompatible) {
-        if (Util.isMobile()) {
-          $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
-          $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
-        } else {
-          $('#cardboard img').attr('src', '/images/vive-pink.gif');
-          $('#tilt img').attr('src', '/images/desktop-pink.gif');
-        }
-        $('.choose-vr-mode-screen').removeClass('blue green');
-        $('.choose-vr-mode-screen').addClass('pink');
-      }
-      this.scene.setSingleplayer();
-      this.viewVRChooserScreen().then(() => {
-        setTimeout(() => {
-          bodymovin.stop();
-          bodymovin.destroy();
-          bodymovin.stop();
-          bodymovin.destroy();
-        }, 300);
-      });
-    });
-
-    $('#reload').on('click', () => {
-      window.location.reload();
-    });
-
-    $('#open-room').on('click', () => {
-      if (this.scene.manager.isVRCompatible) {
-        if (Util.isMobile()) {
-          $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
-          $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
-        } else {
-          $('#cardboard img').attr('src', '/images/vive-blue.gif');
-          $('#tilt img').attr('src', '/images/desktop-blue.gif');
-        }
-        $('.choose-vr-mode-screen').removeClass('pink green');
-        $('.choose-vr-mode-screen').addClass('blue');
-      }
-      this.scene.setMultiplayer();
-      this.viewOpenRoomScreenAnimation().then(() => {
-        bodymovin.stop();
-        bodymovin.destroy();
-        bodymovin.stop();
-        bodymovin.destroy();
-      });
-    });
-
-    $('#join-room').on('click', () => {
-      if (this.scene.manager.isVRCompatible) {
-        if (Util.isMobile()) {
-          $('#cardboard img').attr('src', '/images/cardboard-green.gif');
-          $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
-        } else {
-          $('#cardboard img').attr('src', '/images/vive-green.gif');
-          $('#tilt img').attr('src', '/images/desktop-green.gif');
-        }
-        $('.choose-vr-mode-screen').removeClass('pink blue');
-        $('.choose-vr-mode-screen').addClass('green');
-      }
-      this.scene.setMultiplayer();
-      if (window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1) {
-        $('#room-code').val(window.location.pathname.slice(1));
-      }
-      this.viewJoinRoomScreenAnimation().then(() => {
-        bodymovin.stop();
-        bodymovin.destroy();
-        bodymovin.stop();
-        bodymovin.destroy();
-      });
-    });
-
-    $('#play-again').on('click', () => {
-      if (this.scene.config.mode === MODE.MULTIPLAYER) {
-        $('#play-again').text('waiting for opponent to restart');
-        this.scene.playerRequestedRestart = true;
-        this.communication.sendRestartGame();
-      }
-      this.scene.restartGame();
-    });
-
-    $('.about-button').on('click', () => {
-      if (this.aboutScreenOpen) {
-        TweenMax.to('.about-screen', 0.5, {
-          autoAlpha: 0,
-        });
-        $('.about-button').text('About');
-      } else {
-        TweenMax.set('.about-screen', {
-          display: 'block',
-          opacity: 0,
-        });
-        TweenMax.to('.about-screen', 0.5, {
-          autoAlpha: 1,
-        });
-        $('.about-button').text('Close');
-      }
-      this.aboutScreenOpen = !this.aboutScreenOpen;
-    });
-
-    $('#cardboard').on('click', () => {
+  onTiltClick() {
+    if (Util.isMobile()) {
+      // eslint-disable-next-line
+      this.scene.manager.onFSClick_();
       this.scene.setupVRControls();
-      this.scene.controlMode = 'VR';
-        // eslint-disable-next-line
-      this.scene.manager.enterVRMode_();
-      this.scene.startGame();
-    });
-
-    $('#tilt').on('click', () => {
-      if (Util.isMobile()) {
-        // eslint-disable-next-line
-        this.scene.manager.onFSClick_();
-        this.scene.setupVRControls();
-        this.scene.controlMode = 'VR';
-      } else {
-        this.scene.controlMode = 'MOUSE';
-      }
-      this.scene.startGame();
-    });
-
-    $('button.btn').on('click', () => {
-      this.scene.sound.playUI('button');
-    });
-
-    $('button.btn').on('click', function onButtonClick() {
-      const duration = 0.1;
-      TweenMax.to($(this), duration, {
-        backgroundColor: '#fff',
-      });
-      TweenMax.to($(this), duration, {
-        backgroundColor: 'transparent',
-        delay: duration,
-      });
-    });
-
-    $('.join-room-screen .back-arrow').on('click', () => {
-      this.backAnimation('join');
-    });
-
-    $('.open-room-screen .back-arrow').on('click', () => {
-      this.backAnimation('open');
-    });
-
-    $('.mute').on('click', () => {
-      this.scene.sound.toggleMute();
-    });
+      this.scene.controlMode = CONTROLMODE.VR;
+    } else {
+      this.scene.controlMode = CONTROLMODE.MOUSE;
+    }
+    this.scene.startGame();
   }
 
   viewVRChooserScreen() {
@@ -504,7 +502,6 @@ class PingPong {
         e.preventDefault();
         $('#room-form .grey-text').text('connecting to server');
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(() => {
-          console.log('resolved');
           $('#room-form .grey-text').text('game starts');
           $('#room-form #join-room-button').css('visibility', 'hidden');
           TweenMax.set('.opponent-icon > *', {fill: '#fff'});
@@ -587,7 +584,7 @@ class PingPong {
         $('#generated-room-url').val(`pong.wild.plus/${id}`);
         $('.opponent-joined').text('waiting for opponent');
       }).catch(e => {
-        console.log(e);
+        console.warn(e);
         $('.opponent-joined').text('cannot connect to server');
         TweenMax.killTweensOf('.opponent-joined');
         TweenMax.set('.opponent-joined', {visibility: 'visible', opacity: 1});
@@ -617,7 +614,6 @@ class PingPong {
       // eslint-disable-next-line
       let clip2 = new Clipboard('#generated-room-code');
       const tl = new TimelineMax();
-      console.log('go timelint');
       tl.set('.open-room-screen > div > *', {
         opacity: 0,
         y: 10,
@@ -662,7 +658,6 @@ class PingPong {
         visibility: 'visible',
       }, blinkSpeed);
     }).catch(e => {
-      // eslint-disable-next-line
       console.warn(e);
     });
   }

@@ -24,6 +24,8 @@
     "arrow-parens": 0,
     "no-param-reassign": 0,
     "arrow-body-style": ["error", "as-needed", {"requireReturnForObjectLiteral": true}],
+    "no-console": [1, { "allow": ["warn", "error"] }],
+    "comma-dangle": ["error", "always-multiline"],
     "no-useless-constructor": 0
   }
 }
