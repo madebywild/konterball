@@ -1,4 +1,4 @@
-import {TweenMax, TimelineMax, Power0, Power1, Power2, Power4} from 'gsap';
+import {TweenMax, TimelineMax, Power0, Power1, Power2, Power4, Expo} from 'gsap';
 import $ from 'zepto-modules';
 import FPS from 'fps';
 import {
@@ -6,6 +6,7 @@ import {
   WebGLRenderer,
   TextureLoader,
   BasicShadowMap,
+  SphereGeometry,
   PerspectiveCamera,
   DirectionalLight,
   AmbientLight,
@@ -186,6 +187,15 @@ export default class Scene {
       this.crosshair = new Crosshair(this.scene, this.config);
       this.crosshair.visible = false;
 
+
+      const geometry = new SphereGeometry(0.3, 32, 32);
+      const material = new MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+      });
+      this.halo = new Mesh(geometry, material);
+      this.halo.position.z = 10;
+      this.scene.add(this.halo);
       Promise.all([
         setupPaddles(this.objLoader, this.config, this.scene),
         this.hud.setup(),
@@ -218,10 +228,12 @@ export default class Scene {
     });
 
     if ('onpointerlockchange' in document) {
-      document.addEventListener('pointerlockchange', this.pointerLockChange.bind(this), false);
+      document.addEventListener('pointerlockchange', this.onPointerLockChange.bind(this), false);
     } else if ('onmozpointerlockchange' in document) {
-      document.addEventListener('mozpointerlockchange', this.pointerLockChange.bind(this), false);
+      document.addEventListener('mozpointerlockchange', this.onPointerLockChange.bind(this), false);
     }
+    $(window).on('resize', this.onResize.bind(this));
+    $(window).on('vrdisplaypresentchange', this.onResize.bind(this));
 
     this.fps.on('data', framerate => {
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
@@ -231,9 +243,6 @@ export default class Scene {
         this.renderer.setPixelRatio(window.devicePixelRatio / 2);
       }
     });
-
-    window.addEventListener('resize', this.onResize.bind(this), true);
-    window.addEventListener('vrdisplaypresentchange', this.onResize.bind(this), true);
   }
 
   onBallPaddleCollision(point) {
@@ -243,6 +252,7 @@ export default class Scene {
     }
     this.physics.onBallPaddleCollision({body: this.physics.ball, target: this.paddle});
     this.ballHitAnimation();
+    this.haloAnimation(point);
     this.ballPositionDifference = null;
     this.restartPingpongTimeout();
     this.ballHasHitEnemyTable = false;
@@ -334,7 +344,7 @@ export default class Scene {
     }
   }
 
-  pointerLockChange() {
+  onPointerLockChange() {
     if (document.pointerLockElement === this.renderer.domElement
       || document.mozPointerLockElement === this.renderer.domElement) {
       this.pointerIsLocked = true;
@@ -690,6 +700,7 @@ export default class Scene {
       this.sound.paddle(data.point);
     }
     if (!wasMiss) {
+      this.haloAnimation(mirrorPosition(data.point, this.config.tablePositionZ));
       // the received position will sometimes be slightly off from the position
       // of this players ball due to changes in latency. save the difference and
       // interpolate it until the ball is at our side again. this way the user
@@ -1010,6 +1021,25 @@ export default class Scene {
         paddleInterpolationAlpha: 0,
       });
     }
+  }
+
+  haloAnimation(position) {
+    this.halo.position.copy(position);
+    TweenMax.fromTo(this.halo.material, 1, {
+      opacity: 0.2,
+    }, {
+      opacity: 0,
+    });
+    TweenMax.fromTo(this.halo.scale, 1, {
+      x: 0,
+      y: 0,
+      z: 0,
+    }, {
+      x: 1,
+      y: 1,
+      z: 1,
+      ease: Expo.easeOut,
+    });
   }
 
   updateHudControls() {
