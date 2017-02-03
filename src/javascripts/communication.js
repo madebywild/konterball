@@ -35,7 +35,8 @@ export default class Communication {
       if (this.isOpponentConnected) {
         // tell opponent we disconnected
         this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {action: ACTION.DISCONNECT});
-      } else {
+      }
+      if (this.statusRecord) {
         // delete all records
         this.statusRecord.discard();
         this.statusRecord.delete();

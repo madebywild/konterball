@@ -17,6 +17,9 @@ import {
   Vector3,
   Vector2,
   Euler,
+  CatmullRomCurve3,
+  TubeGeometry,
+  Texture,
 } from 'three';
 import OBJLoader from './three/OBJLoader';
 import VREffect from './three/VREffect';
@@ -183,19 +186,12 @@ export default class Scene {
       this.setupEventListeners();
       this.setupTablePlane();
       this.setupLights();
+      this.setupEffects();
+
       this.hud = new Hud(this.scene, this.config, this.emitter, this.objLoader);
       this.crosshair = new Crosshair(this.scene, this.config);
       this.crosshair.visible = false;
 
-
-      const geometry = new SphereGeometry(0.3, 32, 32);
-      const material = new MeshBasicMaterial({
-        color: 0xffffff,
-        transparent: true,
-      });
-      this.halo = new Mesh(geometry, material);
-      this.halo.position.z = 10;
-      this.scene.add(this.halo);
       Promise.all([
         setupPaddles(this.objLoader, this.config, this.scene),
         this.hud.setup(),
@@ -237,9 +233,11 @@ export default class Scene {
 
     this.fps.on('data', framerate => {
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
+        console.warn('throttling frame rate');
         // set only half pixel density, this brings a huge speed boost for a
         // loss of image quality
-        // TODO maybe reduce shadow map size first
+        this.light.shadow.mapSize.width = 512;
+        this.light.shadow.mapSize.height = 512;
         this.renderer.setPixelRatio(window.devicePixelRatio / 2);
       }
     });
@@ -283,6 +281,7 @@ export default class Scene {
   }
 
   onGameOver() {
+    this.ballPath = null;
     this.sound.playLoop('bass-pad-synth');
     this.ball.visible = false;
     this.paddle.visible = false;
@@ -393,23 +392,22 @@ export default class Scene {
   }
 
   setupLights() {
-    let light = new DirectionalLight(0xffffff, 0.3, 0);
-    light.position.z = this.config.tablePositionZ;
-    light.position.z = 2;
-    light.position.y = 4;
-    light.shadow.camera.near = 3.5;
-    light.shadow.camera.far = 5.4;
-    light.shadow.camera.left = -this.config.tableWidth / 2;
-    light.shadow.camera.right = this.config.tableWidth / 2;
-    light.shadow.camera.bottom = 0.8;
-    light.shadow.camera.top = 3.4;
-    light.castShadow = true;
-    light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
-    light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
-    this.scene.add(light);
+    this.light = new DirectionalLight(0xffffff, 0.3, 0);
+    this.light.position.z = this.config.tablePositionZ;
+    this.light.position.z = 2;
+    this.light.position.y = 4;
+    this.light.shadow.camera.near = 3.5;
+    this.light.shadow.camera.far = 5.4;
+    this.light.shadow.camera.left = -this.config.tableWidth / 2;
+    this.light.shadow.camera.right = this.config.tableWidth / 2;
+    this.light.shadow.camera.bottom = 0.8;
+    this.light.shadow.camera.top = 3.4;
+    this.light.castShadow = true;
+    this.light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
+    this.light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
+    this.scene.add(this.light);
 
-    light = new AmbientLight(0xFFFFFF, 0.9);
-    this.scene.add(light);
+    this.scene.add(new AmbientLight(0xFFFFFF, 0.9));
   }
 
   setupTablePlane() {
@@ -448,6 +446,44 @@ export default class Scene {
         }
       }
     });
+  }
+
+  setupEffects() {
+    let geometry = new SphereGeometry(0.3, 32, 32);
+    let material = new MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    });
+    this.halo = new Mesh(geometry, material);
+    this.halo.position.z = 10;
+    this.scene.add(this.halo);
+
+    this.ballPath = new CatmullRomCurve3([new Vector3(0, 0, 0), new Vector3(0, 0.1, 0)]);
+    geometry = new TubeGeometry(this.ballPath, 30, 0.01, 8, false);
+
+    // create a gradient texture on canvas and apply it on material
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d');
+
+    const gradient = ctx.createLinearGradient(0, 0, 200, 0);
+    gradient.addColorStop(0, 'rgba(249, 252, 86, 0)');
+    gradient.addColorStop(1, 'rgba(249, 252, 86, 0.3)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 512, 512);
+    const trailTexture = new Texture(canvas);
+    trailTexture.needsUpdate = true;
+
+    material = new MeshBasicMaterial({
+      map: trailTexture,
+      transparent: true,
+    });
+    this.trail = new Mesh(geometry, material);
+    this.scene.add(this.trail);
+    this.ballPath = null;
   }
 
   startGame() {
@@ -787,6 +823,7 @@ export default class Scene {
   }
 
   resetTimeoutEnded() {
+    this.ballPath = null;
     if (this.config.mode === MODE.MULTIPLAYER) {
       this.physicsTimeStep = 1000;
       if (this.ballHasHitEnemyTable) {
@@ -1031,9 +1068,9 @@ export default class Scene {
       opacity: 0,
     });
     TweenMax.fromTo(this.halo.scale, 1, {
-      x: 0,
-      y: 0,
-      z: 0,
+      x: 0.001,
+      y: 0.001,
+      z: 0.001,
     }, {
       x: 1,
       y: 1,
@@ -1085,7 +1122,27 @@ export default class Scene {
         && this.physics.ball.velocity.z > 0) {
         this.onBallPaddleCollision(this.ball.position);
       }
+
+      // the points array is a first in first out queue
+      if (!this.ballPath) {
+        this.ballPath = new CatmullRomCurve3([
+          this.ball.position.clone(),
+          new Vector3(
+            this.ball.position.x,
+            this.ball.position.y,
+            this.ball.position.z + 0.001
+          ),
+        ]);
+      } else {
+        this.ballPath.points.push(this.ball.position.clone());
+      }
+      if (this.ballPath.points.length > 50) {
+        this.ballPath.points.shift();
+      }
+      this.trail.geometry.dispose();
+      this.trail.geometry = new TubeGeometry(this.ballPath, 128, 0.01, 8, false);
     }
+
 
     if (this.config.state === STATE.PLAYING
       || this.config.state === STATE.COUNTDOWN
