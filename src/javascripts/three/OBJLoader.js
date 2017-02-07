@@ -4,7 +4,7 @@
 
 import {
   DefaultLoadingManager,
-  XHRLoader,
+  FileLoader,
   Group,
   BufferGeometry,
   BufferAttribute,
@@ -54,7 +54,7 @@ OBJLoader.prototype = {
 
 		var scope = this;
 
-		var loader = new XHRLoader( scope.manager );
+		var loader = new FileLoader( scope.manager );
 		loader.setPath( this.path );
 		loader.load( url, function ( text ) {
 
