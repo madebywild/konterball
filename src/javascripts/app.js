@@ -50,7 +50,7 @@ class PingPong {
     tl.set('.checkmark', {visibility: 'hidden'}, '-=0.2');
     if ($(window).width() < $(window).height()) {
       TweenMax.set('.rotate-phone-screen', {
-        display: 'block',
+        visibility: 'visible',
       });
       tl.play();
     } else if (!this.startedLoading) {
@@ -255,7 +255,6 @@ class PingPong {
   }
 
   onStartSingleplayerClick() {
-    console.log(this.scene.manager);
     if (this.scene.manager.isVRCompatible) {
       if (Util.isMobile()) {
         $('#cardboard img').attr('src', '/images/cardboard-pink.gif');

@@ -35,7 +35,7 @@ export default (parent, config) => {
   // actual net
   const griddivisions = 6;
   for (let i = 0; i < griddivisions; i += 1) {
-    const grid = new GridHelper(config.netHeight / 2, 8, 0xFFFFFF, 0xFFFFFF);
+    const grid = new GridHelper(config.netHeight, 8, 0xFFFFFF, 0xFFFFFF);
     grid.rotation.x = Math.PI / 2;
     grid.scale.x = (config.tableWidth / griddivisions) / config.netHeight;
     grid.position.x = (((i / griddivisions) * config.tableWidth) + (config.netHeight / 2) * grid.scale.x) - config.tableWidth / 2;

@@ -2,7 +2,7 @@
   @extend .screen;
   background-color: $blue-background;
   z-index: 10;
-  display: none;
+  visibility: hidden;
   .phone-container {
     @extend .absolute-center;
     width: 100%;
