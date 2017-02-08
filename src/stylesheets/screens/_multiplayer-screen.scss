@@ -51,8 +51,17 @@
     letter-spacing: 1px;
   }
   @media screen and (max-width: $breakpoint-mobile-max) {
-    input {
-      font-size: 90px;
+    .input-wrapper {
+      input {
+        font-size: 50px;
+      }
+      .placeholder.placeholder {
+        font-size: 60px;
+        bottom: 10px;
+      }
+    }
+    .present-players svg {
+      width: 30px;
     }
     #generated-room-url {
       font-size: 30px;
@@ -62,8 +71,8 @@
       margin-top: 10px;
     }
     .grey-text {
-      margin-bottom: 0;
-      margin-top: -10px;
+      margin-bottom: -10px;
+      margin-top: 10px;
     }
   }
 }
@@ -93,7 +102,7 @@
     .placeholder {
       pointer-events: none;
       font-family: AntiqueOlive;
-      letter-spacing: 30px;
+      letter-spacing: 0.23em;
       text-align: center;
       display: block;
       color: #fff;

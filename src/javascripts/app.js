@@ -499,15 +499,34 @@ class PingPong {
       $('#room-form').on('submit', e => {
         $('#room-form .grey-text').css('color', '#fff');
         e.preventDefault();
-        $('#room-form .grey-text').text('connecting to server');
+        $('#room-form .grey-text').text('connecting to server...');
+        const loadingTL = new TimelineMax({
+          repeat: -1,
+          repeatDelay: 0.5,
+        });
+        loadingTL.call(() => {
+          $('#room-form .grey-text').html('connecting to server&nbsp;&nbsp;&nbsp;');
+        }, null, null, 0.5);
+        loadingTL.call(() => {
+          $('#room-form .grey-text').html('connecting to server.&nbsp;&nbsp;');
+        }, null, null, 1);
+        loadingTL.call(() => {
+          $('#room-form .grey-text').html('connecting to server..&nbsp;');
+        }, null, null, 1.5);
+        loadingTL.call(() => {
+          $('#room-form .grey-text').html('connecting to server...');
+        }, null, null, 2);
+
         this.communication.tryConnecting($('#room-code').val().toUpperCase()).then(() => {
           $('#room-form .grey-text').text('game starts');
           $('#room-form #join-room-button').css('visibility', 'hidden');
           TweenMax.set('.opponent-icon > *', {fill: '#fff'});
+          loadingTL.kill();
           setTimeout(() => {
             this.viewVRChooserScreen();
           }, 1000);
         }).catch(err => {
+          loadingTL.kill();
           $('#room-form .grey-text').text(err);
         });
       });
