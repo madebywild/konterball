@@ -314,6 +314,7 @@ class PingPong {
     this.scene.setMultiplayer();
     if (window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1) {
       $('#room-code').val(window.location.pathname.slice(1));
+      $('.input-wrapper .placeholder').hide();
     }
     this.viewJoinRoomScreenAnimation().then(() => {
       bodymovin.stop();

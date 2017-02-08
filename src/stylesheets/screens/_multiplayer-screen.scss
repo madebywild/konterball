@@ -49,11 +49,17 @@
     margin-top: 5px;
     font-size: 20px;
     letter-spacing: 1px;
+    margin-bottom: 0px;
   }
   @media screen and (max-width: $breakpoint-mobile-max) {
+    input {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
     .input-wrapper {
       input {
         font-size: 50px;
+        margin-bottom: -10px;
       }
       .placeholder.placeholder {
         font-size: 60px;

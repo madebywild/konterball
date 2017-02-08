@@ -173,7 +173,9 @@ export default class Physics {
   initBallPosition() {
     this.speed = 1;
     if (this.config.mode === MODE.SINGLEPLAYER) {
+      // initialize ball position
       this.ball.position.set(0, 1.4, this.config.tablePositionZ + 0.1);
+      // throw ball to the player, randomize direction a bit
       this.ball.velocity.x = (0.5 - Math.random()) * 0.5;
       this.ball.velocity.y = 0;
       this.ball.velocity.z = 2;
@@ -181,10 +183,17 @@ export default class Physics {
       this.ball.angularVelocity.y = 0;
       this.ball.angularVelocity.z = 0;
     } else {
+      // in multiplayer we set the ball on the far side of the table so we have
+      // to give it a little more velocity, similar to if the opponent was
+      // hitting it
+      this.ball.position.set(
+        0,
+        this.config.tableHeight + 0.2,
+        this.config.tablePositionZ - this.config.tableDepth * 0.4
+      );
       this.ball.velocity.z = 3;
       this.ball.velocity.x = (Math.random() - 0.5) * 0.5;
       this.ball.velocity.y = 2;
-      this.ball.position.set(0, this.config.tableHeight + 0.2, this.config.tablePositionZ - this.config.tableDepth * 0.4);
       this.ball.angularVelocity.x = 0;
       this.ball.angularVelocity.y = 0;
       this.ball.angularVelocity.z = 0;
