@@ -255,6 +255,7 @@ class PingPong {
   }
 
   onStartSingleplayerClick() {
+    console.log(this.scene.manager);
     if (this.scene.manager.isVRCompatible) {
       if (Util.isMobile()) {
         $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
@@ -338,14 +339,6 @@ class PingPong {
     });
   }
 
-  onCardboardClick() {
-    this.scene.setupVRControls();
-    this.scene.controlMode = CONTROLMODE.VR;
-      // eslint-disable-next-line
-    this.scene.manager.enterVRMode_();
-    this.scene.startGame();
-  }
-
   onStartClick() {
     if (Util.isMobile()) {
       const noSleep = new NoSleep();
@@ -408,6 +401,23 @@ class PingPong {
       y: 0,
       opacity: 1,
     }, 0.1, '+=0.2');
+  }
+
+  onCardboardClick() {
+    // eslint-disable-next-line
+    this.scene.manager.enterVRMode_();
+    $('.choose-vr-mode-screen .inner').html('Put on your VR device now<br>Game is starting in 5');
+    let time = 5;
+    const countdown = setInterval(() => {
+      time -= 1;
+      $('.choose-vr-mode-screen .inner').html(`Put on your VR device now<br>Game is starting in ${time}`);
+      if (time === 0) {
+        clearInterval(countdown);
+        this.scene.setupVRControls();
+        this.scene.controlMode = CONTROLMODE.VR;
+        this.scene.startGame();
+      }
+    }, 1000);
   }
 
   onTiltClick() {
