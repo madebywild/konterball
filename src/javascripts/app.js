@@ -407,18 +407,12 @@ class PingPong {
   onCardboardClick() {
     // eslint-disable-next-line
     this.scene.manager.enterVRMode_();
-    $('.choose-vr-mode-screen .inner').html('Put on your VR device now<br>Game is starting in 5');
-    let time = 5;
-    const countdown = setInterval(() => {
-      time -= 1;
-      $('.choose-vr-mode-screen .inner').html(`Put on your VR device now<br>Game is starting in ${time}`);
-      if (time === 0) {
-        clearInterval(countdown);
-        this.scene.setupVRControls();
-        this.scene.controlMode = CONTROLMODE.VR;
-        this.scene.startGame();
-      }
-    }, 1000);
+    $('.choose-vr-mode-screen .inner').html('Put on your VR device now<br>Game is starting...');
+    TweenMax.delayedCall(5, () => {
+      this.scene.setupVRControls();
+      this.scene.controlMode = CONTROLMODE.VR;
+      this.scene.startGame();
+    });
   }
 
   onTiltClick() {
