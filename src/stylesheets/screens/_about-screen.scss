@@ -1,0 +1,13 @@
+.about-screen {
+  @extend .screen;
+  visibility: hidden;
+  z-index: 100;
+  .about-inner {
+    @extend .absolute-center;
+    width: 100%;
+  }
+  width: 100%;
+  font-size: 16px;
+  z-index: 80;
+  background-color: $blue-background;
+}

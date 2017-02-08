@@ -228,6 +228,7 @@ class PingPong {
     $('#reload').on('click', window.location.reload);
     $('.join-room-screen .back-arrow').on('click', () => {this.backAnimation('join');});
     $('.open-room-screen .back-arrow').on('click', () => {this.backAnimation('open');});
+    $('.about-screen .back-arrow').on('click', () => {this.backAnimation('about');});
     $('.mute').on('click', this.scene.sound.toggleMute.bind(this.scene.sound));
 
     $('button.btn').on('click', function onAnyButtonClick() {
@@ -330,23 +331,11 @@ class PingPong {
     this.scene.restartGame();
   }
 
+  // eslint-disable-next-line
   onAboutButtonClick() {
-    if (this.aboutScreenOpen) {
-      TweenMax.to('.about-screen', 0.5, {
-        autoAlpha: 0,
-      });
-      $('.about-button').text('About');
-    } else {
-      TweenMax.set('.about-screen', {
-        display: 'block',
-        opacity: 0,
-      });
-      TweenMax.to('.about-screen', 0.5, {
-        autoAlpha: 1,
-      });
-      $('.about-button').text('Close');
-    }
-    this.aboutScreenOpen = !this.aboutScreenOpen;
+    TweenMax.to('.about-screen', 0.5, {
+      autoAlpha: 1,
+    });
   }
 
   onCardboardClick() {
@@ -551,6 +540,12 @@ class PingPong {
   }
 
   backAnimation(from) {
+    if (from === 'about') {
+      TweenMax.to('.about-screen', 0.5, {
+        autoAlpha: 0,
+      });
+      return;
+    }
     this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
     tl.set('.choose-mode-screen', {zIndex: 10});

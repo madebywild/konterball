@@ -3,6 +3,8 @@ import $ from 'zepto-modules';
 import {rand, cap} from './util/helpers';
 import {MODE} from './constants';
 
+/* eslint-disable */
+
 export default class SoundManager {
   constructor(config) {
     this.config = config;
@@ -19,7 +21,13 @@ export default class SoundManager {
       }));
     }
     this.uiSounds = new Map();
-    this.uiSounds.set('button', new Howl({src: `${url}button.mp3`}));
+    this.uiSounds.set('button', new Howl({
+      src: `${url}button.mp3`,
+      onloaderror: () => {
+        console.warn('Error loading sound');
+        this.error = true;
+      },
+    }));
     this.uiSounds.set('joined', new Howl({src: `${url}joined.mp3`}));
     this.uiSounds.set('touch', new Howl({src: `${url}touch.mp3`}));
     this.uiSounds.set('transition', new Howl({src: `${url}transition.mp3`}));
@@ -33,11 +41,16 @@ export default class SoundManager {
 
     url = 'https://s3.eu-central-1.amazonaws.com/pingpongsound/loops/';
     this.loopSounds = new Map();
-    this.loopSounds.set('bass', new Howl({loop: true, src: `${url}loop1-bass.mp3`}));
+    this.loopSounds.set('bass', new Howl({
+      loop: true,
+      src: `${url}loop1-bass.mp3`,
+      onload: () => {
+        this.loopSounds.get('bass').play();
+      },
+    }));
     this.loopSounds.set('bass-pad', new Howl({loop: true, src: `${url}loop1-bass-pad.mp3`}));
     this.loopSounds.set('bass-pad-synth', new Howl({loop: true, src: `${url}loop1-bass-pad-synth.mp3`}));
     this.loopSounds.set('waiting', new Howl({loop: true, src: `${url}waiting.mp3`}));
-    this.loopSounds.get('bass').play();
     if (localStorage.muted === 'true') {
       this.mute();
     }

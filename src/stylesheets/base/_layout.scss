@@ -18,6 +18,13 @@ body {
   // padding-bottom: 80px;
   color: #fff;
 }
+a,
+a:visited,
+a:active,
+a:focus {
+  color: #fff;
+  text-decoration: underline;
+}
 .pink {
   background-color: $pink-background;
 }
@@ -88,29 +95,18 @@ button.inactive {
   left: 0;
   overflow: hidden;
 }
-.about-button {
-  display: none;
+button.btn.about-button {
   z-index: 90;
-  position: fixed;
-  padding: 15px;
+  position: absolute;
+  border: 0;
   top: 0;
   right: 0;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-.about-screen {
-  display: none;
-  z-index: 80;
-  @extend .screen;
-  background-color: $blue-background;
-  overflow: scroll;
-}
-.about-inner {
-  text-align: center;
-  max-width: 400px;
-  padding-top: 30px;
-  padding-bottom: 30px;
-  margin: auto;
+  margin: 0;
+  padding: 20px;
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    padding-right: 15px;
+    padding-top: 15px;
+  }
 }
 .grey-text {
   margin-top: -15px;
