@@ -12,7 +12,7 @@ body {
   font-family: Futura;
   overflow: hidden;
   background-color: $blue-background;
-  height: 100vh;
+  height: 100%;
   // +80 to enable ios users to scroll up and down to view/hide the menu bar
   // disable for now
   // padding-bottom: 80px;
@@ -90,7 +90,7 @@ button.inactive {
 .screen {
   position: fixed;
   width: 100%;
-  height: calc(100vh + 1px);
+  height: 100%;
   top: 0;
   left: 0;
   overflow: hidden;
