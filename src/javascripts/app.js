@@ -22,8 +22,8 @@ class PingPong {
     this.scene = new Scene(this.emitter, this.communication);
     this.setupHandlers();
     this.setupListeners();
-    this.aboutScreenOpen = false;
     this.introBallTween = null;
+    this.activeScreen = '.intro-screen';
 
     if (Util.isMobile() && 'orientation' in window) {
       this.checkPhoneOrientation();
@@ -226,9 +226,9 @@ class PingPong {
     $('#tilt').on('click', this.onTiltClick.bind(this));
     $('button.btn').on('click', () => {this.scene.sound.playUI('button');});
     $('#reload').on('click', window.location.reload);
-    $('.join-room-screen .back-arrow').on('click', () => {this.backAnimation('join');});
-    $('.open-room-screen .back-arrow').on('click', () => {this.backAnimation('open');});
-    $('.about-screen .back-arrow').on('click', () => {this.backAnimation('about');});
+    $('.join-room-screen .back-arrow').on('click', () => {this.backAnimation('.choose-mode-screen');});
+    $('.open-room-screen .back-arrow').on('click', () => {this.backAnimation('.choose-mode-screen');});
+    $('.about-screen .back-arrow').on('click', () => {this.backAnimation(this.activeScreen, true);});
     $('.mute').on('click', this.scene.sound.toggleMute.bind(this.scene.sound));
 
     $('button.btn').on('click', function onAnyButtonClick() {
@@ -267,14 +267,7 @@ class PingPong {
       $('.choose-vr-mode-screen').addClass('pink');
     }
     this.scene.setSingleplayer();
-    this.viewVRChooserScreen().then(() => {
-      setTimeout(() => {
-        bodymovin.stop();
-        bodymovin.destroy();
-        bodymovin.stop();
-        bodymovin.destroy();
-      }, 300);
-    });
+    this.viewVRChooserScreen();
   }
 
   onOpenRoomClick() {
@@ -290,12 +283,7 @@ class PingPong {
       $('.choose-vr-mode-screen').addClass('blue');
     }
     this.scene.setMultiplayer();
-    this.viewOpenRoomScreenAnimation().then(() => {
-      bodymovin.stop();
-      bodymovin.destroy();
-      bodymovin.stop();
-      bodymovin.destroy();
-    });
+    this.viewOpenRoomScreenAnimation();
   }
 
   onJoinRoomClick() {
@@ -315,12 +303,7 @@ class PingPong {
       $('#room-code').val(window.location.pathname.slice(1));
       $('.input-wrapper .placeholder').hide();
     }
-    this.viewJoinRoomScreenAnimation().then(() => {
-      bodymovin.stop();
-      bodymovin.destroy();
-      bodymovin.stop();
-      bodymovin.destroy();
-    });
+    this.viewJoinRoomScreenAnimation();
   }
 
   onPlayAgainClick() {
@@ -334,12 +317,30 @@ class PingPong {
 
   // eslint-disable-next-line
   onAboutButtonClick() {
-    TweenMax.to('.about-screen', 0.5, {
-      autoAlpha: 1,
+    console.log(this.activeScreen);
+    const tl = new TimelineMax();
+    tl.set(this.activeScreen, {zIndex: 10});
+    tl.set('.transition-color-screen.green', {zIndex: 11, left: '-100%'});
+    tl.set('.transition-color-screen.blue', {zIndex: 12, left: '-100%'});
+    tl.set('.transition-color-screen.pink', {zIndex: 13, left: '-100%'});
+    tl.set('.about-screen', {zIndex: 14});
+    tl.to(this.activeScreen, screenTransitionDuration, {
+      left: '100%',
+      ease: screenTransitionEase,
     });
+    tl.staggerTo([
+      '.transition-color-screen.green',
+      '.transition-color-screen.blue',
+      '.transition-color-screen.pink',
+      '.about-screen',
+    ], screenTransitionDuration, {
+      left: '0%',
+      ease: screenTransitionEase,
+    }, screenTransitionInterval, `-=${screenTransitionDuration - screenTransitionInterval}`);
   }
 
   onStartClick() {
+    this.activeScreen = '.choose-mode-screen';
     if (Util.isMobile()) {
       const noSleep = new NoSleep();
       noSleep.enable();
@@ -428,6 +429,10 @@ class PingPong {
 
   viewVRChooserScreen() {
     return new Promise(resolve => {
+      bodymovin.stop();
+      bodymovin.destroy();
+      bodymovin.stop();
+      bodymovin.destroy();
       if (!this.scene.manager.isVRCompatible) {
         this.scene.startGame();
         resolve();
@@ -474,6 +479,7 @@ class PingPong {
 
   viewJoinRoomScreenAnimation() {
     return new Promise(resolve => {
+      this.activeScreen = '.join-room-screen';
       $('#room-code').focus();
       $('#room-code').bind('input', () => {
         this.scene.sound.playUI('type');
@@ -490,13 +496,14 @@ class PingPong {
           $('#join-room-button').css('pointer-events', 'none');
         }
       });
-      $('#room-form').on('submit', e => {
+      $('#room-form').on('submit', () => {
         // hack to close android keyboard after submit
         $('#room-code').attr('readonly', 'readonly');
         setTimeout(() => {
           $('#room-code').blur();
           $('#room-code').removeAttr('readonly');
         }, 100);
+
         $('#room-form .grey-text').css('color', '#fff');
         $('#room-form .grey-text').text('connecting to server...');
         const loadingTL = new TimelineMax({
@@ -567,40 +574,39 @@ class PingPong {
     });
   }
 
-  backAnimation(from) {
-    if (from === 'about') {
-      TweenMax.to('.about-screen', 0.5, {
-        autoAlpha: 0,
-      });
-      return;
-    }
+  backAnimation(to, fromAboutScreen = false) {
     this.scene.sound.playUI('transition');
     const tl = new TimelineMax();
     tl.set('.choose-mode-screen', {zIndex: 10});
-    tl.set(`.transition-color-screen.${from === 'join' ? 'blue' : 'green'}`, {zIndex: 11, left: '0'});
-    tl.set(`.transition-color-screen.${from === 'join' ? 'green' : 'blue'}`, {zIndex: 11, left: '-100%'});
+    tl.set(`.transition-color-screen.${this.activeScreen === '.join-room-screen' ? 'blue' : 'green'}`, {zIndex: 11, left: '0'});
+    tl.set(`.transition-color-screen.${this.activeScreen === '.join-room-screen' ? 'green' : 'blue'}`, {zIndex: 11, left: '-100%'});
     tl.set('.transition-color-screen.pink', {zIndex: 12, left: '0'});
-    tl.set('.join-room-screen, .open-room-screen', {zIndex: 13});
+    if (!fromAboutScreen) {
+      tl.set('.join-room-screen, .open-room-screen', {zIndex: 13});
+    }
     tl.staggerTo([
-      '.join-room-screen, .open-room-screen',
+      fromAboutScreen ? '.about-screen' : this.activeScreen,
       '.transition-color-screen.pink',
-      `.transition-color-screen.${from === 'join' ? 'blue' : 'green'}`,
+      `.transition-color-screen.${this.activeScreen === '.join-room-screen' ? 'blue' : 'green'}`,
     ], screenTransitionDuration, {
       left: '-100%',
       ease: screenTransitionEase,
     }, screenTransitionInterval);
     tl.to([
-      '.choose-mode-screen',
+      fromAboutScreen ? this.activeScreen : to,
     ], screenTransitionDuration, {
       left: '0%',
       ease: screenTransitionEase,
     }, `-=${screenTransitionDuration - screenTransitionInterval}`);
-    this.loadModeChooserAnimation();
-    this.scene.sound.playLoop('bass-pad');
+    if (!fromAboutScreen) {
+      this.scene.sound.playLoop('bass-pad');
+    }
+    this.activeScreen = to;
   }
 
   viewOpenRoomScreenAnimation() {
     return new Promise(resolve => {
+      this.activeScreen = '.open-room-screen';
       this.communication.chooseClosestServer().then(() => {
         const id = this.communication.openRoom();
         $('#generated-room-code').val(id);

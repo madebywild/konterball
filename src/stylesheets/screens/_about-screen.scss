@@ -1,7 +1,7 @@
 .about-screen {
   @extend .screen;
-  visibility: hidden;
   z-index: 100;
+  left: -100%;
   .about-inner {
     @extend .absolute-center;
     width: 100%;

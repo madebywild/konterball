@@ -17,8 +17,8 @@ export default class Communication {
     this.pingInterval = null;
     this.isOpponentConnected = false;
     this.availableServers = [
-      '138.68.98.41:6020', // frankfurt
-      '104.236.73.94:6020', // new york
+      '54.89.219.253:6020', // us-east
+      '52.59.225.245:6020', // eu-central
     ];
     // chunk available characters into n parts where n is the number of servers
     this.availablePrefixes = chunk(
@@ -71,6 +71,7 @@ export default class Communication {
       });
       client.on('connectionStateChanged', e => {
         if (e !== deepstream.CONSTANTS.CONNECTION_STATE.ERROR
+            && e !== deepstream.CONSTANTS.CONNECTION_STATE.CLOSED
             && e !== deepstream.CONSTANTS.CONNECTION_STATE.RECONNECTING) {
           // we're in
           clearTimeout(timeout);
