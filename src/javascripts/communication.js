@@ -140,7 +140,8 @@ export default class Communication {
         }
       });
       if (serverIndex === -1) {
-        reject('unknown prefix');
+        // impossible room code, there is no prefix like that
+        reject('no room found');
       }
       this.connectToServer(this.availableServers[serverIndex]).then(() => {
         this.GAME_ID = id;

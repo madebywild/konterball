@@ -491,8 +491,13 @@ class PingPong {
         }
       });
       $('#room-form').on('submit', e => {
+        // hack to close android keyboard after submit
+        $('#room-code').attr('readonly', 'readonly');
+        setTimeout(() => {
+          $('#room-code').blur();
+          $('#room-code').removeAttr('readonly');
+        }, 100);
         $('#room-form .grey-text').css('color', '#fff');
-        e.preventDefault();
         $('#room-form .grey-text').text('connecting to server...');
         const loadingTL = new TimelineMax({
           repeat: -1,
