@@ -113,11 +113,23 @@ button.btn.about-button {
   color: $medium-grey;
   @extend .futura-italic;
 }
+.badge {
+  left: 13px;
+  bottom: 13px;
+  position: fixed;
+  width: 100px;
+  z-index: 100;
+  opacity: 0.3;
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    left: 8px;
+    bottom: 8px;
+  }
+}
 .mute {
   padding: 20px;
   padding-bottom: 13px;
   border: 0;
-  left: 0;
+  right: 0;
   bottom: 0;
   position: fixed;
   z-index: 100;
@@ -126,7 +138,7 @@ button.btn.about-button {
     height: auto;
   }
   @media screen and (max-width: $breakpoint-mobile-max) {
-    padding-left: 15px;
+    padding-right: 15px;
     padding-bottom: 8px;
     img {
       width: 20px;

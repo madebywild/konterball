@@ -30,6 +30,15 @@ class PingPong {
     } else {
       this.startLoading();
     }
+    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (iOS) {
+      // cant reliably go fullscreen in ios so just hide the button
+      TweenMax.set('.fullscreen-button', {
+        display: 'none',
+        opacity: 0,
+        visibility: 'hidden',
+      });
+    }
   }
 
   checkPhoneOrientation() {
