@@ -87,6 +87,8 @@ export default class Physics {
     this.upwardsTable.position.z = this.config.tablePositionZ - this.config.tableHeight / 2;
     this.upwardsTable.position.y = this.config.tableHeight + this.config.tableDepth / 4;
     this.upwardsTable.collisionResponse = 0;
+    // eslint-disable-next-line
+    this.upwardsTable._name = 'upwards-table';
     this.upwardsTable.addEventListener('collide', this.onBallTableCollision.bind(this));
     this.world.add(this.upwardsTable);
   }

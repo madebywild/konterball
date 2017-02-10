@@ -320,7 +320,6 @@ class PingPong {
 
   // eslint-disable-next-line
   onAboutButtonClick() {
-    console.log(this.activeScreen);
     const tl = new TimelineMax();
     tl.set(this.activeScreen, {zIndex: 10});
     tl.set('.transition-color-screen.green', {zIndex: 11, left: '-100%'});

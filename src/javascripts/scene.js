@@ -256,8 +256,6 @@ export default class Scene {
     this.ballHasHitEnemyTable = false;
     this.sound.paddle(point);
     if (this.config.mode === MODE.SINGLEPLAYER) {
-      this.score.self += 1;
-      this.hud.scoreDisplay.setSelfScore(this.score.self);
       return;
     }
     this.slowdownBall();
@@ -274,6 +272,11 @@ export default class Scene {
 
   onBallTableCollision(body, target) {
     this.sound.table(body.position, this.physics.ball.velocity);
+    // eslint-disable-next-line
+    if (target._name === 'upwards-table') {
+      this.score.self += 1;
+      this.hud.scoreDisplay.setSelfScore(this.score.self);
+    }
     // eslint-disable-next-line
     if (target._name === 'table-2-player' && body.position.z < this.config.tablePositionZ) {
       this.ballHasHitEnemyTable = true;
