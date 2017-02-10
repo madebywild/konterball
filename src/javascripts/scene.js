@@ -273,7 +273,7 @@ export default class Scene {
   onBallTableCollision(body, target) {
     this.sound.table(body.position, this.physics.ball.velocity);
     // eslint-disable-next-line
-    if (target._name === 'upwards-table') {
+    if (target._name === 'upwards-table' && this.config.mode === MODE.SINGLEPLAYER) {
       this.score.self += 1;
       this.hud.scoreDisplay.setSelfScore(this.score.self);
     }
