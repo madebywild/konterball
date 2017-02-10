@@ -187,6 +187,11 @@ button.btn.about-button {
   box-sizing: content-box;
 }
 .fullscreen-button {
-  bottom: 0;
-  right: 0;
+  bottom: 2px;
+  right: 50px;
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    width: 16px;
+    bottom: -6px;
+    right: 40px;
+  }
 }
