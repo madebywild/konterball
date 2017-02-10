@@ -8,28 +8,28 @@
     padding-left: 15px;
     padding-right: 15px;
   }
-  .options-wrapper {
-    display: flex;
-    align-items: stretch;
-    & > div {
-      cursor: pointer;
-      flex-direction: row;
-      flex: 50%;
-      flex-shrink: 1;
-      position: relative;
-    }
-  }
-  .tilt img {
-    display: block;
-  }
   p {
     width: 100%;
     text-align: center;
   }
+  font-style: italic;
+  letter-spacing: 0.05em;
+  .cardboard {
+    text-transform: uppercase;
+    text-decoration: underline;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1.4em;
+  }
+  .tilt {
+    cursor: pointer;
+    font-size: 18px;
+    text-decoration: underline;
+  }
   img {
     height: auto;
     display: block;
-    width: 50%;
+    width: 30%;
     margin: auto;
   }
 }

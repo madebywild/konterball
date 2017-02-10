@@ -267,10 +267,8 @@ class PingPong {
     if (this.scene.manager.isVRCompatible) {
       if (Util.isMobile()) {
         $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
-        $('#tilt img').attr('src', '/images/phone-tilt-pink.gif');
       } else {
         $('#cardboard img').attr('src', '/images/vive-pink.gif');
-        $('#tilt img').attr('src', '/images/desktop-pink.gif');
       }
       $('.choose-vr-mode-screen').removeClass('blue green');
       $('.choose-vr-mode-screen').addClass('pink');
@@ -283,10 +281,8 @@ class PingPong {
     if (this.scene.manager.isVRCompatible) {
       if (Util.isMobile()) {
         $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
-        $('#tilt img').attr('src', '/images/phone-tilt-blue.gif');
       } else {
         $('#cardboard img').attr('src', '/images/vive-blue.gif');
-        $('#tilt img').attr('src', '/images/desktop-blue.gif');
       }
       $('.choose-vr-mode-screen').removeClass('pink green');
       $('.choose-vr-mode-screen').addClass('blue');
@@ -299,10 +295,8 @@ class PingPong {
     if (this.scene.manager.isVRCompatible) {
       if (Util.isMobile()) {
         $('#cardboard img').attr('src', '/images/cardboard-green.gif');
-        $('#tilt img').attr('src', '/images/phone-tilt-green.gif');
       } else {
         $('#cardboard img').attr('src', '/images/vive-green.gif');
-        $('#tilt img').attr('src', '/images/desktop-green.gif');
       }
       $('.choose-vr-mode-screen').removeClass('pink blue');
       $('.choose-vr-mode-screen').addClass('green');
@@ -449,8 +443,8 @@ class PingPong {
       }
 
       if (!Util.isMobile()) {
-        $('#cardboard p').text('Vive');
-        $('#tilt p').text('Mouse');
+        $('#cardboard p').text('Play in VR with HMD');
+        $('#tilt p').text('or just your mouse');
       }
 
       this.scene.sound.playUI('transition');
