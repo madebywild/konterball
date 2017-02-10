@@ -14,6 +14,7 @@ import {
   PlaneGeometry,
   Mesh,
   MeshBasicMaterial,
+  Color,
   Vector3,
   Vector2,
   Euler,
@@ -44,7 +45,7 @@ import setupPaddles from './models/paddle';
 
 const DEBUG_MODE = false;
 
-/* global CannonDebugRenderer */
+/* global CannonDebugRenderer, Power1, Power2, Power3, Power4 */
 
 export default class Scene {
   constructor(emitter, communication) {
@@ -233,12 +234,12 @@ export default class Scene {
 
     this.fps.on('data', framerate => {
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
-        console.warn('throttling frame rate');
         // set only half pixel density, this brings a huge speed boost for a
         // loss of image quality
+        // TODO this was also firing on hi end devices, need to find a better way of checking the fps
         this.light.shadow.mapSize.width = 512;
         this.light.shadow.mapSize.height = 512;
-        this.renderer.setPixelRatio(window.devicePixelRatio / 2);
+        // this.renderer.setPixelRatio(window.devicePixelRatio / 2);
       }
     });
   }
@@ -492,14 +493,17 @@ export default class Scene {
   startGame() {
     // prepare the scene
     this.hud.container.visible = false;
-    const table = this.scene.getObjectByName('table');
+    const table1 = this.scene.getObjectByName('table-self');
+    const table2 = this.scene.getObjectByName('table-opponent');
     if (this.config.mode === MODE.MULTIPLAYER) {
       if (this.communication.isHost) {
         this.renderer.setClearColor(this.config.colors.BLUE_CLEARCOLOR, 1);
-        table.material.color.set(this.config.colors.BLUE_TABLE);
+        table1.material.color.set(this.config.colors.BLUE_TABLE);
+        table2.material.color.set(this.config.colors.BLUE_TABLE);
       } else {
         this.renderer.setClearColor(this.config.colors.GREEN_CLEARCOLOR, 1);
-        table.material.color.set(this.config.colors.GREEN_TABLE);
+        table1.material.color.set(this.config.colors.GREEN_TABLE);
+        table2.material.color.set(this.config.colors.GREEN_TABLE);
       }
     } else {
       const upwardsTableGroup = this.scene.getObjectByName('upwardsTableGroup');
@@ -508,7 +512,7 @@ export default class Scene {
       this.physics.net.collisionResponse = 0;
       this.physics.upwardsTable.collisionResponse = 1;
       this.renderer.setClearColor(this.config.colors.PINK_CLEARCOLOR, 1);
-      table.material.color.set(this.config.colors.PINK_TABLE);
+      table1.material.color.set(this.config.colors.PINK_TABLE);
     }
 
     this.introPanAnimation().then(() => {
@@ -771,10 +775,12 @@ export default class Scene {
     if (!data.isInit) {
       if (data.ballHasHitEnemyTable) {
         this.score.opponent += 1;
+        this.tableBlinkAnimation('table-opponent');
         this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
         this.sound.playUI('miss');
       } else {
         this.score.self += 1;
+        this.tableBlinkAnimation('table-self');
         this.hud.scoreDisplay.setSelfScore(this.score.self);
         this.sound.playUI('point');
       }
@@ -831,10 +837,12 @@ export default class Scene {
       this.physicsTimeStep = 1000;
       if (this.ballHasHitEnemyTable) {
         this.score.self += 1;
+        this.tableBlinkAnimation('table-self');
         this.hud.scoreDisplay.setSelfScore(this.score.self);
         this.sound.playUI('point');
       } else {
         this.score.opponent += 1;
+        this.tableBlinkAnimation('table-opponent');
         this.hud.scoreDisplay.setOpponentScore(this.score.opponent);
         this.sound.playUI('miss');
       }
@@ -1079,6 +1087,22 @@ export default class Scene {
       y: 1,
       z: 1,
       ease: Expo.easeOut,
+    });
+  }
+
+  tableBlinkAnimation(side) {
+    const table = this.scene.getObjectByName(side);
+    if (!table) return;
+    const brightenedColor = `#${table.material.color.clone().lerp(new Color(0xffffff), 0.5).getHexString()}`;
+    const no = {
+      color: `#${table.material.color.getHexString()}`,
+    };
+    TweenMax.from(no, 0.8, {
+      color: brightenedColor,
+      ease: Power4.easeOut,
+      onUpdate: () => {
+        table.material.color.set(no.color);
+      },
     });
   }
 

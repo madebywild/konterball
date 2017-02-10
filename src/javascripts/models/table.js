@@ -13,17 +13,31 @@ export default (parent, config) => {
     color: config.colors.BLUE_TABLE,
   });
 
-  const tableDepth = config.mode === MODE.MULTIPLAYER ? config.tableDepth : config.tableDepth / 2;
+  let tableDepth = config.tableDepth / 2;
 
+  // player half
   geometry = new BoxGeometry(config.tableWidth, config.tableThickness, tableDepth);
   mesh = new Mesh(geometry, material);
   mesh.position.y = config.tableHeight / 2 - config.tableThickness / 2;
-  if (config.mode === MODE.SINGLEPLAYER) {
-    mesh.position.z = config.tableDepth / 4;
-  }
-  mesh.name = 'table';
+  mesh.position.z = config.tableDepth / 4;
+  mesh.name = 'table-self';
   mesh.receiveShadow = true;
   group.add(mesh);
+
+  material = new MeshLambertMaterial({
+    color: config.colors.BLUE_TABLE,
+  });
+
+  if (config.mode === MODE.MULTIPLAYER) {
+    // opponent half
+    geometry = new BoxGeometry(config.tableWidth, config.tableThickness, tableDepth);
+    mesh = new Mesh(geometry, material);
+    mesh.position.y = config.tableHeight / 2 - config.tableThickness / 2;
+    mesh.position.z = -config.tableDepth / 4;
+    mesh.name = 'table-opponent';
+    mesh.receiveShadow = true;
+    group.add(mesh);
+  }
 
   const upwardsTableGroup = new Group();
   const upwardsTableHeight = config.tableDepth * 0.37;
@@ -43,6 +57,7 @@ export default (parent, config) => {
 
   group.add(upwardsTableGroup);
 
+  tableDepth = config.mode === MODE.MULTIPLAYER ? config.tableDepth : config.tableDepth / 2;
   // lines
   // put the lines slightly above the table to combat z-fighting
   const epsilon = 0.001;

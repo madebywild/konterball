@@ -11,7 +11,7 @@ export default class SoundManager {
     this.muted = false;
     this.paddleSounds = [];
     this.tableSounds = [];
-    let url = 'https://s3.eu-central-1.amazonaws.com/pingpongsound/menu/';
+    let url = '/audio/menu/';
     for (let i = 1; i <= 3; i += 1) {
       this.paddleSounds.push(new Howl({
         src: `${url}racket0${i}.mp3`,
@@ -39,7 +39,7 @@ export default class SoundManager {
     this.uiSounds.set('net', new Howl({src: `${url}net.mp3`}));
     this.uiSounds.set('type', new Howl({src: `${url}type.mp3`}));
 
-    url = 'https://s3.eu-central-1.amazonaws.com/pingpongsound/loops/';
+    url = '/audio/loops/';
     this.loopSounds = new Map();
     this.loopSounds.set('bass', new Howl({
       loop: true,
