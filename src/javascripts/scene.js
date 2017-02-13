@@ -233,6 +233,7 @@ export default class Scene {
     $(window).on('vrdisplaypresentchange', this.onResize.bind(this));
 
     this.fps.on('data', framerate => {
+      $('#fps-counter').text(`${Math.round(framerate * 100) / 100} FPS`);
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
         // set only half pixel density, this brings a huge speed boost for a
         // loss of image quality
@@ -665,7 +666,7 @@ export default class Scene {
     this.scene.remove(this.table);
     this.table = Table(this.scene, this.config);
     this.hud.message.showMessage();
-    this.resetTimeoutDuration = 3000;
+    this.resetTimeoutDuration = 2000;
     this.hud.scoreDisplay.opponentScore.visible = true;
     this.hud.scoreDisplay.lifeGroup.visible = false;
     this.scene.getObjectByName('net-collider').visible = true;

@@ -8,6 +8,7 @@ import {EVENT, MODE, INITIAL_CONFIG, CONTROLMODE} from './constants';
 import Scene from './scene';
 import Util from './webvr-manager/util';
 import Communication from './communication';
+import * as webvrui from 'webvr-ui';
 
 document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
 
@@ -410,7 +411,12 @@ class PingPong {
     // eslint-disable-next-line
     this.scene.manager.enterVRMode_();
     $('.choose-vr-mode-screen .inner').html('Put on your VR device now<br>Game is starting...');
+    $('.choose-vr-mode-screen').css('z-index', '1000001');
+    $('.choose-vr-mode-screen').appendTo('.webvr-polyfill-fullscreen-wrapper');
     TweenMax.delayedCall(5, () => {
+      TweenMax.to('.choose-vr-mode-screen', 0.4, {
+        autoAlpha: 0,
+      });
       this.scene.setupVRControls();
       this.scene.controlMode = CONTROLMODE.VR;
       this.scene.startGame();

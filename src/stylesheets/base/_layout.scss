@@ -75,7 +75,7 @@ button.inactive {
 .game-over-screen-wrapper,
 .intro-wrapper {
   @extend .screen;
-  z-index: 2;
+  z-index: 20;
 }
 .game-over-screen-wrapper {
   z-index: 20;
@@ -194,4 +194,13 @@ button.btn.about-button {
     bottom: -6px;
     right: 40px;
   }
+}
+#fps-counter {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
+  font-family: monospace;
 }
