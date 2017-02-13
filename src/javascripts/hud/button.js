@@ -10,8 +10,6 @@ import {
 import {Power0, TimelineMax} from 'gsap';
 import {EVENT} from '../constants';
 
-const root = `${location.protocol}//${location.host}`;
-
 export default class Button {
   constructor(parent, font, name, x, y, emitter) {
     this.font = font;
@@ -24,13 +22,7 @@ export default class Button {
     this.loader.setPath('/textures/');
 
     this.buttonGroup = new Group();
-    if (this.name === 'restart') {
-      this.buttonWidth = 0.4;
-    } else if (this.name === 'exit') {
-      this.buttonWidth = 0.3;
-    } else {
-      this.buttonWidth = 0.2;
-    }
+    this.buttonWidth = 0.4;
     this.buttonHeight = 0.2;
     this.borderWidth = 0.01;
     this.makeButton(x, y);
@@ -104,14 +96,6 @@ export default class Button {
 
     this.buttonGroup.add(animationGroup);
 
-    if (this.name !== 'exit' && this.name !== 'restart') {
-      geometry = new PlaneGeometry(this.buttonWidth, this.buttonHeight);
-      material = new MeshBasicMaterial({transparent: true, opacity: 1});
-      this.logo = new Mesh(geometry, material);
-      this.logo.position.z = -0.006;
-      this.buttonGroup.add(this.logo);
-    }
-
     geometry = new PlaneGeometry(this.buttonWidth, this.buttonHeight);
     material = new MeshBasicMaterial({transparent: true, opacity: 0});
     this.hitbox = new Mesh(geometry, material);
@@ -123,20 +107,7 @@ export default class Button {
     this.buttonGroup.position.x = x;
     this.buttonGroup.position.y = y;
 
-
-    switch (this.name) {
-      case 'google':
-        this.logo.material.map = this.loader.load('google.png');
-        break;
-      case 'facebook':
-        this.logo.material.map = this.loader.load('facebook.png');
-        break;
-      case 'twitter':
-        this.logo.material.map = this.loader.load('twitter.png');
-        break;
-      default:
-        this.setupText();
-    }
+    this.setupText();
     this.parent.add(this.buttonGroup);
   }
 
@@ -193,25 +164,6 @@ export default class Button {
       case 'exit':
         this.emitter.emit(EVENT.EXIT_BUTTON_PRESSED);
         break;
-      case 'google': {
-        let googleUrl = 'https://plus.google.com/share?url=';
-        googleUrl += encodeURIComponent('http://pong.wild.plus');
-        window.open(googleUrl);
-        break;
-      }
-      case 'facebook': {
-        let fbUrl = 'https://www.facebook.com/dialog/feed?';
-        fbUrl += `&link=${encodeURIComponent(root)}`;
-        fbUrl += '&app_id=674070926074386';
-        window.open(fbUrl);
-        break;
-      }
-      case 'twitter': {
-        let twitterUrl = 'http://twitter.com/intent/tweet?status=';
-        twitterUrl += encodeURIComponent(root);
-        window.open(twitterUrl);
-        break;
-      }
       default: {
         console.warn('unknown button');
       }

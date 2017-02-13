@@ -83,11 +83,8 @@ export default class Message {
     this.messageGroup.add(gameOverText);
 
     const buttonsYPosition = multiplayer ? -0.15 : -0.1;
-    this.buttons.exit = new Button(this.messageGroup, this.font, 'exit', -0.6, buttonsYPosition, this.emitter);
-    this.buttons.restart = new Button(this.messageGroup, this.font, 'restart', -0.2, buttonsYPosition, this.emitter);
-    this.buttons.google = new Button(this.messageGroup, this.font, 'google', 0.15, buttonsYPosition, this.emitter);
-    this.buttons.facebook = new Button(this.messageGroup, this.font, 'facebook', 0.4, buttonsYPosition, this.emitter);
-    this.buttons.twitter = new Button(this.messageGroup, this.font, 'twitter', 0.65, buttonsYPosition, this.emitter);
+    this.buttons.exit = new Button(this.messageGroup, this.font, 'exit', 0.25, buttonsYPosition, this.emitter);
+    this.buttons.restart = new Button(this.messageGroup, this.font, 'restart', -0.25, buttonsYPosition, this.emitter);
 
     if (multiplayer) {
       geometry = new TextGeometry(`You: ${score.self} Opponent: ${score.opponent}`, {
