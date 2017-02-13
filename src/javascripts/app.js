@@ -4,11 +4,11 @@ import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
-import {EVENT, MODE, INITIAL_CONFIG, CONTROLMODE} from './constants';
+import * as webvrui from 'webvr-ui/build/webvr-ui';
+import {EVENT, MODE, STATE, INITIAL_CONFIG, CONTROLMODE} from './constants';
 import Scene from './scene';
 import Util from './webvr-manager/util';
 import Communication from './communication';
-import * as webvrui from 'webvr-ui';
 
 document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
 
@@ -94,7 +94,44 @@ class PingPong {
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
+      this.setupVRButton();
       this.introAnimation();
+    }).catch(e => {
+      console.warn(e);
+    });
+  }
+
+  setupVRButton() {
+    const options = {
+      color: '#fff',
+      corners: 'square',
+    };
+    const enterVR = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
+    document.getElementById('cardboard').appendChild(enterVR.domElement);
+    // document.body.appendChild(enterVR.domElement);
+    enterVR.on('enter', () => {
+      if (this.scene.config.state === STATE.PLAYING
+          || this.scene.config.state === STATE.GAME_OVER
+          || this.scene.config.state === STATE.COUNTDOWN
+          || this.scene.config.state === STATE.PAUSED) {
+        return;
+      }
+      $('.choose-vr-mode-screen .inner').html('Put on your VR device now<br>Game is starting...');
+      $('.choose-vr-mode-screen').css('z-index', '1000001');
+      $('.choose-vr-mode-screen').appendTo('.webvr-polyfill-fullscreen-wrapper');
+      TweenMax.delayedCall(5, () => {
+        TweenMax.to('.choose-vr-mode-screen', 0.4, {
+          autoAlpha: 0,
+        });
+        this.scene.setupVRControls();
+        this.scene.controlMode = CONTROLMODE.VR;
+        this.scene.startGame();
+      });
+    });
+    enterVR.on('exit', () => {
+      TweenMax.set(this.scene.renderer, {
+        display: 'block',
+      });
     });
   }
 
@@ -231,7 +268,7 @@ class PingPong {
     $('#join-room').on('click', this.onJoinRoomClick.bind(this));
     $('#play-again').on('click', this.onPlayAgainClick.bind(this));
     $('.about-button').on('click', this.onAboutButtonClick.bind(this));
-    $('#cardboard').on('click', this.onCardboardClick.bind(this));
+    // $('#cardboard').on('click', this.onCardboardClick.bind(this));
     $('#start').on('click', this.onStartClick.bind(this));
     $('#tilt').on('click', this.onTiltClick.bind(this));
     $('button.btn').on('click', () => {this.scene.sound.playUI('button');});
@@ -266,11 +303,6 @@ class PingPong {
 
   onStartSingleplayerClick() {
     if (this.scene.manager.isVRCompatible) {
-      if (Util.isMobile()) {
-        $('#cardboard img').attr('src', '/images/cardboard-pink.gif');
-      } else {
-        $('#cardboard img').attr('src', '/images/vive-pink.gif');
-      }
       $('.choose-vr-mode-screen').removeClass('blue green');
       $('.choose-vr-mode-screen').addClass('pink');
     }
@@ -280,11 +312,6 @@ class PingPong {
 
   onOpenRoomClick() {
     if (this.scene.manager.isVRCompatible) {
-      if (Util.isMobile()) {
-        $('#cardboard img').attr('src', '/images/cardboard-blue.gif');
-      } else {
-        $('#cardboard img').attr('src', '/images/vive-blue.gif');
-      }
       $('.choose-vr-mode-screen').removeClass('pink green');
       $('.choose-vr-mode-screen').addClass('blue');
     }
@@ -294,11 +321,6 @@ class PingPong {
 
   onJoinRoomClick() {
     if (this.scene.manager.isVRCompatible) {
-      if (Util.isMobile()) {
-        $('#cardboard img').attr('src', '/images/cardboard-green.gif');
-      } else {
-        $('#cardboard img').attr('src', '/images/vive-green.gif');
-      }
       $('.choose-vr-mode-screen').removeClass('pink blue');
       $('.choose-vr-mode-screen').addClass('green');
     }
@@ -410,17 +432,6 @@ class PingPong {
   onCardboardClick() {
     // eslint-disable-next-line
     this.scene.manager.enterVRMode_();
-    $('.choose-vr-mode-screen .inner').html('Put on your VR device now<br>Game is starting...');
-    $('.choose-vr-mode-screen').css('z-index', '1000001');
-    $('.choose-vr-mode-screen').appendTo('.webvr-polyfill-fullscreen-wrapper');
-    TweenMax.delayedCall(5, () => {
-      TweenMax.to('.choose-vr-mode-screen', 0.4, {
-        autoAlpha: 0,
-      });
-      this.scene.setupVRControls();
-      this.scene.controlMode = CONTROLMODE.VR;
-      this.scene.startGame();
-    });
   }
 
   onTiltClick() {
@@ -437,19 +448,8 @@ class PingPong {
 
   viewVRChooserScreen() {
     return new Promise(resolve => {
-      bodymovin.stop();
-      bodymovin.destroy();
-      bodymovin.stop();
-      bodymovin.destroy();
-      if (!this.scene.manager.isVRCompatible) {
-        this.scene.startGame();
-        resolve();
-        return;
-      }
-
       if (!Util.isMobile()) {
-        $('#cardboard p').text('Play in VR with HMD');
-        $('#tilt p').text('or just your mouse');
+        $('#tilt p').text('or just use your mouse');
       }
 
       this.scene.sound.playUI('transition');
@@ -481,6 +481,12 @@ class PingPong {
         left: '0%',
         ease: screenTransitionEase,
       }, screenTransitionInterval, `-=${screenTransitionDuration + screenTransitionInterval}`);
+      tl.call(() => {
+        bodymovin.stop();
+        bodymovin.destroy();
+        bodymovin.stop();
+        bodymovin.destroy();
+      });
       tl.call(resolve);
     });
   }
