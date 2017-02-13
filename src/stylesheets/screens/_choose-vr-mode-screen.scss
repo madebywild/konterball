@@ -11,6 +11,11 @@
   p {
     width: 100%;
     text-align: center;
+    margin-top: 40px;
+    span {
+      text-decoration: underline;
+      cursor: pointer;
+    }
   }
   font-style: italic;
   letter-spacing: 0.05em;
@@ -20,9 +25,7 @@
     line-height: 1.4em;
   }
   .tilt {
-    cursor: pointer;
     font-size: 18px;
-    text-decoration: underline;
   }
   button[disabled] {
     cursor: not-allowed;

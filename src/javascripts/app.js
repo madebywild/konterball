@@ -448,10 +448,6 @@ class PingPong {
 
   viewVRChooserScreen() {
     return new Promise(resolve => {
-      if (!Util.isMobile()) {
-        $('#tilt p').text('or just use your mouse');
-      }
-
       this.scene.sound.playUI('transition');
       const tl = new TimelineMax();
       tl.set('.choose-vr-mode-screen, .transition-color-screen', {
