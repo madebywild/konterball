@@ -1,7 +1,7 @@
 .rotate-phone-screen {
   @extend .screen;
   background-color: $blue-background;
-  z-index: 10;
+  z-index: 30;
   visibility: hidden;
   .phone-container {
     @extend .absolute-center;

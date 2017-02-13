@@ -232,6 +232,15 @@ class PingPong {
       this.scene.hud.message.showMessage();
       this.scene.paddleOpponent.visible = false;
     });
+    this.emitter.on(EVENT.OPPONENT_PAUSED, () => {
+      this.scene.hud.message.setMessage('opponent paused');
+      this.scene.hud.message.showMessage();
+      this.scene.tabActive = false;
+    });
+    this.emitter.on(EVENT.OPPONENT_UNPAUSED, () => {
+      this.scene.hud.message.hideMessage();
+      this.scene.tabActive = true;
+    });
   }
 
   loadModeChooserAnimation() {
@@ -268,7 +277,6 @@ class PingPong {
     $('#join-room').on('click', this.onJoinRoomClick.bind(this));
     $('#play-again').on('click', this.onPlayAgainClick.bind(this));
     $('.about-button').on('click', this.onAboutButtonClick.bind(this));
-    // $('#cardboard').on('click', this.onCardboardClick.bind(this));
     $('#start').on('click', this.onStartClick.bind(this));
     $('#tilt').on('click', this.onTiltClick.bind(this));
     $('button.btn').on('click', () => {this.scene.sound.playUI('button');});
@@ -294,36 +302,36 @@ class PingPong {
     if (document.hidden) {
       this.scene.tabActive = false;
       this.scene.sound.blur();
+      if (this.scene.communication.isOpponentConnected) {
+        this.scene.communication.sendPause();
+      }
     } else {
       this.scene.tabActive = true;
       this.scene.firstActiveFrame = this.scene.frameNumber;
       this.scene.sound.focus();
+      if (this.scene.communication.isOpponentConnected) {
+        this.scene.communication.sendUnpause();
+      }
     }
   }
 
   onStartSingleplayerClick() {
-    if (this.scene.manager.isVRCompatible) {
-      $('.choose-vr-mode-screen').removeClass('blue green');
-      $('.choose-vr-mode-screen').addClass('pink');
-    }
+    $('.choose-vr-mode-screen').removeClass('blue green');
+    $('.choose-vr-mode-screen').addClass('pink');
     this.scene.setSingleplayer();
     this.viewVRChooserScreen();
   }
 
   onOpenRoomClick() {
-    if (this.scene.manager.isVRCompatible) {
-      $('.choose-vr-mode-screen').removeClass('pink green');
-      $('.choose-vr-mode-screen').addClass('blue');
-    }
+    $('.choose-vr-mode-screen').removeClass('pink green');
+    $('.choose-vr-mode-screen').addClass('blue');
     this.scene.setMultiplayer();
     this.viewOpenRoomScreenAnimation();
   }
 
   onJoinRoomClick() {
-    if (this.scene.manager.isVRCompatible) {
-      $('.choose-vr-mode-screen').removeClass('pink blue');
-      $('.choose-vr-mode-screen').addClass('green');
-    }
+    $('.choose-vr-mode-screen').removeClass('pink blue');
+    $('.choose-vr-mode-screen').addClass('green');
     this.scene.setMultiplayer();
     if (window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1) {
       $('#room-code').val(window.location.pathname.slice(1));
@@ -427,11 +435,6 @@ class PingPong {
       y: 0,
       opacity: 1,
     }, 0.1, '+=0.2');
-  }
-
-  onCardboardClick() {
-    // eslint-disable-next-line
-    this.scene.manager.enterVRMode_();
   }
 
   onTiltClick() {

@@ -226,7 +226,18 @@ export default class Communication {
           this.isOpponentConnected = false;
           this.emitter.emit(EVENT.OPPONENT_DISCONNECTED);
           break;
+        case ACTION.PAUSE:
+          if (this.isOpponentConnected) {
+            this.emitter.emit(EVENT.OPPONENT_PAUSED);
+          }
+          break;
+        case ACTION.UNPAUSE:
+          if (this.isOpponentConnected) {
+            this.emitter.emit(EVENT.OPPONENT_UNPAUSED);
+          }
+          break;
         case ACTION.REQUEST_COUNTDOWN:
+          console.log('received request countdown');
           this.callbacks.receivedRequestCountdown();
           break;
         case ACTION.RESTART_GAME:
@@ -302,8 +313,23 @@ export default class Communication {
   }
 
   sendRequestCountdown() {
+    console.log('send request countdown');
     this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {
       action: ACTION.REQUEST_COUNTDOWN,
+      t: Date.now(),
+    });
+  }
+
+  sendPause() {
+    this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {
+      action: ACTION.PAUSE,
+      t: Date.now(),
+    });
+  }
+
+  sendUnpause() {
+    this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {
+      action: ACTION.UNPAUSE,
       t: Date.now(),
     });
   }

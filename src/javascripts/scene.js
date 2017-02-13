@@ -1,4 +1,11 @@
-import {TweenMax, TimelineMax, Power0, Power1, Power2, Power4, Expo} from 'gsap';
+import {
+  TweenMax,
+  TimelineMax,
+  Power0,
+  Power2,
+  Power4,
+  Expo,
+} from 'gsap';
 import $ from 'zepto-modules';
 import FPS from 'fps';
 import {
@@ -553,7 +560,6 @@ export default class Scene {
           0.5
         )
       );
-      this.camera.position.y = 5;
       tl.set(this.renderer.domElement, {display: 'block'});
 
       if (this.config.mode === MODE.MULTIPLAYER && !this.isMobile && this.controlMode === CONTROLMODE.MOUSE) {
@@ -568,13 +574,6 @@ export default class Scene {
         }, 0.1, 0);
       }
       tl.to('.intro-wrapper', 0.3, {autoAlpha: 0});
-
-      const panDuration = 1.5;
-
-      tl.to(this.camera.position, panDuration, {
-        y: 1.6,
-        ease: Power1.easeInOut,
-      }, 0.6);
       tl.call(resolve, [], null, '+=1');
     });
   }
@@ -585,48 +584,70 @@ export default class Scene {
     }
   }
 
+  showInstructions() {
+    return new Promise(resolve => {
+      this.config.state = STATE.INSTRUCTIONS;
+      if (this.config.state === STATE.GAME_OVER) {
+        resolve();
+        return;
+      }
+      if (this.config.mode === MODE.SINGLEPLAYER) {
+        this.hud.message.setMessage('you have 5 lives');
+      } else {
+        this.hud.message.setMessage('first to get 11 points wins');
+      }
+      this.hud.message.showMessage();
+      this.time.setTimeout(resolve, 1500);
+    });
+  }
+
   countdown() {
+    if (this.config.state === STATE.COUNTDOWN || this.config.state === STATE.PLAYING) {
+      return;
+    }
     // TODO why is this neccessary
     $('.opponent-joined').css('display', 'none');
     this.paddle.visible = true;
     this.paddleOpponent.visible = this.config.mode === MODE.MULTIPLAYER;
     this.sound.playLoop('bass');
     this.hud.scoreDisplay.show();
-    this.hud.message.hideMessage(this.config.mode === MODE.MULTIPLAYER);
     setTransparency(this.table, 1);
     setTransparency(this.net, 1);
 
-    this.config.state = STATE.COUNTDOWN;
     // countdown from 3, start game afterwards
-    this.hud.countdown.showCountdown();
     let n = 2;
-    const countdown = this.time.setInterval(() => {
-      this.hud.countdown.setCountdown(n);
-      n -= 1;
-      if (n < 0) {
-        // stop the countdown
-        this.time.clearInterval(countdown);
-        this.hud.countdown.hideCountdown();
-        // start game by adding ball
-        if (this.config.mode === MODE.SINGLEPLAYER) {
-          this.addBall();
-          this.physics.initBallPosition();
-        } else if (this.config.mode === MODE.MULTIPLAYER
-            && !this.communication.isHost) {
-          this.addBall();
-          // if multiplayer, also send the other player a hit so the ball is synced
-          this.communication.sendMiss({
-            x: this.physics.ball.position.x,
-            y: this.physics.ball.position.y,
-            z: this.physics.ball.position.z,
-          }, {
-            x: this.physics.ball.velocity.x,
-            y: this.physics.ball.velocity.y,
-            z: this.physics.ball.velocity.z,
-          }, true, true);
+    this.showInstructions().then(() => {
+      this.config.state = STATE.COUNTDOWN;
+      this.hud.countdown.showCountdown();
+      this.hud.message.hideMessage();
+      const countdown = this.time.setInterval(() => {
+        this.hud.countdown.setCountdown(n);
+        n -= 1;
+        if (n < 0) {
+          // stop the countdown
+          this.time.clearInterval(countdown);
+          this.hud.countdown.hideCountdown();
+          // start game by adding ball
+          if (this.config.mode === MODE.SINGLEPLAYER) {
+            this.addBall();
+            this.physics.initBallPosition();
+          } else if (this.config.mode === MODE.MULTIPLAYER
+              && !this.communication.isHost) {
+            this.addBall();
+            // if multiplayer, also send the other player a miss so the ball is synced
+            this.communication.sendMiss({
+              x: this.physics.ball.position.x,
+              y: this.physics.ball.position.y,
+              z: this.physics.ball.position.z,
+            }, {
+              x: this.physics.ball.velocity.x,
+              y: this.physics.ball.velocity.y,
+              z: this.physics.ball.velocity.z,
+            }, true, true);
+          }
         }
-      }
-    }, 1000);
+      }, 1000);
+    });
   }
 
   restartGame() {
@@ -685,7 +706,6 @@ export default class Scene {
     this.config.mode = MODE.SINGLEPLAYER;
     this.scene.remove(this.table);
     this.table = Table(this.scene, this.config);
-    this.hud.message.hideMessage();
     this.resetTimeoutDuration = 1500;
     this.hud.scoreDisplay.opponentScore.visible = false;
     this.hud.scoreDisplay.lifeGroup.visible = true;
@@ -876,6 +896,11 @@ export default class Scene {
       this.score.lives -= 1;
       this.hud.scoreDisplay.setLives(this.score.lives);
       this.sound.playUI('miss');
+      if (this.score.lives === 1) {
+        this.hud.message.setMessage('last life!');
+        this.hud.message.showMessage();
+        this.time.setTimeout(() => {this.hud.message.hideMessage();}, 1000);
+      }
       if (this.score.lives < 1) {
         this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
       }
@@ -1098,8 +1123,13 @@ export default class Scene {
     const no = {
       color: `#${table.material.color.getHexString()}`,
     };
-    TweenMax.from(no, 0.8, {
+    const BLUE_TABLE = '#2B689C';
+    const GREEN_TABLE = '#55CC8F';
+    const to = this.communication.isHost ? BLUE_TABLE : GREEN_TABLE;
+    TweenMax.fromTo(no, 0.8, {
       color: brightenedColor,
+    }, {
+      color: to,
       ease: Power4.easeOut,
       onUpdate: () => {
         table.material.color.set(no.color);
@@ -1174,6 +1204,7 @@ export default class Scene {
 
     if (this.config.state === STATE.PLAYING
       || this.config.state === STATE.COUNTDOWN
+      || this.config.state === STATE.INSTRUCTIONS
       || this.config.state === STATE.GAME_OVER) {
       this.updateControls();
       if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
@@ -1193,7 +1224,7 @@ export default class Scene {
       }
     }
 
-    if (this.config.state === STATE.PLAYING) {
+    if (this.config.state === STATE.PLAYING && this.tabActive) {
       this.physics.step(delta / this.physicsTimeStep);
       this.updateBall();
       this.physics.predictCollisions(this.scene.getObjectByName('net-collider'), delta);
@@ -1207,7 +1238,9 @@ export default class Scene {
       this.physicsDebugRenderer.update();
     }
 
-    this.time.step();
+    if (this.tabActive) {
+      this.time.step();
+    }
 
     this.lastRender = timestamp;
     this.frameNumber += 1;
