@@ -32,7 +32,6 @@ import {
 import OBJLoader from './three/OBJLoader';
 import VREffect from './three/VREffect';
 import VRControls from './three/VRControls';
-import ViveController from './three/ViveController';
 
 import {STATE, MODE, INITIAL_CONFIG, EVENT, CONTROLMODE} from './constants';
 import {cap, mirrorPosition, mirrorVelocity, setTransparency} from './util/helpers';
@@ -77,8 +76,6 @@ export default class Scene {
     this.camera = null;
     // three.js VRControls
     this.controls = null;
-    // the active vive controller
-    this.controller = null;
     // three.js VREffect
     this.effect = null;
     // VR display
@@ -93,9 +90,6 @@ export default class Scene {
     this.net = null;
     this.ball = null;
     this.crossHair = null;
-    // vive controllers
-    this.controller1 = null;
-    this.controller2 = null;
     // vr manager
     this.manager = null;
     // three.js raycaster
@@ -129,7 +123,7 @@ export default class Scene {
     // stores the last hit for the hit animation
     this.lastHitPosition = null;
     // used to animate a hit (the paddle quickly moves towards the ball and
-    // back to the position it should be in according to the controller
+    // back to the position it should be in according to the hmd
     this.paddleInterpolationAlpha = 0;
     // we need this also for the hit animation. always stores where the paddle
     // is according to the controls, so we can interpolate between that and the
@@ -157,6 +151,15 @@ export default class Scene {
       every: 10,
       decay: 0.1,
     });
+    // this number will be decremented as the quality is decreased if the fps are too low.
+    // 4 = full quality
+    // 3 = reduced shadow map size
+    // 2 = no ball trail
+    // 1 = no shadows
+    // 0 = half pixel density
+    this.quality = 4;
+    // the trail causes the paddle to be janky on mobile devices for some reason.
+    this.trailEnabled = !Util.isMobile();
     // count the frames
     this.frameNumber = 0;
     // first frame after tab became active again, when tab is in background the
@@ -241,13 +244,24 @@ export default class Scene {
 
     this.fps.on('data', framerate => {
       $('#fps-counter').text(`${Math.round(framerate * 100) / 100} FPS`);
-      if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 30) {
-        // set only half pixel density, this brings a huge speed boost for a
-        // loss of image quality
-        // TODO this was also firing on hi end devices, need to find a better way of checking the fps
-        this.light.shadow.mapSize.width = 512;
-        this.light.shadow.mapSize.height = 512;
-        // this.renderer.setPixelRatio(window.devicePixelRatio / 2);
+      if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 50) {
+        // allow the fps to recover for 2 seconds before further reducing quality
+        this.firstActiveFrame = this.frameNumber;
+        console.warn(`reducing quality to ${this.quality - 1}`);
+        if (this.quality === 4) {
+          this.light.shadow.mapSize.width = 512;
+          this.light.shadow.mapSize.height = 512;
+        } else if (this.quality === 3) {
+          this.trailEnabled = false;
+          this.scene.remove(this.trail);
+        } else if (this.quality === 2) {
+          this.renderer.shadowMap.enabled = false;
+        } else if (this.quality === 1) {
+          this.renderer.setPixelRatio(window.devicePixelRatio / 2);
+        } else {
+          return;
+        }
+        this.quality -= 1;
       }
     });
   }
@@ -369,7 +383,6 @@ export default class Scene {
     this.controls = new VRControls(this.camera);
     this.controls.standing = true;
     this.controls.userHeight = this.config.cameraHeight;
-    this.setupControllers();
   }
 
   setupVR() {
@@ -432,32 +445,6 @@ export default class Scene {
     this.tablePlane.position.z = this.config.tablePositionZ + this.config.tableDepth / 2;
     this.tablePlane.material.visible = false;
     this.scene.add(this.tablePlane);
-  }
-
-  setupControllers() {
-    navigator.getVRDisplays().then(displays => {
-      if (displays.length > 0) {
-        this.display = displays[0];
-        if (displays[0].capabilities && displays[0].capabilities.hasPosition) {
-          // also check gamepads
-          this.controller1 = new ViveController(0);
-          this.controller1.standingMatrix = this.controls.getStandingMatrix();
-          this.scene.add(this.controller1);
-          this.controller2 = new ViveController(1);
-          this.controller2.standingMatrix = this.controls.getStandingMatrix();
-          this.scene.add(this.controller2);
-
-          this.objLoader.load('vr_controller_vive_1_5.obj', object => {
-            const controller = object.children[0];
-            controller.material.map = this.textureLoader.load('onepointfive_texture.png');
-            controller.material.specularMap = this.textureLoader.load('onepointfive_spec.png');
-
-            this.controller1.add(object.clone());
-            this.controller2.add(object.clone());
-          });
-        }
-      }
-    });
   }
 
   setupEffects() {
@@ -922,10 +909,6 @@ export default class Scene {
   }
 
   updateControls() {
-    if (this.controller1 && this.controller2) {
-      this.controller1.update();
-      this.controller2.update();
-    }
     const pos = this.computePaddlePosition();
     if (pos) {
       this.ghostPaddlePosition.copy(pos);
@@ -994,35 +977,17 @@ export default class Scene {
   computePaddlePosition() {
     let paddlePosition = null;
     if (this.display && this.controlMode === CONTROLMODE.VR) {
-      let controller = null;
-      if (this.controller1 && this.controller1.visible) {
-        controller = this.controller1;
-      } else if (this.controller2 && this.controller2.visible) {
-        controller = this.controller2;
-      }
       let intersects = [];
-      if (controller) {
-        // VIVE ETC
-        // if we do have a controller, intersect the table with where the controller is facing
-        const direction = new Vector3(0, 0, -1);
-        direction.applyQuaternion(controller.getWorldQuaternion());
-        direction.normalize();
-        this.raycaster.set(controller.getWorldPosition(), direction);
-        this.raycaster.far = 5;
-        intersects = this.raycaster.intersectObject(this.tablePlane, false);
-      } else {
-        // CARDBOARD
-        // if we dont have a controller, intersect the table
-        // with where the camera is looking and place the paddle there
-        // if we are in vr, position paddle below looking direction so we dont have
-        // to look down at all times
-        const rayYDirection = this.manager.mode === VR_MODES.VR ? -0.7 : -0.3;
-        this.raycaster.setFromCamera(new Vector2(0, rayYDirection), this.camera);
-        this.raycaster.far = 5;
-        intersects = this.raycaster.intersectObject(this.tablePlane, false);
-        if (intersects.length > 0) {
-          intersects[0].point.x *= 1.5;
-        }
+      // CARDBOARD / VIVE
+      // intersect the table with where the camera is looking and place the
+      // paddle there if we are in vr, position paddle below looking direction
+      // so we dont have to look down at all times
+      const rayYDirection = this.manager.mode === VR_MODES.VR ? -0.7 : -0.3;
+      this.raycaster.setFromCamera(new Vector2(0, rayYDirection), this.camera);
+      this.raycaster.far = 5;
+      intersects = this.raycaster.intersectObject(this.tablePlane, false);
+      if (intersects.length > 0) {
+        intersects[0].point.x *= 1.5;
       }
       if (intersects.length > 0) {
         paddlePosition = intersects[0].point;
@@ -1158,6 +1123,30 @@ export default class Scene {
     this.hud.message.intersect(this.raycaster, this.controlMode === CONTROLMODE.MOUSE && !this.isMobile);
   }
 
+  updateTrail() {
+    if (!this.trailEnabled) {
+      return;
+    }
+    // the points array is a first in first out queue
+    if (!this.ballPath) {
+      this.ballPath = new CatmullRomCurve3([
+        this.ball.position.clone(),
+        new Vector3(
+          this.ball.position.x,
+          this.ball.position.y,
+          this.ball.position.z + 0.001
+        ),
+      ]);
+    } else {
+      this.ballPath.points.push(this.ball.position.clone());
+    }
+    if (this.ballPath.points.length > 50) {
+      this.ballPath.points.shift();
+    }
+    this.trail.geometry.dispose();
+    this.trail.geometry = new TubeGeometry(this.ballPath, 25, 0.01, 8, false);
+  }
+
   animate() {
     const timestamp = Date.now();
     const delta = Math.min(timestamp - this.lastRender, 500);
@@ -1180,25 +1169,7 @@ export default class Scene {
         && this.physics.ball.velocity.z > 0) {
         this.onBallPaddleCollision(this.ball.position);
       }
-
-      // the points array is a first in first out queue
-      if (!this.ballPath) {
-        this.ballPath = new CatmullRomCurve3([
-          this.ball.position.clone(),
-          new Vector3(
-            this.ball.position.x,
-            this.ball.position.y,
-            this.ball.position.z + 0.001
-          ),
-        ]);
-      } else {
-        this.ballPath.points.push(this.ball.position.clone());
-      }
-      if (this.ballPath.points.length > 50) {
-        this.ballPath.points.shift();
-      }
-      this.trail.geometry.dispose();
-      this.trail.geometry = new TubeGeometry(this.ballPath, 128, 0.01, 8, false);
+      this.updateTrail();
     }
 
 

@@ -224,6 +224,6 @@ export default class Physics {
   }
 
   step(delta) {
-    this.world.step(delta);
+    this.world.step(1 / 60, delta, 10);
   }
 }

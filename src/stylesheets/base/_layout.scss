@@ -195,10 +195,10 @@ button.btn.about-button {
   }
 }
 #fps-counter {
-  position: absolute;
-  z-index: 10;
+  position: fixed;
+  z-index: 2147483647;
   top: 10px;
-  left: 10px;
+  right: 10px;
   font-family: monospace;
   opacity: 0.5;
   font-size: 14px;
