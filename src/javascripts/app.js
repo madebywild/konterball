@@ -1,4 +1,3 @@
-import NoSleep from 'nosleep';
 import {TweenMax, TimelineMax, Power0, Power1, Power4, SlowMo, Back} from 'gsap';
 import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
@@ -108,8 +107,8 @@ class PingPong {
     };
     const enterVR = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
     document.getElementById('cardboard').appendChild(enterVR.domElement);
-    // document.body.appendChild(enterVR.domElement);
     enterVR.on('enter', () => {
+      document.body.appendChild(enterVR.domElement);
       if (this.scene.config.state === STATE.PLAYING
           || this.scene.config.state === STATE.GAME_OVER
           || this.scene.config.state === STATE.COUNTDOWN
@@ -374,11 +373,6 @@ class PingPong {
 
   onStartClick() {
     this.activeScreen = '.choose-mode-screen';
-    if (Util.isMobile()) {
-      const noSleep = new NoSleep();
-      noSleep.enable();
-    }
-
     this.scene.sound.playLoop('bass-pad');
     this.scene.sound.playUI('transition');
     const tl = new TimelineMax();

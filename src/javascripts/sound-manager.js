@@ -14,43 +14,92 @@ export default class SoundManager {
     let url = '/audio/menu/';
     for (let i = 1; i <= 3; i += 1) {
       this.paddleSounds.push(new Howl({
-        src: `${url}racket0${i}.mp3`,
+        src: [
+          `${url}racket0${i}.mp3`,
+          `${url}racket0${i}.ogg`,
+        ],
       }));
       this.tableSounds.push(new Howl({
-        src: `${url}table0${i}.mp3`,
+        src: [
+          `${url}table0${i}.mp3`,
+          `${url}table0${i}.ogg`,
+        ],
       }));
     }
     this.uiSounds = new Map();
     this.uiSounds.set('button', new Howl({
-      src: `${url}button.mp3`,
-      onloaderror: () => {
+      src: [
+        `${url}button.mp3`,
+        `${url}button.ogg`,
+      ],
+      onloaderror: e => {
         console.warn('Error loading sound');
         this.error = true;
+        console.warn(e);
       },
     }));
-    this.uiSounds.set('joined', new Howl({src: `${url}joined.mp3`}));
-    this.uiSounds.set('touch', new Howl({src: `${url}touch.mp3`}));
-    this.uiSounds.set('transition', new Howl({src: `${url}transition.mp3`}));
+    this.uiSounds.set('joined', new Howl({src: [
+      `${url}joined.mp3`,
+      `${url}joined.ogg`,
+    ]}));
+    this.uiSounds.set('touch', new Howl({src: [
+      `${url}touch.mp3`,
+      `${url}touch.ogg`,
+    ]}));
+    this.uiSounds.set('transition', new Howl({src: [
+      `${url}transition.mp3`,
+      `${url}transition.ogg`,
+    ]}));
 
-    this.uiSounds.set('lose', new Howl({src: `${url}lose.mp3`}));
-    this.uiSounds.set('win', new Howl({src: `${url}win.mp3`}));
-    this.uiSounds.set('miss', new Howl({src: `${url}miss.mp3`}));
-    this.uiSounds.set('point', new Howl({src: `${url}point.mp3`}));
-    this.uiSounds.set('net', new Howl({src: `${url}net.mp3`}));
-    this.uiSounds.set('type', new Howl({src: `${url}type.mp3`}));
+    this.uiSounds.set('lose', new Howl({src: [
+      `${url}lose.mp3`,
+      `${url}lose.ogg`,
+    ]}));
+    this.uiSounds.set('win', new Howl({src: [
+      `${url}win.mp3`,
+      `${url}win.ogg`,
+    ]}));
+    this.uiSounds.set('miss', new Howl({src: [
+      `${url}miss.mp3`,
+      `${url}miss.ogg`,
+    ]}));
+    this.uiSounds.set('point', new Howl({src: [
+      `${url}point.mp3`,
+      `${url}point.ogg`,
+    ]}));
+    this.uiSounds.set('net', new Howl({src: [
+      `${url}net.mp3`,
+      `${url}net.ogg`,
+    ]}));
+    this.uiSounds.set('type', new Howl({src: [
+      `${url}type.mp3`,
+      `${url}type.ogg`,
+    ]}));
 
     url = '/audio/loops/';
     this.loopSounds = new Map();
     this.loopSounds.set('bass', new Howl({
       loop: true,
-      src: `${url}loop1-bass.mp3`,
+      src: [
+        `${url}loop1-bass.mp3`,
+        `${url}loop1-bass.ogg`,
+      ],
       onload: () => {
         this.loopSounds.get('bass').play();
       },
     }));
-    this.loopSounds.set('bass-pad', new Howl({loop: true, src: `${url}loop1-bass-pad.mp3`}));
-    this.loopSounds.set('bass-pad-synth', new Howl({loop: true, src: `${url}loop1-bass-pad-synth.mp3`}));
-    this.loopSounds.set('waiting', new Howl({loop: true, src: `${url}waiting.mp3`}));
+    this.loopSounds.set('bass-pad', new Howl({loop: true, src: [
+      `${url}loop1-bass-pad.mp3`,
+      `${url}loop1-bass-pad.ogg`,
+    ]}));
+    this.loopSounds.set('bass-pad-synth', new Howl({loop: true, src: [
+      `${url}loop1-bass-pad-synth.mp3`,
+      `${url}loop1-bass-pad-synth.ogg`,
+    ]}));
+    this.loopSounds.set('waiting', new Howl({loop: true, src: [
+      `${url}waiting.mp3`,
+      `${url}waiting.ogg`,
+    ]}));
     if (localStorage.muted === 'true') {
       this.mute();
     }

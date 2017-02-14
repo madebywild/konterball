@@ -255,7 +255,12 @@ export default class Scene {
           this.trailEnabled = false;
           this.scene.remove(this.trail);
         } else if (this.quality === 2) {
-          this.renderer.shadowMap.enabled = false;
+          this.light.castShadow = false;
+          this.time.setTimeout(() => {
+            // wait a little for the shadows to disappear before turning this
+            // off, otherwise the shadow will be 'stuck' on the table
+            this.renderer.shadowMap.enabled = false;
+          }, 100);
         } else if (this.quality === 1) {
           this.renderer.setPixelRatio(window.devicePixelRatio / 2);
         } else {

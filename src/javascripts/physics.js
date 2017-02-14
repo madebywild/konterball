@@ -26,7 +26,7 @@ export default class Physics {
     this.world = new CANNON.World();
     this.world.gravity.set(0, -this.config.gravity, 0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
-    this.world.solver.iterations = 20;
+    this.world.solver.iterations = 10;
     this.setupTable();
     this.setupNet();
   }
@@ -224,6 +224,6 @@ export default class Physics {
   }
 
   step(delta) {
-    this.world.step(1 / 60, delta, 10);
+    this.world.step(1 / 60, delta, 3);
   }
 }
