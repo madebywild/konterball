@@ -63,22 +63,22 @@ $margin: 4vh;
     width: 64%;
     margin: auto;
     @extend .absolute-center;
-    transform: translate(-55%, -45%);
+    transform: translate(-55%, -55%);
   }
   #multiplayer-animation {
     width: 85%;
     margin: auto;
     @extend .absolute-center;
-    transform: translate(-50%, -45%);
+    transform: translate(-50%, -55%);
   }
   @media screen and (max-width: $breakpoint-mobile-max) {
     #singleplayer-animation {
       width: 60%;
-      transform: translate(-55%, -48%);
+      transform: translate(-55%, -60%);
     }
     #multiplayer-animation {
       width: 80%;
-      transform: translate(-50%, -48%);
+      transform: translate(-50%, -60%);
     }
     .buttons {
       bottom: 10vh;
