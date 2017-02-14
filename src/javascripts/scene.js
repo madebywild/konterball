@@ -395,8 +395,13 @@ export default class Scene {
       hideButton: false,
       isUndistorted: false,
     };
-
     this.manager = new WebVRManager(this.renderer, this.effect, params);
+    // need the display for calling RAF on it instead of window
+    navigator.getVRDisplays().then(displays => {
+      if (displays.length > 0) {
+        this.display = displays[0];
+      }
+    });
   }
 
   setupThree() {
@@ -978,9 +983,9 @@ export default class Scene {
     let paddlePosition = null;
     if (this.display && this.controlMode === CONTROLMODE.VR) {
       let intersects = [];
-      // CARDBOARD / VIVE
+      // cardboard / vive / oculus / daydream
       // intersect the table with where the camera is looking and place the
-      // paddle there if we are in vr, position paddle below looking direction
+      // paddle there. if we are in vr, position paddle below looking direction
       // so we dont have to look down at all times
       const rayYDirection = this.manager.mode === VR_MODES.VR ? -0.7 : -0.3;
       this.raycaster.setFromCamera(new Vector2(0, rayYDirection), this.camera);
@@ -993,13 +998,14 @@ export default class Scene {
         paddlePosition = intersects[0].point;
       }
     } else if (this.pointerIsLocked) {
-      // MOUSE
+      // mouse, locked pointer
       paddlePosition = {
         x: this.ghostPaddlePosition.x + 0.0015 * this.mouseMoveSinceLastFrame.x,
         y: this.config.tableHeight + 0.24,
         z: this.ghostPaddlePosition.z + 0.0015 * this.mouseMoveSinceLastFrame.y,
       };
     } else {
+      // mouse, unlocked pointer
       paddlePosition = {
         x: 1.4 * this.mousePosition.x * this.config.tableWidth,
         y: this.config.tableHeight + 0.24,
