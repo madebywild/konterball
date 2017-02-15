@@ -576,17 +576,6 @@ export default class Scene {
       );
       tl.set(this.renderer.domElement, {display: 'block'});
 
-      if (this.config.mode === MODE.MULTIPLAYER && !this.isMobile && this.controlMode === CONTROLMODE.MOUSE) {
-        tl.staggerTo([
-          '.present-players',
-          '#generated-room-code, #generated-room-url, #room-code',
-          '.grey-text',
-          '.opponent-joined',
-        ], 0.5, {
-          y: -20,
-          opacity: 0,
-        }, 0.1, 0);
-      }
       tl.to('.intro-wrapper', 0.3, {autoAlpha: 0});
       tl.call(resolve, [], null, '+=1');
     });

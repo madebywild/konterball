@@ -565,7 +565,7 @@ class PingPong {
 
       this.scene.sound.playUI('transition');
       const tl = new TimelineMax();
-      tl.set('.join-room-screen > div > .present-players, .join-room-screen > div > form > *', {
+      tl.set('.join-room-screen form > *', {
         opacity: 0,
         y: 10,
       });
@@ -588,7 +588,6 @@ class PingPong {
         ease: screenTransitionEase,
       }, screenTransitionInterval, `-=${screenTransitionDuration - screenTransitionInterval}`);
       tl.staggerTo([
-        '.join-room-screen .present-players',
         '.join-room-screen .input-wrapper',
         '.join-room-screen .grey-text',
         '.join-room-screen #join-room-button',
@@ -666,7 +665,7 @@ class PingPong {
       // eslint-disable-next-line
       let clip2 = new Clipboard('#generated-room-code');
       const tl = new TimelineMax();
-      tl.set('.open-room-screen > div > *', {
+      tl.set('.open-room-screen > .inner > *', {
         opacity: 0,
         y: 10,
       });
@@ -674,7 +673,7 @@ class PingPong {
         opacity: 0,
         y: 10,
       });
-      tl.set(['.open-room-screen .present-players', '.open-room-screen .opponent-joined'], {
+      tl.set(['.open-room-screen .opponent-joined'], {
         opacity: 0,
       });
       tl.set('.choose-mode-screen', {zIndex: 10});
@@ -696,7 +695,7 @@ class PingPong {
         y: 0,
         opacity: 1,
       });
-      tl.to(['.open-room-screen .present-players', '.open-room-screen .opponent-joined'], 0.3, {
+      tl.to(['.open-room-screen .opponent-joined'], 0.3, {
         opacity: 1,
       }, '+=0.5');
       tl.call(resolve);

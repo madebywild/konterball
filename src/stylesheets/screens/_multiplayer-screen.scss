@@ -21,16 +21,6 @@
     letter-spacing: 0.05em;
     width: 100%;
   }
-  .present-players {
-    width: 50%;
-    margin: auto;
-    svg {
-      width: 40px;
-      height: auto;
-      margin: 40px 5px;
-      margin-top: 10px;
-    }
-  }
   #generated-room-url {
     font-family: FuturaItalic;
     font-size: 40px;
@@ -65,9 +55,6 @@
         font-size: 60px;
         bottom: 10px;
       }
-    }
-    .present-players svg {
-      width: 30px;
     }
     #generated-room-url {
       font-size: 30px;
