@@ -4,7 +4,7 @@ import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
-import * as webvrui from 'webvr-ui/build/webvr-ui';
+import * as webvrui from './webvr-ui';
 import {EVENT, MODE, STATE, INITIAL_CONFIG, CONTROLMODE} from './constants';
 import Scene from './scene';
 import Util from './webvr-manager/util';

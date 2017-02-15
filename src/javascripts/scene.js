@@ -405,10 +405,16 @@ export default class Scene {
     };
     this.manager = new WebVRManager(this.renderer, this.effect, params);
     // need the display for calling RAF on it instead of window
+    console.log('gettings vr displays...');
     navigator.getVRDisplays().then(displays => {
+      console.log('got vr displays:');
+      console.log(displays);
       if (displays.length > 0) {
         this.display = displays[0];
       }
+    }).catch(e => {
+      console.log('error getting vr displays:');
+      console.log(e);
     });
   }
 
