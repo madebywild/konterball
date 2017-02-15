@@ -5,7 +5,7 @@ import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
 import * as webvrui from './webvr-ui';
-import {EVENT, MODE, STATE, INITIAL_CONFIG, CONTROLMODE} from './constants';
+import {EVENT, MODE, STATE, CONTROLMODE} from './constants';
 import Scene from './scene';
 import Util from './webvr-manager/util';
 import Communication from './communication';
@@ -351,10 +351,6 @@ class PingPong {
     $('.choose-vr-mode-screen').removeClass('pink blue');
     $('.choose-vr-mode-screen').addClass('green');
     this.scene.setMultiplayer();
-    if (window.location.pathname.length === INITIAL_CONFIG.ROOM_CODE_LENGTH + 1) {
-      $('#room-code').val(window.location.pathname.slice(1));
-      $('.input-wrapper .placeholder').hide();
-    }
     this.viewJoinRoomScreenAnimation();
   }
 
@@ -640,7 +636,6 @@ class PingPong {
       this.communication.chooseClosestServer().then(() => {
         const id = this.communication.openRoom();
         $('#generated-room-code').val(id);
-        $('#generated-room-url').val(`pong.wild.plus/${id}`);
         $('.opponent-joined').text('waiting for opponent');
       }).catch(e => {
         console.warn(e);
@@ -669,15 +664,13 @@ class PingPong {
       $('.intro-wrapper').addClass('pink');
 
       // eslint-disable-next-line
-      let clip1 = new Clipboard('#generated-room-url');
-      // eslint-disable-next-line
       let clip2 = new Clipboard('#generated-room-code');
       const tl = new TimelineMax();
       tl.set('.open-room-screen > div > *', {
         opacity: 0,
         y: 10,
       });
-      tl.set(['#generated-room-code', '#generated-room-url', '.open-room-screen .grey-text'], {
+      tl.set(['#generated-room-code', '.open-room-screen .grey-text'], {
         opacity: 0,
         y: 10,
       });
@@ -699,7 +692,7 @@ class PingPong {
         left: '0%',
         ease: screenTransitionEase,
       }, screenTransitionInterval, `-=${screenTransitionDuration}`);
-      tl.staggerTo(['#generated-room-code', '#generated-room-url', '.open-room-screen .grey-text'], 0.3, {
+      tl.staggerTo(['#generated-room-code', '.open-room-screen .grey-text'], 0.3, {
         y: 0,
         opacity: 1,
       });
