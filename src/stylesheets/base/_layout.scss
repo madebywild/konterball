@@ -6,9 +6,10 @@ canvas {
   top: 0;
   left: 0;
   z-index: 1;
+  visibility: hidden;
 }
 body {
-  font-family: Futura;
+  font-family: FuturaItalic;
   overflow: hidden;
   background-color: $blue-background;
   height: 100%;
@@ -33,9 +34,6 @@ a:focus {
 .green {
   background-color: $green-background;
 }
-.futura-italic {
-  font-family: FuturaItalic;
-}
 h2 {
   text-transform: uppercase;
   font-size: $font-size-large;
@@ -48,15 +46,12 @@ button {
 }
 button.btn {
   text-transform: uppercase;
-  font-size: 12px;
-  padding: 15px 30px;
+  font-size: 15px;
   border: 2px solid #fff;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.08em;
   color: #fff;
   margin-top: 15px;
-  padding: 22px 32px;
-  padding-top: 24px;
-  font-size: 12px;
+  padding: 20px 40px;
 }
 @media screen and (max-width: $breakpoint-mobile-max) {
   button.btn {
@@ -99,18 +94,17 @@ button.btn.about-button {
   position: absolute;
   border: 0;
   top: 0;
-  right: 0;
+  left: 0;
   margin: 0;
   padding: 20px;
   @media screen and (max-width: $breakpoint-mobile-max) {
-    padding-right: 15px;
+    padding-left: 15px;
     padding-top: 15px;
   }
 }
 .grey-text {
   margin-top: -15px;
   color: $medium-grey;
-  @extend .futura-italic;
 }
 .badge {
   left: 13px;
@@ -118,7 +112,7 @@ button.btn.about-button {
   position: fixed;
   width: 100px;
   z-index: 100;
-  opacity: 0.5;
+  opacity: 0.35;
   @media screen and (max-width: $breakpoint-mobile-max) {
     left: 8px;
     bottom: 8px;
@@ -127,14 +121,14 @@ button.btn.about-button {
 .enter-vr {
   padding: 20px;
   border: 0;
-  right: 90px;
+  right: 40px;
   bottom: -2px;
   position: fixed;
   z-index: 100;
   display: none;
   @media screen and (max-width: $breakpoint-mobile-max) {
     bottom: -9px;
-    right: 80px;
+    right: 34px;
   }
   img {
     width: 25px;
@@ -143,10 +137,9 @@ button.btn.about-button {
 }
 .mute {
   padding: 20px;
-  padding-bottom: 13px;
   border: 0;
   right: 0;
-  bottom: 0;
+  top: 0;
   position: fixed;
   z-index: 100;
   img {
@@ -155,7 +148,7 @@ button.btn.about-button {
   }
   @media screen and (max-width: $breakpoint-mobile-max) {
     padding-right: 15px;
-    padding-bottom: 8px;
+    padding-top: 13px;
     img {
       width: 20px;
     }
@@ -204,18 +197,18 @@ button.btn.about-button {
 }
 .fullscreen-button {
   bottom: 2px;
-  right: 50px;
+  right: 0;
   @media screen and (max-width: $breakpoint-mobile-max) {
     width: 16px;
     bottom: -6px;
-    right: 40px;
+    right: 0;
   }
 }
 #fps-counter {
   position: fixed;
   z-index: 2147483647;
   top: 10px;
-  right: 10px;
+  right: 40px;
   font-family: monospace;
   opacity: 0.5;
   font-size: 14px;

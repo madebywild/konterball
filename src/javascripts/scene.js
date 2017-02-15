@@ -511,6 +511,9 @@ export default class Scene {
     this.hud.container.visible = false;
     const table1 = this.scene.getObjectByName('table-self');
     const table2 = this.scene.getObjectByName('table-opponent');
+    TweenMax.set('canvas', {
+      visibility: 'visible',
+    });
     if (this.config.mode === MODE.MULTIPLAYER) {
       if (this.communication.isHost) {
         this.renderer.setClearColor(this.config.colors.BLUE_CLEARCOLOR, 1);

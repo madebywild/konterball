@@ -41,7 +41,7 @@ class PingPong {
         right: '-999px',
       });
       TweenMax.set('.enter-vr', {
-        right: '40px',
+        right: '0',
         bottom: '-10px',
       });
     }
@@ -152,7 +152,10 @@ class PingPong {
         ease: SlowMo.ease.config(0.3, 0.7, false),
         width: '100%',
         onComplete: () => {
-          $('header h1').css('opacity', 1);
+          TweenMax.set('header h1', {
+            opacity: 1,
+            color: '#fff',
+          });
           $('header span').remove();
           resolve();
         },
@@ -162,7 +165,7 @@ class PingPong {
 
   introAnimation() {
     TweenMax.to(['.intro-screen > div > *'], 0.5, {
-      y: 0,
+      y: 10,
     });
     TweenMax.to(['.intro-screen > div > *'], 0.2, {
       opacity: 1,

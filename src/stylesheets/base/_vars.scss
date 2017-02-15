@@ -1,10 +1,9 @@
 @include font-face('AntiqueOlive', '/fonts/AntiqueOlive');
-@include font-face('Futura', '/fonts/Futura');
 @include font-face('FuturaItalic', '/fonts/FuturaItalic');
 
 $font-size: 20px;
 $font-size-large: 24px;
-$font-size-olive: calc(30px + 5vw);
+$font-size-olive: calc(30px + 0vw);
 
 // colors
 $dark-grey: #262626;
