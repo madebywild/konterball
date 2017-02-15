@@ -1168,11 +1168,11 @@ export default class Scene {
     } else {
       this.ballPath.points.push(this.ball.position.clone());
     }
-    if (this.ballPath.points.length > 50) {
+    if (this.ballPath.points.length > 20) {
       this.ballPath.points.shift();
     }
     this.trail.geometry.dispose();
-    this.trail.geometry = new TubeGeometry(this.ballPath, 25, 0.01, 8, false);
+    this.trail.geometry = new TubeGeometry(this.ballPath, 8, 0.01, 8, false);
   }
 
   animate() {
