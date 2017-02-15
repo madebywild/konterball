@@ -17,6 +17,9 @@ export default (parent, config) => {
 
   // player half
   geometry = new BoxGeometry(config.tableWidth, config.tableThickness, tableDepth);
+  delete geometry.faces[10];
+  delete geometry.faces[11];
+  geometry.faces = geometry.faces.filter(a => a !== undefined);
   mesh = new Mesh(geometry, material);
   mesh.position.y = config.tableHeight / 2 - config.tableThickness / 2;
   mesh.position.z = config.tableDepth / 4;
@@ -31,6 +34,9 @@ export default (parent, config) => {
   if (config.mode === MODE.MULTIPLAYER) {
     // opponent half
     geometry = new BoxGeometry(config.tableWidth, config.tableThickness, tableDepth);
+    delete geometry.faces[8];
+    delete geometry.faces[9];
+    geometry.faces = geometry.faces.filter(a => a !== undefined);
     mesh = new Mesh(geometry, material);
     mesh.position.y = config.tableHeight / 2 - config.tableThickness / 2;
     mesh.position.z = -config.tableDepth / 4;
