@@ -1113,8 +1113,8 @@ export default class Scene {
     const no = {
       color: `#${table.material.color.getHexString()}`,
     };
-    const BLUE_TABLE = '#2B689C';
-    const GREEN_TABLE = '#55CC8F';
+    const BLUE_TABLE = `#${new Color(this.config.colors.BLUE_TABLE).getHexString()}`;
+    const GREEN_TABLE = `#${new Color(this.config.colors.GREEN_TABLE).getHexString()}`;
     const to = this.communication.isHost ? BLUE_TABLE : GREEN_TABLE;
     TweenMax.fromTo(no, 0.8, {
       color: brightenedColor,

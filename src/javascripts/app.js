@@ -256,7 +256,7 @@ class PingPong {
   loadModeChooserAnimation() {
     return Promise.all([
       new Promise(resolve => {
-        $.getJSON('/animations/1player.json', data => {
+        $.getJSON('/animations/1player-v3.json', data => {
           this.singleplayerAnimation = bodymovin.loadAnimation({
             container: document.getElementById('singleplayer-animation'),
             renderer: 'svg',
@@ -267,7 +267,7 @@ class PingPong {
         });
       }),
       new Promise(resolve => {
-        $.getJSON('/animations/2player.json', data => {
+        $.getJSON('/animations/2player-v3.json', data => {
           this.multiplayerAnimation = bodymovin.loadAnimation({
             container: document.getElementById('multiplayer-animation'),
             renderer: 'svg',
