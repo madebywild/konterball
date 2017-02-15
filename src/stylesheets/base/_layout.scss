@@ -124,6 +124,23 @@ button.btn.about-button {
     bottom: 8px;
   }
 }
+.enter-vr {
+  padding: 20px;
+  border: 0;
+  right: 90px;
+  bottom: -2px;
+  position: fixed;
+  z-index: 100;
+  display: none;
+  @media screen and (max-width: $breakpoint-mobile-max) {
+    bottom: -9px;
+    right: 80px;
+  }
+  img {
+    width: 25px;
+    height: auto;
+  }
+}
 .mute {
   padding: 20px;
   padding-bottom: 13px;

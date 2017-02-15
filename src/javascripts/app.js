@@ -1,3 +1,4 @@
+import NoSleep from 'nosleep';
 import {TweenMax, TimelineMax, Power0, Power1, Power4, SlowMo, Back} from 'gsap';
 import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
@@ -37,6 +38,11 @@ class PingPong {
         display: 'none',
         opacity: 0,
         visibility: 'hidden',
+        right: '-999px',
+      });
+      TweenMax.set('.enter-vr', {
+        right: '40px',
+        bottom: '-10px',
       });
     }
   }
@@ -105,10 +111,12 @@ class PingPong {
       color: '#fff',
       corners: 'square',
     };
-    const enterVR = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
-    document.getElementById('cardboard').appendChild(enterVR.domElement);
-    enterVR.on('enter', () => {
-      document.body.appendChild(enterVR.domElement);
+    this.enterVRButton = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
+    document.getElementById('cardboard').appendChild(this.enterVRButton.domElement);
+    this.enterVRButton.on('enter', () => {
+      TweenMax.set('.enter-vr, .mute', {
+        display: 'none',
+      });
       if (this.scene.config.state === STATE.PLAYING
           || this.scene.config.state === STATE.GAME_OVER
           || this.scene.config.state === STATE.COUNTDOWN
@@ -127,7 +135,10 @@ class PingPong {
         this.scene.startGame();
       });
     });
-    enterVR.on('exit', () => {
+    this.enterVRButton.on('exit', () => {
+      TweenMax.set('.enter-vr, .mute', {
+        display: 'block',
+      });
       TweenMax.set(this.scene.renderer, {
         display: 'block',
       });
@@ -275,6 +286,7 @@ class PingPong {
     $('#open-room').on('click', this.onOpenRoomClick.bind(this));
     $('#join-room').on('click', this.onJoinRoomClick.bind(this));
     $('#play-again').on('click', this.onPlayAgainClick.bind(this));
+    $('.enter-vr').on('click', this.onEnterVRClick.bind(this));
     $('.about-button').on('click', this.onAboutButtonClick.bind(this));
     $('#start').on('click', this.onStartClick.bind(this));
     $('#tilt').on('click', this.onTiltClick.bind(this));
@@ -312,6 +324,10 @@ class PingPong {
         this.scene.communication.sendUnpause();
       }
     }
+  }
+
+  onEnterVRClick() {
+    this.enterVRButton.requestEnterVR();
   }
 
   onStartSingleplayerClick() {
@@ -372,6 +388,10 @@ class PingPong {
   }
 
   onStartClick() {
+    if (Util.isMobile()) {
+      const noSleep = new NoSleep();
+      noSleep.enable();
+    }
     this.activeScreen = '.choose-mode-screen';
     this.scene.sound.playLoop('bass-pad');
     this.scene.sound.playUI('transition');

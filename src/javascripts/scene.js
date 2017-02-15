@@ -262,7 +262,10 @@ export default class Scene {
             this.renderer.shadowMap.enabled = false;
           }, 100);
         } else if (this.quality === 1) {
-          this.renderer.setPixelRatio(window.devicePixelRatio / 2);
+          if (Util.isMobile() && this.manager.mode !== VR_MODES.VR) {
+            // doing this when in VR may break everything and turn it black
+            this.renderer.setPixelRatio(window.devicePixelRatio / 2);
+          }
         } else {
           return;
         }

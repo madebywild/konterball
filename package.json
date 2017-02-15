@@ -109,6 +109,7 @@
     "lodash": "^4.6.1",
     "lodash.chunk": "^4.2.0",
     "normalize.css": "^4.0.0",
+    "nosleep": "github:bhspitmonkey/NoSleep.js",
     "object.values": "^1.0.3",
     "randomstring": "^1.1.5",
     "three": "^0.84.0",
