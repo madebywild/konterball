@@ -313,14 +313,14 @@ class PingPong {
     if (document.hidden) {
       this.scene.tabActive = false;
       this.scene.sound.blur();
-      if (this.scene.communication.isOpponentConnected) {
+      if (this.scene.communication.isOpponentConnected && this.scene.state === STATE.PLAYING) {
         this.scene.communication.sendPause();
       }
     } else {
       this.scene.tabActive = true;
       this.scene.firstActiveFrame = this.scene.frameNumber;
       this.scene.sound.focus();
-      if (this.scene.communication.isOpponentConnected) {
+      if (this.scene.communication.isOpponentConnected && this.scene.state === STATE.PLAYING) {
         this.scene.communication.sendUnpause();
       }
     }

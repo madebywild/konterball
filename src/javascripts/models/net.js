@@ -1,4 +1,10 @@
-import {Group, MeshBasicMaterial, Mesh, GridHelper, BoxGeometry} from 'three';
+import {
+  Group,
+  MeshBasicMaterial,
+  Mesh,
+  BoxGeometry,
+  PlaneGeometry,
+} from 'three';
 
 export default (parent, config) => {
   const group = new Group();
@@ -11,12 +17,13 @@ export default (parent, config) => {
     config.netHeight,
     config.netThickness
   );
-  const material = new MeshBasicMaterial({
-    color: 0xFFFFFF,
-    visible: false,
+  let material = new MeshBasicMaterial({
+    color: 0x1c1a54,
+    transparent: true,
+    opacity: 0.2,
   });
-
   const net = new Mesh(geometry, material);
+  net.name = 'net';
   colliderGroup.add(net);
 
   geometry = new BoxGeometry(
@@ -32,18 +39,22 @@ export default (parent, config) => {
 
   group.add(colliderGroup);
 
-  // actual net
-  const griddivisions = 6;
-  for (let i = 0; i < griddivisions; i += 1) {
-    const grid = new GridHelper(config.netHeight, 8, 0xFFFFFF, 0xFFFFFF);
-    grid.rotation.x = Math.PI / 2;
-    grid.scale.x = (config.tableWidth / griddivisions) / config.netHeight;
-    grid.position.x = (((i / griddivisions) * config.tableWidth) + (config.netHeight / 2) * grid.scale.x) - config.tableWidth / 2;
-    group.add(grid);
-  }
+  geometry = new PlaneGeometry(
+    config.tableWidth,
+    config.netThickness
+  );
+  material = new MeshBasicMaterial({
+    color: 0xffffff,
+  });
+  const topNet = new Mesh(geometry, material);
+  topNet.position.y = config.netHeight / 2 + 0.001;
+  topNet.rotation.x = -Math.PI / 2;
+  group.add(topNet);
+
   group.position.z = config.tablePositionZ;
   group.position.y = config.tableHeight + config.netHeight / 2 + 0.01;
-  parent.add(group);
 
+  parent.add(group);
+  group.topNet = topNet;
   return group;
 };

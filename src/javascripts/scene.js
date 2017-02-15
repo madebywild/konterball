@@ -336,7 +336,7 @@ export default class Scene {
     }
     // make it look like there is an overlay between the ui layer and the table
     setTransparency(this.table, 0.2);
-    setTransparency(this.net, 0.2);
+    setTransparency(this.net.topNet, 0.2);
     this.hud.scoreDisplay.hide();
     this.hud.message.showMessage();
   }
@@ -521,6 +521,9 @@ export default class Scene {
         table1.material.color.set(this.config.colors.GREEN_TABLE);
         table2.material.color.set(this.config.colors.GREEN_TABLE);
       }
+      this.net.getObjectByName('net').material.color.setHex(
+        this.communication.isHost ? 0x1c1a54 : 0x194a51
+      );
     } else {
       const upwardsTableGroup = this.scene.getObjectByName('upwardsTableGroup');
       upwardsTableGroup.visible = true;
@@ -620,7 +623,7 @@ export default class Scene {
     this.sound.playLoop('bass');
     this.hud.scoreDisplay.show();
     setTransparency(this.table, 1);
-    setTransparency(this.net, 1);
+    setTransparency(this.net.topNet, 1);
 
     // countdown from 3, start game afterwards
     let n = 2;
@@ -698,7 +701,7 @@ export default class Scene {
     this.resetTimeoutDuration = 2000;
     this.hud.scoreDisplay.opponentScore.visible = true;
     this.hud.scoreDisplay.lifeGroup.visible = false;
-    this.scene.getObjectByName('net-collider').visible = true;
+    this.net.getObjectByName('net-collider').visible = true;
     // add callbacks for received actions
     this.communication.setCallbacks({
       receivedMove: this.onReceivedMove.bind(this),

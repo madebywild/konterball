@@ -52,7 +52,7 @@ export const ACTION = {
 export const INITIAL_CONFIG = {
   mode: MODE.SINGLEPLAYER,
   gravity: 6,
-  netThickness: 0.02,
+  netThickness: 0.04,
   tableWidth: 1.52,
   tableDepth: 2.74,
   tableHeight: 0.76,
