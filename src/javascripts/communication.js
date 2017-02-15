@@ -237,7 +237,6 @@ export default class Communication {
           }
           break;
         case ACTION.REQUEST_COUNTDOWN:
-          console.log('received request countdown');
           this.callbacks.receivedRequestCountdown();
           break;
         case ACTION.RESTART_GAME:
@@ -313,7 +312,6 @@ export default class Communication {
   }
 
   sendRequestCountdown() {
-    console.log('send request countdown');
     this.statusRecord.set(`player-${this.isHost ? 1 : 2}`, {
       action: ACTION.REQUEST_COUNTDOWN,
       t: Date.now(),

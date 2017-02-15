@@ -404,17 +404,20 @@ export default class Scene {
       isUndistorted: false,
     };
     this.manager = new WebVRManager(this.renderer, this.effect, params);
-    // need the display for calling RAF on it instead of window
-    console.log('gettings vr displays...');
+    // need the display for calling RAF on it instead of on window
     navigator.getVRDisplays().then(displays => {
-      console.log('got vr displays:');
-      console.log(displays);
-      if (displays.length > 0) {
-        this.display = displays[0];
+      for (let i = 0; i < displays.length; i += 1) {
+        if (displays[i].capabilities.canPresent) {
+          this.display = displays[i];
+          if (this.display.displayName.indexOf('Daydream') !== -1) {
+            this.daydream = true;
+          }
+          break;
+        }
       }
     }).catch(e => {
-      console.log('error getting vr displays:');
-      console.log(e);
+      console.warn('error getting vr displays:');
+      console.warn(e);
     });
   }
 
@@ -429,7 +432,6 @@ export default class Scene {
     this.scene = new ThreeScene();
     this.camera = new PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 10000);
 
-    // position over the table, will be animated to the final camera position
     this.camera.position.x = 0;
     this.camera.position.y = 1.6;
     this.camera.position.z = 0.6;
@@ -937,7 +939,10 @@ export default class Scene {
       this.controls.update();
       if (this.camera.position.x === 0
         && this.camera.position.z === 0) {
-          // no position sensor in the device, put it behind the table
+        // no position sensor in the device, put it behind the table
+        this.camera.position.z = 1;
+      }
+      if (this.daydream) {
         this.camera.position.z = 1;
       }
     }
