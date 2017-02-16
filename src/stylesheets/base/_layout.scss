@@ -21,9 +21,28 @@ body {
 a,
 a:visited,
 a:active,
+#tilt,
 a:focus {
   color: #fff;
-  text-decoration: underline;
+  text-decoration: none;
+  position: relative;
+  .before {
+    z-index: 0;
+    content: ' ';
+    position: absolute;
+    width: 100%;
+    height: 0.5em;
+    background-color: $pink-background;
+    bottom: -0.1em;
+    left: 0;
+  }
+  .main {
+    position: relative;
+    z-index: 1;
+  }
+  &.pink .before {
+    background-color: $green-background;
+  }
 }
 .pink {
   background-color: $pink-background;
@@ -122,12 +141,12 @@ button.btn.about-button {
   padding: 20px;
   border: 0;
   right: 40px;
-  bottom: -2px;
+  bottom: -4px;
   position: fixed;
   z-index: 100;
   display: none;
   @media screen and (max-width: $breakpoint-mobile-max) {
-    bottom: -9px;
+    bottom: -11px;
     right: 34px;
   }
   img {
@@ -194,6 +213,23 @@ button.btn.about-button {
   z-index: 1;
   display: none;
   box-sizing: content-box;
+}
+.reset-pose {
+  position: fixed;
+  bottom: 5px;
+  right: 93px;
+  width: 20px;
+  height: 30px;
+  padding: 0px;
+  user-select: none;
+  cursor: pointer;
+  z-index: 4;
+  border: 0;
+  display: none;
+  img {
+    width: 100%;
+    height: auto;
+  }
 }
 .fullscreen-button {
   bottom: 2px;

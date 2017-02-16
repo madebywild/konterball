@@ -17,15 +17,9 @@
     border: 0;
     color: #fff;
     padding: 0;
-    font-size: 120px;
+    font-size: 140px;
     letter-spacing: 0.05em;
     width: 100%;
-  }
-  #generated-room-url {
-    font-family: FuturaItalic;
-    font-size: 40px;
-    margin-bottom: 0;
-    margin-top: -24px;
   }
   #room-code {
     text-transform: uppercase;
@@ -36,15 +30,14 @@
     letter-spacing: 1px;
   }
   .grey-text {
-    margin-top: 5px;
+    margin-top: -10px;
     font-size: 20px;
     letter-spacing: 1px;
     margin-bottom: 0px;
   }
   @media screen and (max-width: $breakpoint-mobile-max) {
     input {
-      font-size: 50px;
-      margin-bottom: 10px;
+      font-size: 80px;
     }
     .input-wrapper {
       input {
@@ -56,16 +49,11 @@
         bottom: 10px;
       }
     }
-    #generated-room-url {
-      font-size: 30px;
-      margin-top: -30px;
-    }
     .opponent-joined {
       margin-top: 10px;
     }
     .grey-text {
       margin-bottom: -10px;
-      margin-top: 10px;
     }
   }
 }

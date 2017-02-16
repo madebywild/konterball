@@ -4,6 +4,7 @@ import $ from 'zepto-modules';
 import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
+import VR_MODES from './webvr-manager/modes';
 import * as webvrui from './webvr-ui';
 import {EVENT, MODE, STATE, CONTROLMODE} from './constants';
 import Scene from './scene';
@@ -39,10 +40,14 @@ class PingPong {
         opacity: 0,
         visibility: 'hidden',
         right: '-999px',
+        top: '-9999px',
       });
       TweenMax.set('.enter-vr', {
         right: '0',
         bottom: '-10px',
+      });
+      TweenMax.set('.reset-pose', {
+        right: '60px',
       });
     }
   }
@@ -114,7 +119,7 @@ class PingPong {
     this.enterVRButton = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
     document.getElementById('cardboard').appendChild(this.enterVRButton.domElement);
     this.enterVRButton.on('enter', () => {
-      TweenMax.set('.enter-vr, .mute', {
+      TweenMax.set('.enter-vr, .mute, .reset-pose', {
         display: 'none',
       });
       if (this.scene.config.state === STATE.PLAYING
@@ -136,12 +141,22 @@ class PingPong {
       });
     });
     this.enterVRButton.on('exit', () => {
-      TweenMax.set('.enter-vr, .mute', {
+      TweenMax.set('.mute', {
         display: 'block',
       });
       TweenMax.set(this.scene.renderer, {
         display: 'block',
       });
+      if (this.scene.display) {
+        TweenMax.set('.enter-vr', {
+          display: 'block',
+        });
+      }
+      if (Util.isMobile()) {
+        TweenMax.set('.reset-pose', {
+          display: 'block',
+        });
+      }
     });
   }
 
@@ -234,13 +249,14 @@ class PingPong {
       }
     });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
-      if (this.scene.controlMode === CONTROLMODE.VR) {
+      if (this.scene.manager.mode === VR_MODES.VR) {
         setTimeout(() => {location.reload();}, 3000);
       } else {
         location.reload();
       }
     });
     this.emitter.on(EVENT.OPPONENT_DISCONNECTED, () => {
+      this.scene.showOverlay();
       this.scene.hud.message.setMessage('opponent disconnected');
       this.scene.hud.message.showMessage();
       this.scene.paddleOpponent.visible = false;
@@ -249,10 +265,12 @@ class PingPong {
       this.scene.hud.message.setMessage('opponent paused');
       this.scene.hud.message.showMessage();
       this.scene.tabActive = false;
+      this.scene.showOverlay();
     });
     this.emitter.on(EVENT.OPPONENT_UNPAUSED, () => {
       this.scene.hud.message.hideMessage();
       this.scene.tabActive = true;
+      this.scene.hideOverlay();
     });
   }
 
@@ -293,6 +311,7 @@ class PingPong {
     $('.about-button').on('click', this.onAboutButtonClick.bind(this));
     $('#start').on('click', this.onStartClick.bind(this));
     $('#tilt').on('click', this.onTiltClick.bind(this));
+    $('.reset-pose').on('click', this.scene.resetPose.bind(this.scene));
     $('button.btn').on('click', () => {this.scene.sound.playUI('button');});
     $('#reload').on('click', window.location.reload);
     $('.join-room-screen .back-arrow').on('click', () => {this.backAnimation('.choose-mode-screen');});
@@ -316,14 +335,14 @@ class PingPong {
     if (document.hidden) {
       this.scene.tabActive = false;
       this.scene.sound.blur();
-      if (this.scene.communication.isOpponentConnected && this.scene.state === STATE.PLAYING) {
+      if (this.scene.communication.isOpponentConnected && this.scene.config.state === STATE.PLAYING) {
         this.scene.communication.sendPause();
       }
     } else {
       this.scene.tabActive = true;
       this.scene.firstActiveFrame = this.scene.frameNumber;
       this.scene.sound.focus();
-      if (this.scene.communication.isOpponentConnected && this.scene.state === STATE.PLAYING) {
+      if (this.scene.communication.isOpponentConnected && this.scene.config.state === STATE.PLAYING) {
         this.scene.communication.sendUnpause();
       }
     }
@@ -336,6 +355,7 @@ class PingPong {
   onStartSingleplayerClick() {
     $('.choose-vr-mode-screen').removeClass('blue green');
     $('.choose-vr-mode-screen').addClass('pink');
+    $('.choose-vr-mode-screen a, .choose-vr-mode-screen #tilt').addClass('pink');
     this.scene.setSingleplayer();
     this.viewVRChooserScreen();
   }
@@ -703,10 +723,10 @@ class PingPong {
       const blinkSpeed = 1;
       const blinkTL = new TimelineMax({repeat: -1, repeatDelay: blinkSpeed});
       blinkTL.set('.opponent-joined', {
-        visibility: 'hidden',
+        color: '#392a85',
       }, 0);
       blinkTL.set('.opponent-joined', {
-        visibility: 'visible',
+        color: '#ffffff',
       }, blinkSpeed);
     }).catch(e => {
       console.warn(e);

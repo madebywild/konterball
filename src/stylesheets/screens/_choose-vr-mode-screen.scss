@@ -13,7 +13,6 @@
     text-align: center;
     margin-top: 40px;
     span {
-      text-decoration: underline;
       cursor: pointer;
     }
   }
@@ -28,5 +27,9 @@
   }
   button[disabled] {
     cursor: not-allowed;
+  }
+  .webvr-ui-button {
+    font-family: FuturaItalic;
+    padding-bottom: 0;
   }
 }

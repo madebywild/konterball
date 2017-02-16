@@ -56,5 +56,6 @@ export default (parent, config) => {
 
   parent.add(group);
   group.topNet = topNet;
+  group.collider = net;
   return group;
 };

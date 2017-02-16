@@ -149,7 +149,7 @@ export default class Scene {
     // store fps for reducing image quality if too low
     this.fps = FPS({
       every: 10,
-      decay: 0.1,
+      decay: 0.01,
     });
     // this number will be decremented as the quality is decreased if the fps are too low.
     // 4 = full quality
@@ -223,7 +223,9 @@ export default class Scene {
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.onBallTableCollision.bind(this));
     this.emitter.on(EVENT.RESTART_BUTTON_PRESSED, this.onRestartButtonPressed.bind(this));
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
-      this.hud.message.setMessage('take off vr device');
+      if (this.manager.mode === VR_MODES.VR) {
+        this.hud.message.setMessage('take off vr device');
+      }
     });
     this.emitter.on(EVENT.BALL_NET_COLLISION, () => {
       this.sound.playUI('net');
@@ -244,8 +246,8 @@ export default class Scene {
 
     this.fps.on('data', framerate => {
       $('#fps-counter').text(`${Math.round(framerate * 100) / 100} FPS`);
-      if (this.tabActive && this.frameNumber - this.firstActiveFrame > 100 && framerate < 50) {
-        // allow the fps to recover for 2 seconds before further reducing quality
+      if (this.tabActive && this.frameNumber - this.firstActiveFrame > 60 * 5 && framerate < 50) {
+        // allow the fps to recover for 5 seconds before further reducing quality
         this.firstActiveFrame = this.frameNumber;
         console.warn(`reducing quality to ${this.quality - 1}`);
         if (this.quality === 4) {
@@ -335,8 +337,7 @@ export default class Scene {
       }
     }
     // make it look like there is an overlay between the ui layer and the table
-    setTransparency(this.table, 0.2);
-    setTransparency(this.net.topNet, 0.2);
+    this.showOverlay();
     this.hud.scoreDisplay.hide();
     this.hud.message.showMessage();
   }
@@ -527,6 +528,7 @@ export default class Scene {
       this.net.getObjectByName('net').material.color.setHex(
         this.communication.isHost ? 0x1c1a54 : 0x194a51
       );
+      this.showOverlay();
     } else {
       const upwardsTableGroup = this.scene.getObjectByName('upwardsTableGroup');
       upwardsTableGroup.visible = true;
@@ -542,9 +544,17 @@ export default class Scene {
         width: $(this.renderer.domElement).width(),
         height: $(this.renderer.domElement).height(),
       };
-      if (this.display) {
-        this.display.resetPose();
+      if (Util.isMobile()) {
+        TweenMax.set('.reset-pose', {
+          display: 'block',
+        });
       }
+      if (this.manager.isVRCompatible) {
+        TweenMax.set('.enter-vr', {
+          display: 'block',
+        });
+      }
+      this.resetPose();
       this.paddle.visible = true;
       this.hud.container.visible = true;
       this.setupVRControls();
@@ -595,12 +605,13 @@ export default class Scene {
         return;
       }
       if (this.config.mode === MODE.SINGLEPLAYER) {
-        this.hud.message.setMessage('you have 5 lives');
+        this.hud.message.setMessage('YOU HAVE\n5 LIVES', 'antique');
+        this.time.setTimeout(resolve, 1500);
       } else {
-        this.hud.message.setMessage('first to get 11 points wins');
+        this.hud.message.setMessage('FIRST WITH\n11PTS WINS', 'antique');
+        this.time.setTimeout(resolve, 2500);
       }
       this.hud.message.showMessage();
-      this.time.setTimeout(resolve, 1500);
     });
   }
 
@@ -614,8 +625,7 @@ export default class Scene {
     this.paddleOpponent.visible = this.config.mode === MODE.MULTIPLAYER;
     this.sound.playLoop('bass');
     this.hud.scoreDisplay.show();
-    setTransparency(this.table, 1);
-    setTransparency(this.net.topNet, 1);
+    this.hideOverlay();
 
     // countdown from 3, start game afterwards
     let n = 2;
@@ -900,7 +910,7 @@ export default class Scene {
       this.hud.scoreDisplay.setLives(this.score.lives);
       this.sound.playUI('miss');
       if (this.score.lives === 1) {
-        this.hud.message.setMessage('last life!');
+        this.hud.message.setMessage('LAST LIFE!', 'antique');
         this.hud.message.showMessage();
         this.time.setTimeout(() => {this.hud.message.hideMessage();}, 1000);
       }
@@ -909,6 +919,24 @@ export default class Scene {
       }
     }
     this.restartPingpongTimeout();
+  }
+
+  showOverlay() {
+    setTransparency(this.table, 0.2);
+    setTransparency(this.net.topNet, 0.2);
+    setTransparency(this.net.collider, 0.04);
+  }
+
+  hideOverlay() {
+    setTransparency(this.table, 1);
+    setTransparency(this.net.topNet, 1);
+    setTransparency(this.net.collider, 0.2);
+  }
+
+  resetPose() {
+    if (this.display) {
+      this.display.resetPose();
+    }
   }
 
   addBall() {

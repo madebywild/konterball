@@ -6,7 +6,7 @@ import Button from './button';
 
 const CHAR_LIMIT = 16;
 const FONT_SIZE = 0.07;
-const LINE_SPACING = 0.1;
+const LINE_SPACING = 0.06;
 
 export default class Message {
   constructor(scene, config, font, antique, emitter) {
@@ -24,7 +24,7 @@ export default class Message {
     this.showMessage();
   }
 
-  setMessage(text) {
+  setMessage(text, font = 'futura') {
     this.messageGroup.remove(...this.messageGroup.children);
     let splitText = [];
     if ($.isArray(text)) {
@@ -39,8 +39,8 @@ export default class Message {
     let lineHeight = 0;
     splitText.forEach((split, index) => {
       const geometry = new TextGeometry(split, {
-        font: this.font,
-        size: FONT_SIZE,
+        font: font === 'futura' ? this.font : this.antique,
+        size: font === 'futura' ? FONT_SIZE : 0.15,
         height: 0.001,
         curveSegments: 3,
       });
@@ -53,7 +53,7 @@ export default class Message {
       lineHeight = geometry.boundingBox.max.y;
     });
     const height = splitText.length * (LINE_SPACING + lineHeight);
-    this.messageGroup.position.y = this.config.tableHeight + height / 2 + 0.4;
+    this.messageGroup.position.y = this.config.tableHeight + 0.6 - height / 2;
     this.messageGroup.position.z = this.config.tablePositionZ + 0.5;
   }
 

@@ -76,7 +76,7 @@ export const INITIAL_CONFIG = {
   cameraHeight: 1.6,
   startLives: 5,
   state: STATE.PRELOADER,
-  POINTS_FOR_WIN: 1,
+  POINTS_FOR_WIN: 11,
   ROOM_CODE_LENGTH: 4,
   colors: {
     PINK_TABLE: 0xfbb8c3,
