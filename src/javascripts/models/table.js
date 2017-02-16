@@ -72,6 +72,7 @@ export default (parent, config) => {
 
   material = new MeshLambertMaterial({
     color: 0xFFFFFF,
+    depthWrite: false,
   });
   geometry = new BoxGeometry(lineWidth, epsilon, tableDepth);
   mesh = new Mesh(geometry, material);
@@ -116,11 +117,19 @@ export default (parent, config) => {
   // lines for the upwards tilted table
   material = new MeshLambertMaterial({
     color: 0xDDDDDD,
+    depthWrite: false,
   });
   geometry = new BoxGeometry(config.tableWidth - lineWidth * 2, epsilon, lineWidth);
   mesh = new Mesh(geometry, material);
   mesh.position.y = config.tableThickness / 2 + epsilon;
   mesh.position.z = -upwardsTableHeight / 2 + lineWidth / 2;
+  mesh.receiveShadow = true;
+  upwardsTableGroup.add(mesh);
+
+  geometry = new BoxGeometry(config.tableWidth - lineWidth * 2, epsilon, lineWidth);
+  mesh = new Mesh(geometry, material);
+  mesh.position.y = config.tableThickness / 2 + epsilon;
+  mesh.position.z = upwardsTableHeight / 2 - lineWidth / 2;
   mesh.receiveShadow = true;
   upwardsTableGroup.add(mesh);
 

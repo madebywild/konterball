@@ -141,10 +141,7 @@ class PingPong {
       });
     });
     this.enterVRButton.on('exit', () => {
-      TweenMax.set('.mute', {
-        display: 'block',
-      });
-      TweenMax.set(this.scene.renderer, {
+      TweenMax.set([this.scene.renderer, '.mute', 'canvas'], {
         display: 'block',
       });
       if (this.scene.display) {
@@ -208,7 +205,8 @@ class PingPong {
     const $shadow = $('#ball-shadow');
     const startY = no.y;
     const shadowPos = 840;
-    this.introBallTween.to(no, 1, {
+    const speed = 1.8;
+    this.introBallTween.to(no, 1 / speed, {
       x: no.x > 0 ? -ballRadius : 1920 + ballRadius,
       ease: Power0.easeNone,
       onUpdate: () => {
@@ -221,7 +219,7 @@ class PingPong {
         $shadow.attr('ry', ry);
       },
     }, 0);
-    this.introBallTween.to(no, 0.6, {
+    this.introBallTween.to(no, 0.6 / speed, {
       y: 800,
       ease: Power1.easeIn,
       onUpdate: () => {
@@ -233,13 +231,13 @@ class PingPong {
     this.introBallTween.call(() => {
       this.scene.sound.table();
     }, null, null, '-=0.39');
-    this.introBallTween.to(no, 0.8, {
+    this.introBallTween.to(no, 0.8 / speed, {
       y: startY + 150,
       ease: Power1.easeOut,
       onUpdate: () => {
         $ball.attr('cy', no.y);
       },
-    }, 0.6);
+    }, 0.6 / speed);
   }
 
   setupListeners() {

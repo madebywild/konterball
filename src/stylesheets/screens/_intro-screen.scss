@@ -17,7 +17,7 @@
   }
   header {
     text-transform: uppercase;
-    font-family: AntiqueOlive;
+    font-family: AntiqueOlive, sans-serif;
     font-weight: normal;
     letter-spacing: 0.05em;
     position: relative;
@@ -26,14 +26,14 @@
     h1 {
       opacity: 0.3;
       color: #898cff;
-      font-family: AntiqueOlive;
+      font-family: AntiqueOlive, sans-serif;
       font-weight: normal;
       margin: 0;
       font-size: inherit;
     }
     .loading-text-overlay {
       font-size: inherit;
-      font-family: AntiqueOlive;
+      font-family: AntiqueOlive, sans-serif;
       font-weight: normal;
       display: block;
       position: absolute;

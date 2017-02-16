@@ -97,7 +97,8 @@ let VRControls = function ( object, onError ) {
 				vrDisplay.getFrameData( frameData );
 				pose = frameData.pose;
 
-			} else if ( vrDisplay.getPose ) {
+			}
+      if (!pose.orientation && vrDisplay.getPose ) {
 
 				pose = vrDisplay.getPose();
 

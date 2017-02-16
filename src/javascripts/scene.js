@@ -213,6 +213,7 @@ export default class Scene {
         this.ghostPaddlePosition.copy(this.paddle.position);
         resolve('loaded');
       }).catch(e => {
+        console.warn('Loading error:');
         console.warn(e);
       });
     });
@@ -912,7 +913,7 @@ export default class Scene {
       if (this.score.lives === 1) {
         this.hud.message.setMessage('LAST LIFE!', 'antique');
         this.hud.message.showMessage();
-        this.time.setTimeout(() => {this.hud.message.hideMessage();}, 1000);
+        this.time.setTimeout(() => {this.hud.message.hideMessage();}, 1500);
       }
       if (this.score.lives < 1) {
         this.emitter.emit(EVENT.GAME_OVER, this.score, this.config.mode);
@@ -935,7 +936,7 @@ export default class Scene {
 
   resetPose() {
     if (this.display) {
-      this.display.resetPose();
+      this.controls.resetPose();
     }
   }
 
