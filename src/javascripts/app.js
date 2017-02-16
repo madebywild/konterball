@@ -78,7 +78,6 @@ class PingPong {
     }
     $(window).on('orientationchange', () => {
       setTimeout(() => {
-        window.scrollTo(0, 80);
         if ($(window).width() > $(window).height()) {
           TweenMax.to('.rotate-phone-screen', 0.3, {
             autoAlpha: 0,
@@ -143,6 +142,7 @@ class PingPong {
     this.enterVRButton.on('exit', () => {
       TweenMax.set([this.scene.renderer, '.mute', 'canvas'], {
         display: 'block',
+        visibility: 'visible',
       });
       if (this.scene.display) {
         TweenMax.set('.enter-vr', {

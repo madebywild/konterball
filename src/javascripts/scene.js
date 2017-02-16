@@ -149,7 +149,7 @@ export default class Scene {
     // store fps for reducing image quality if too low
     this.fps = FPS({
       every: 10,
-      decay: 0.01,
+      decay: 0.05,
     });
     // this number will be decremented as the quality is decreased if the fps are too low.
     // 4 = full quality
