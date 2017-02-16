@@ -481,31 +481,36 @@ export default class Scene {
     this.halo = new Mesh(geometry, material);
     this.halo.position.z = 10;
     this.scene.add(this.halo);
+    this.halo.scale.x = 0.001;
+    this.halo.scale.y = 0.001;
+    this.halo.scale.z = 0.001;
 
     this.ballPath = new CatmullRomCurve3([new Vector3(0, 0, 0), new Vector3(0, 0.1, 0)]);
     geometry = new TubeGeometry(this.ballPath, 30, 0.01, 8, false);
 
-    // create a gradient texture on canvas and apply it on material
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d');
+    if (this.trailEnabled) {
+      // create a gradient texture on canvas and apply it on material
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
 
-    const gradient = ctx.createLinearGradient(0, 0, 200, 0);
-    gradient.addColorStop(0, 'rgba(249, 252, 86, 0)');
-    gradient.addColorStop(1, 'rgba(249, 252, 86, 0.3)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 512, 512);
-    const trailTexture = new Texture(canvas);
-    trailTexture.needsUpdate = true;
+      const gradient = ctx.createLinearGradient(0, 0, 200, 0);
+      gradient.addColorStop(0, 'rgba(249, 252, 86, 0)');
+      gradient.addColorStop(1, 'rgba(249, 252, 86, 0.3)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 512, 512);
+      const trailTexture = new Texture(canvas);
+      trailTexture.needsUpdate = true;
 
-    material = new MeshBasicMaterial({
-      map: trailTexture,
-      transparent: true,
-    });
-    this.trail = new Mesh(geometry, material);
-    this.scene.add(this.trail);
-    this.ballPath = null;
+      material = new MeshBasicMaterial({
+        map: trailTexture,
+        transparent: true,
+      });
+      this.trail = new Mesh(geometry, material);
+      this.scene.add(this.trail);
+      this.ballPath = null;
+    }
   }
 
   startGame() {
