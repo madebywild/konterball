@@ -571,6 +571,7 @@ export default class Scene {
         this.playerRequestedCountdown = true;
         this.communication.sendRequestCountdown();
         this.requestCountdown();
+        this.config.state = STATE.WAITING;
       }
     });
   }
@@ -1228,6 +1229,7 @@ export default class Scene {
 
 
     if (this.config.state === STATE.PLAYING
+      || this.config.state === STATE.WAITING
       || this.config.state === STATE.COUNTDOWN
       || this.config.state === STATE.INSTRUCTIONS
       || this.config.state === STATE.GAME_OVER) {
@@ -1237,7 +1239,7 @@ export default class Scene {
         // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
         // this.paddle.position.x = this.ball.position.x;
       }
-      if (this.config.mode === MODE.MULTIPLAYER) {
+      if (this.config.mode === MODE.MULTIPLAYER && this.config.state !== STATE.WAITING) {
         // send where the paddle has moved, if it has moved
         // every 5th frame is enough, this way we send less bytes down the line
         if (this.frameNumber % 5 === 0) {

@@ -54,4 +54,15 @@
       margin-right: 10px;
     }
   }
+  @media screen and (max-height: 300px) {
+    p {
+      font-size: 14px;
+    }
+    button.btn {
+      font-size: 12px;
+    }
+    h1 {
+      font-size: 45px;
+    }
+  }
 }

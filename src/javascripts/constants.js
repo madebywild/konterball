@@ -17,6 +17,7 @@ export const STATE = {
   COUNTDOWN: 'COUNTDOWN',
   INSTRUCTIONS: 'INSTRUCTIONS',
   PAUSED: 'PAUSED',
+  WAITING: 'WAITING',
 };
 
 export const EVENT = {
