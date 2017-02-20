@@ -947,13 +947,13 @@ export default class Scene {
   showOverlay() {
     setTransparency(this.table, 0.2);
     setTransparency(this.net.topNet, 0.2);
-    setTransparency(this.net.collider, 0.04);
+    this.net.collider.visible = false;
   }
 
   hideOverlay() {
     setTransparency(this.table, 1);
     setTransparency(this.net.topNet, 1);
-    setTransparency(this.net.collider, 0.2);
+    this.net.collider.visible = true;
   }
 
   resetPose() {
