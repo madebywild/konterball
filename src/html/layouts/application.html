@@ -6,6 +6,16 @@
     <title>{% block title %}{{ title }}{% endblock %}</title>
     <link rel="stylesheet" href="stylesheets/app.css">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+
+    <meta property="og:url" content="https://konterball.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Konterball" />
+    <meta property="og:description" content="A 2-player virtual reality game, built for the web" />
+    <meta property="og:image" content="https://konterball.com/images/share/fb-share-blue.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Konterball" />
+    <meta name="twitter:description" content="A 2-player virtual reality game, built for the web" />
+    <meta name="twitter:image" content="https://konterball.com/images/share/fb-share-blue.jpg" />
     {% include "shared/app-icons.html" %}
     {% block head %}{% endblock %}
   </head>
