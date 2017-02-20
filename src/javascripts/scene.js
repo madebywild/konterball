@@ -233,7 +233,23 @@ export default class Scene {
     });
 
     this.renderer.domElement.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+    document.addEventListener('touchstart', e => {
+      if (this.config.state !== STATE.GAME_OVER) {
+        return;
+      }
+      // enable touch controls on mobile additionally to gaze controls
+      const touchPos = {
+        x: -2 * (0.5 - e.touches[0].clientX / this.viewport.width),
+        y: 2 * (0.5 - e.touches[0].clientY / this.viewport.height),
+      };
+      this.raycaster.setFromCamera(touchPos, this.camera);
+      this.hud.message.intersect(this.raycaster, true);
+      this.hud.message.click();
+    });
     $(this.renderer.domElement).click(() => {
+      if (this.config.state !== STATE.GAME_OVER) {
+        return;
+      }
       this.hud.message.click();
     });
 
