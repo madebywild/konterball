@@ -268,14 +268,17 @@ class PingPong {
       this.scene.paddleOpponent.visible = false;
     });
     this.emitter.on(EVENT.OPPONENT_PAUSED, () => {
+      if (this.scene.config.state !== STATE.PLAYING) {
+        return;
+      }
       this.scene.hud.message.setMessage('opponent paused');
       this.scene.hud.message.showMessage();
-      this.scene.tabActive = false;
+      this.scene.config.state = STATE.PAUSED;
       this.scene.showOverlay();
     });
     this.emitter.on(EVENT.OPPONENT_UNPAUSED, () => {
       this.scene.hud.message.hideMessage();
-      this.scene.tabActive = true;
+      this.scene.config.state = STATE.PLAYING;
       this.scene.hideOverlay();
     });
   }

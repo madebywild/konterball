@@ -1247,6 +1247,7 @@ export default class Scene {
     if (this.config.state === STATE.PLAYING
       || this.config.state === STATE.WAITING
       || this.config.state === STATE.COUNTDOWN
+      || this.config.state === STATE.PAUSED
       || this.config.state === STATE.INSTRUCTIONS
       || this.config.state === STATE.GAME_OVER) {
       this.updateControls();
@@ -1281,7 +1282,7 @@ export default class Scene {
       this.physicsDebugRenderer.update();
     }
 
-    if (this.tabActive) {
+    if (this.tabActive && this.config.state !== STATE.PAUSED) {
       this.time.step();
     }
 
