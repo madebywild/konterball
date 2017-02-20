@@ -1,0 +1,1 @@
+audiosprite --format howler menu/*
