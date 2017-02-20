@@ -12,7 +12,7 @@ export default class Countdown {
       color: 0xffffff,
       transparent: true,
     });
-    const geometry = new TextGeometry('3', {
+    const geometry = new TextGeometry('5', {
       font: this.font,
       size: FONT_SIZE,
       height: 0.001,
@@ -40,7 +40,7 @@ export default class Countdown {
   }
 
   showCountdown() {
-    this.setCountdown(3);
+    this.setCountdown(5);
     this.countdown.visible = true;
   }
 

@@ -628,7 +628,7 @@ export default class Scene {
         return;
       }
       if (this.config.mode === MODE.SINGLEPLAYER) {
-        this.hud.message.setMessage('YOU HAVE\n5 LIVES', 'antique');
+        this.hud.message.setMessage('YOU HAVE\nFIVE LIVES', 'antique');
         this.time.setTimeout(resolve, 1500);
       } else {
         this.hud.message.setMessage('FIRST WITH\n11PTS WINS', 'antique');
@@ -651,7 +651,7 @@ export default class Scene {
     this.hideOverlay();
 
     // countdown from 3, start game afterwards
-    let n = 2;
+    let n = 4;
     this.showInstructions().then(() => {
       this.config.state = STATE.COUNTDOWN;
       this.hud.countdown.showCountdown();
