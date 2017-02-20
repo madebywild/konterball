@@ -17,6 +17,8 @@ const screenTransitionDuration = 1;
 const screenTransitionInterval = 0.1;
 const screenTransitionEase = Power4.easeInOut;
 
+/* global ga */
+
 class PingPong {
   constructor() {
     this.emitter = EventEmitter({});
@@ -115,9 +117,15 @@ class PingPong {
       color: '#fff',
       corners: 'square',
     };
+    if (this.scene.display) {
+      ga('send', 'event', 'VR Display', 'custom', this.scene.display.displayName);
+    } else {
+      ga('send', 'event', 'VR Display', 'custom', 'No VR Display');
+    }
     this.enterVRButton = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
     document.getElementById('cardboard').appendChild(this.enterVRButton.domElement);
     this.enterVRButton.on('enter', () => {
+      ga('send', 'event', 'VR Mode', 'click', 'Enter VR Button');
       TweenMax.set('.enter-vr, .mute, .reset-pose', {
         display: 'none',
       });
@@ -230,7 +238,7 @@ class PingPong {
     }, 0);
     this.introBallTween.call(() => {
       this.scene.sound.table();
-    }, null, null, '-=0.39');
+    }, null, null, '-=0.216');
     this.introBallTween.to(no, 0.8 / speed, {
       y: startY + 150,
       ease: Power1.easeOut,
@@ -469,6 +477,7 @@ class PingPong {
   }
 
   onTiltClick() {
+    ga('send', 'event', 'VR Mode', 'click', 'Enter 360 Button');
     if (Util.isMobile()) {
       // eslint-disable-next-line
       this.scene.manager.onFSClick_();
