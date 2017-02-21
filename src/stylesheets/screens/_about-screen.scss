@@ -43,12 +43,16 @@
         left: 0;
       }
     }
-    button {
+    .btn {
+      display: inline-block;
       padding: 14px 20px;
       margin-top: 10px;
+      &:before {
+        display: none;
+      }
 
     }
-    button img {
+    .btn img {
       width: 14px;
       margin-bottom: -4px;
       margin-right: 10px;
@@ -58,7 +62,7 @@
     p {
       font-size: 14px;
     }
-    button.btn {
+    .btn {
       font-size: 12px;
     }
     h1 {

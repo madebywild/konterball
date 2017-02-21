@@ -416,7 +416,7 @@ class PingPong {
     ], screenTransitionDuration, {
       left: '0%',
       ease: screenTransitionEase,
-    }, screenTransitionInterval, `-=${screenTransitionDuration - screenTransitionInterval}`);
+    }, screenTransitionInterval, `-=${screenTransitionDuration}`);
   }
 
   onStartClick() {
@@ -656,7 +656,7 @@ class PingPong {
     ], screenTransitionDuration, {
       left: '0%',
       ease: screenTransitionEase,
-    }, `-=${screenTransitionDuration - screenTransitionInterval}`);
+    }, `-=${screenTransitionDuration}`);
     if (!fromAboutScreen) {
       this.scene.sound.playLoop('bass-pad');
     }
