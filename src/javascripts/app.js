@@ -191,6 +191,9 @@ class PingPong {
       opacity: 1,
       delay: 0.3,
     });
+    TweenMax.to(['.ui'], 0.8, {
+      opacity: 1,
+    });
     this.startBallTween();
   }
 
@@ -266,6 +269,7 @@ class PingPong {
       this.scene.hud.message.setMessage('opponent disconnected');
       this.scene.hud.message.showMessage();
       this.scene.paddleOpponent.visible = false;
+      this.scene.config.state = STATE.PAUSED;
     });
     this.emitter.on(EVENT.OPPONENT_PAUSED, () => {
       if (this.scene.config.state !== STATE.PLAYING) {

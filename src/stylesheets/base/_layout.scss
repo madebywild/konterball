@@ -132,7 +132,9 @@ button.btn.about-button {
   position: fixed;
   width: 100px;
   z-index: 100;
-  opacity: 0.35;
+  img {
+    opacity: 0.35;
+  }
   @media screen and (max-width: $breakpoint-mobile-max) {
     left: 8px;
     bottom: 8px;
@@ -249,4 +251,7 @@ button.btn.about-button {
   font-family: monospace;
   opacity: 0.5;
   font-size: 14px;
+}
+.ui {
+  opacity: 0;
 }
