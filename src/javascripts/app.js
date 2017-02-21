@@ -598,6 +598,8 @@ class PingPong {
       });
 
       this.scene.sound.playUI('transition');
+      this.scene.sound.playLoop('waiting');
+
       const tl = new TimelineMax();
       tl.set('.join-room-screen form > *', {
         opacity: 0,

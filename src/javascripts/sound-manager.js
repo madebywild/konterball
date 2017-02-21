@@ -126,13 +126,29 @@ export default class SoundManager {
   playLoop(keyLoop) {
     if (this.error) return;
     let pos = 0;
+    let done = false;
     this.loopSounds.forEach((sound, key) => {
+      if (done) {
+        return;
+      }
       if (this.loopSounds.get(key).playing()) {
+        if (keyLoop === key) {
+          // sound already playing
+          done = true;
+          return;
+        }
         pos = this.loopSounds.get(key).seek();
-        this.loopSounds.get(key).stop();
+        this.loopSounds.get(key).fade(1, 0, 1500);
+        this.loopSounds.get(key).once('fade', () => {
+          this.loopSounds.get(key).stop();
+        });
       }
     });
+    if (done) {
+      return;
+    }
     this.loopSounds.get(keyLoop).seek(pos);
+    this.loopSounds.get(keyLoop).fade(0, 1, 1500);
     this.loopSounds.get(keyLoop).play();
   }
 
