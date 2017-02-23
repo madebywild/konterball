@@ -17,8 +17,8 @@ export default class Communication {
     this.pingInterval = null;
     this.isOpponentConnected = false;
     this.availableServers = [
-      '54.89.219.253:6020', // us-east
-      '54.93.163.49:6020', // eu-central
+      // '54.89.219.253:6020', // us-east
+      'ec2-54-93-163-49.eu-central-1.compute.amazonaws.com:6020', // eu-central
     ];
     // chunk available characters into n parts where n is the number of servers
     this.availablePrefixes = chunk(

@@ -6,6 +6,7 @@ node_modules
 **/generated/_icons.sass
 npm-debug.log
 *.swp
+*.repeaks
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
