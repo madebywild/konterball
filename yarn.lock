@@ -8089,13 +8089,6 @@ webvr-polyfill@^0.9.20:
   dependencies:
     object-assign "^4.0.1"
 
-webvr-ui@^0.9.3:
-  version "0.9.3"
-  resolved "https://registry.yarnpkg.com/webvr-ui/-/webvr-ui-0.9.3.tgz#4077ab0b9cf1909aa23a2dd873266732fa0dccbb"
-  dependencies:
-    eventemitter3 "^2.0.2"
-    screenfull "^3.0.2"
-
 weinre@^2.0.0-pre-I0Z7U9OV:
   version "2.0.0-pre-I0Z7U9OV"
   resolved "https://registry.yarnpkg.com/weinre/-/weinre-2.0.0-pre-I0Z7U9OV.tgz#fef8aa223921f7b40bbbbd4c3ed4302f6fd0a813"
