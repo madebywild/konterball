@@ -57,6 +57,7 @@ export default (parent, config) => {
     color: config.colors.PINK_TABLE_UPWARDS,
   });
   mesh = new Mesh(geometry, material);
+  mesh.name = 'table-self-singleplayer';
   mesh.castShadow = true;
   mesh.receiveShadow = true;
   upwardsTableGroup.add(mesh);

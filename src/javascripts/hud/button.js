@@ -1,6 +1,5 @@
 import {
   DoubleSide,
-  TextureLoader,
   PlaneGeometry,
   Mesh,
   MeshBasicMaterial,
@@ -8,23 +7,23 @@ import {
   Group,
 } from 'three';
 import {Power0, TimelineMax} from 'gsap';
-import {EVENT} from '../constants';
+import {EVENT, INITIAL_CONFIG} from '../constants';
 
 export default class Button {
-  constructor(parent, font, name, x, y, emitter) {
+  constructor(parent, font, name, x, y, emitter, width = 0.4, height = 0.2, borderWidth = 0.01, fontSize = 0.04) {
     this.font = font;
     this.emitter = emitter;
     this.parent = parent;
     this.name = name;
     this.button = null;
     this.text = null;
-    this.loader = new TextureLoader();
-    this.loader.setPath('/textures/');
+    this.fontSize = fontSize;
 
     this.buttonGroup = new Group();
-    this.buttonWidth = 0.4;
-    this.buttonHeight = 0.2;
-    this.borderWidth = 0.01;
+    this.buttonGroup.name = name;
+    this.buttonWidth = width;
+    this.buttonHeight = height;
+    this.borderWidth = borderWidth;
     this.makeButton(x, y);
     this.borderAnimation();
   }
@@ -117,7 +116,7 @@ export default class Button {
     });
     const geometry = new TextGeometry(this.name.toUpperCase(), {
       font: this.font,
-      size: 0.04,
+      size: this.fontSize,
       height: 0.001,
       curveSegments: 3,
     });
@@ -153,6 +152,20 @@ export default class Button {
     this.timeline.call(this.emit.bind(this));
   }
 
+  setText(text) {
+    const geometry = new TextGeometry(text.toUpperCase(), {
+      font: this.font,
+      size: this.fontSize,
+      height: 0.001,
+      curveSegments: 3,
+    });
+    geometry.computeBoundingBox();
+    this.text.geometry = geometry;
+    this.text.position.x = -geometry.boundingBox.max.x / 2;
+    this.text.position.y = -geometry.boundingBox.max.y / 2;
+    this.text.position.z = 0.01;
+  }
+
   emit() {
     this.timeline.pause();
     this.timeline.seek(0);
@@ -163,6 +176,9 @@ export default class Button {
         break;
       case 'exit':
         this.emitter.emit(EVENT.EXIT_BUTTON_PRESSED);
+        break;
+      case INITIAL_CONFIG.rainbowText:
+        this.emitter.emit(EVENT.TOGGLE_RAINBOW_MODE);
         break;
       default: {
         console.warn('unknown button');

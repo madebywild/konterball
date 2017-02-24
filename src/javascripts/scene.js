@@ -131,6 +131,9 @@ export default class Scene {
     this.ghostPaddlePosition = new Vector3();
     // so the paddle doesn't repeatedly hit the ball during the animation
     this.hitAvailable = true;
+    // for crazy mode
+    this.hue = 0;
+    this.datShitCray = false;
 
     // CONTROLS
     this.pointerIsLocked = false;
@@ -223,6 +226,15 @@ export default class Scene {
     this.emitter.on(EVENT.GAME_OVER, this.onGameOver.bind(this));
     this.emitter.on(EVENT.BALL_TABLE_COLLISION, this.onBallTableCollision.bind(this));
     this.emitter.on(EVENT.RESTART_BUTTON_PRESSED, this.onRestartButtonPressed.bind(this));
+    this.emitter.on(EVENT.TOGGLE_RAINBOW_MODE, () => {
+      if (this.datShitCray) {
+        this.hud.message.buttons[this.config.rainbowText].setText(this.config.rainbowText);
+        this.resetColors();
+      } else {
+        this.hud.message.buttons[this.config.rainbowText].setText('normal mode');
+      }
+      this.datShitCray = !this.datShitCray;
+    });
     this.emitter.on(EVENT.EXIT_BUTTON_PRESSED, () => {
       if (this.manager.mode === VR_MODES.VR) {
         this.hud.message.setMessage('take off vr device');
@@ -859,6 +871,9 @@ export default class Scene {
   }
 
   onReceivedRequestCountdown() {
+    if (this.opponentRequestedCountdown) {
+      return;
+    }
     this.opponentRequestedCountdown = true;
     this.requestCountdown();
   }
@@ -1173,6 +1188,29 @@ export default class Scene {
     });
   }
 
+  resetColors() {
+    const singleplayerTable = this.table.getObjectByName('table-self-singleplayer');
+    const opponentTable = this.table.getObjectByName('table-opponent');
+    if (this.config.mode === MODE.SINGLEPLAYER) {
+      this.table.getObjectByName('table-self').material.color.set(this.config.colors.PINK_TABLE);
+      singleplayerTable.material.color.set(this.config.colors.PINK_TABLE_UPWARDS);
+      this.renderer.setClearColor(this.config.colors.PINK_CLEARCOLOR);
+    } else if (this.communication.isHost) {
+      this.table.getObjectByName('table-self').material.color.set(this.config.colors.BLUE_TABLE);
+      opponentTable.material.color.set(this.config.colors.BLUE_TABLE);
+      this.renderer.setClearColor(this.config.colors.BLUE_CLEARCOLOR);
+    } else {
+      this.table.getObjectByName('table-self').material.color.set(this.config.colors.GREEN_TABLE);
+      opponentTable.material.color.set(this.config.colors.GREEN_TABLE);
+      this.renderer.setClearColor(this.config.colors.GREEN_CLEARCOLOR);
+    }
+    this.paddle.getObjectByName('Cap_1').material.color.set(this.config.colors.PADDLE_COLOR);
+    this.paddle.getObjectByName('Cap_2').material.color.set(this.config.colors.PADDLE_COLOR);
+    if (this.ball) {
+      this.ball.material.color.set(this.config.colors.BALL);
+    }
+  }
+
   updateHudControls() {
     // raycaster wants mouse from -1 to 1, not -0.5 to 0.5 like mousePosition is normalized
     let mouse = {};
@@ -1180,6 +1218,11 @@ export default class Scene {
       const zCamVec = new Vector3(0, 0, -1);
       const position = this.camera.localToWorld(zCamVec);
       this.crosshair.position.set(position.x, position.y, position.z);
+      if (position.z > 1) {
+        this.crosshair.visible = true;
+      } else {
+        this.crosshair.visible = this.config.state === STATE.GAME_OVER;
+      }
       mouse = {
         x: 0,
         y: 0,
@@ -1191,6 +1234,7 @@ export default class Scene {
       };
     }
     this.raycaster.setFromCamera(mouse, this.camera);
+    this.raycaster.far = 400;
     this.hud.message.intersect(this.raycaster, this.controlMode === CONTROLMODE.MOUSE && !this.isMobile);
   }
 
@@ -1274,9 +1318,7 @@ export default class Scene {
       this.physics.predictCollisions(this.scene.getObjectByName('net-collider'), delta);
     }
 
-    if (this.config.state === STATE.GAME_OVER) {
-      this.updateHudControls();
-    }
+    this.updateHudControls();
 
     if (DEBUG_MODE) {
       this.physicsDebugRenderer.update();
@@ -1284,6 +1326,27 @@ export default class Scene {
 
     if (this.tabActive && this.config.state !== STATE.PAUSED) {
       this.time.step();
+    }
+
+    if (this.datShitCray) {
+      this.table.getObjectByName('table-self').material.color.setHSL(this.hue, 1, 0.5);
+      const singleplayerTable = this.table.getObjectByName('table-self-singleplayer');
+      const opponentTable = this.table.getObjectByName('table-opponent');
+      if (singleplayerTable) {
+        singleplayerTable.material.color.setHSL(this.hue, 1, 0.5);
+      }
+      if (opponentTable) {
+        opponentTable.material.color.setHSL(this.hue, 1, 0.5);
+      }
+      this.paddle.getObjectByName('Cap_1').material.color.setHSL((this.hue + 0.25) % 1, 1, 0.5);
+      this.paddle.getObjectByName('Cap_2').material.color.setHSL((this.hue + 0.25) % 1, 1, 0.5);
+      if (this.ball) {
+        this.ball.material.color.setHSL((this.hue + 0.5) % 1, 1, 0.5);
+      }
+      const color = new Color();
+      color.setHSL((this.hue + 0.8) % 1, 1, 0.5);
+      this.renderer.setClearColor(color);
+      this.hue = (this.hue + delta / 2000) % 1;
     }
 
     this.lastRender = timestamp;

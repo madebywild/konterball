@@ -22,6 +22,11 @@ export default class Message {
     this.scene.add(this.messageGroup);
     this.setMessage('waiting');
     this.showMessage();
+    this.crazyGroup = new Group();
+    this.scene.add(this.crazyGroup);
+    this.buttons[config.rainbowText] = new Button(this.crazyGroup, this.font, config.rainbowText, 0, 2, this.emitter, 0.7 * 100, 0.2 * 100, 0.01 * 100, 0.04 * 100);
+    this.buttons[config.rainbowText].buttonGroup.position.z = 200;
+    this.buttons[config.rainbowText].buttonGroup.rotation.y = Math.PI;
   }
 
   setMessage(text, font = 'futura') {
@@ -108,6 +113,10 @@ export default class Message {
 
   hideMessage() {
     this.messageGroup.visible = false;
+    if (this.buttons.exit) {
+      this.messageGroup.remove(this.buttons.exit.buttonGroup);
+      this.messageGroup.remove(this.buttons.restart.buttonGroup);
+    }
   }
 
   intersect(raycaster, mouseControls) {
