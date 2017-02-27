@@ -18,7 +18,8 @@ export default class Communication {
     this.isOpponentConnected = false;
     this.availableServers = [
       'ec2-54-89-219-253.compute-1.amazonaws.com:6020', // us-east
-      'ec2-54-93-163-49.eu-central-1.compute.amazonaws.com:6020', // eu-central
+      'ec2-54-93-163-49.eu-central-1.compute.amazonaws.com:6020', // eu-central 1
+      'ec2-52-59-248-181.eu-central-1.compute.amazonaws.com:6020', // eu-central 2
     ];
     // chunk available characters into n parts where n is the number of servers
     this.availablePrefixes = chunk(
