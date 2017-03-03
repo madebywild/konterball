@@ -1,4 +1,5 @@
 **/webvr-manager/*
 src/javascripts/three/*
 src/javascripts/webvr-ui/*
+src/javascripts/j360/*
 src/static/*

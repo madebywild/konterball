@@ -76,7 +76,7 @@ export const INITIAL_CONFIG = {
   ballInitVelocity: 1,
   rainbowText: 'rainbow mode!',
   cameraHeight: 1.6,
-  startLives: 1,
+  startLives: 5,
   state: STATE.PRELOADER,
   POINTS_FOR_WIN: 11,
   ROOM_CODE_LENGTH: 4,
