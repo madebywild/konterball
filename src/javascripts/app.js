@@ -372,7 +372,7 @@ class PingPong {
   onStartSingleplayerClick() {
     $('.choose-vr-mode-screen').removeClass('blue green');
     $('.choose-vr-mode-screen').addClass('pink');
-    $('.choose-vr-mode-screen a, .choose-vr-mode-screen #tilt').addClass('pink');
+    $('.choose-vr-mode-screen a .before, .choose-vr-mode-screen #tilt .before').addClass('pink');
     this.scene.setSingleplayer();
     this.viewVRChooserScreen();
   }
@@ -380,6 +380,7 @@ class PingPong {
   onOpenRoomClick() {
     $('.choose-vr-mode-screen').removeClass('pink green');
     $('.choose-vr-mode-screen').addClass('blue');
+    $('.choose-vr-mode-screen a .before, .choose-vr-mode-screen #tilt .before').addClass('blue');
     this.scene.setMultiplayer();
     this.viewOpenRoomScreenAnimation();
   }
@@ -387,6 +388,7 @@ class PingPong {
   onJoinRoomClick() {
     $('.choose-vr-mode-screen').removeClass('pink blue');
     $('.choose-vr-mode-screen').addClass('green');
+    $('.choose-vr-mode-screen a .before, .choose-vr-mode-screen #tilt .before').addClass('green');
     this.scene.setMultiplayer();
     this.viewJoinRoomScreenAnimation();
   }

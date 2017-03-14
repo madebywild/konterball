@@ -33,17 +33,28 @@ a:focus {
     position: absolute;
     width: 100%;
     height: 0.5em;
-    background-color: $pink-background;
     bottom: -0.1em;
     left: 0;
+    transition: 0.4s;
+  }
+  &:hover {
+    .before {
+      height: 140%;
+    }
   }
   .main {
     position: relative;
     z-index: 1;
   }
-  &.pink .before {
-    background-color: $green-background;
-  }
+}
+.blue.before {
+  background-color: lighten($blue-background, 25%);
+}
+.green.before {
+  background-color: lighten($green-background, 15%);
+}
+.pink.before {
+  background-color: lighten($pink-background, 5%);
 }
 .pink {
   background-color: $pink-background;
@@ -72,6 +83,13 @@ button {
   color: #fff;
   margin-top: 15px;
   padding: 20px 40px;
+  position: relative;
+  overflow: hidden;
+  z-index: 2;
+  transition: 0.3s;
+  &:hover {
+    box-shadow: inset 0px 0px 0px 3px #fff;
+  }
 }
 @media screen and (max-width: $breakpoint-mobile-max) {
   button.btn {
