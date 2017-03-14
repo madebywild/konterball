@@ -128,6 +128,7 @@ class PingPong {
       ga('send', 'event', 'VR Mode', 'click', 'Enter VR Button');
       TweenMax.set('.enter-vr, .mute, .reset-pose', {
         display: 'none',
+        opacity: 0,
       });
       if (this.scene.config.state === STATE.PLAYING
           || this.scene.config.state === STATE.GAME_OVER
@@ -145,6 +146,7 @@ class PingPong {
         this.scene.setupVRControls();
         this.scene.controlMode = CONTROLMODE.VR;
         this.scene.startGame();
+        this.scene.onResize();
       });
     });
     this.enterVRButton.on('exit', () => {
@@ -155,11 +157,13 @@ class PingPong {
       if (this.scene.display) {
         TweenMax.set('.enter-vr', {
           display: 'block',
+          opacity: 1,
         });
       }
       if (Util.isMobile()) {
         TweenMax.set('.reset-pose', {
           display: 'block',
+          opacity: 1,
         });
       }
     });
