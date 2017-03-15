@@ -49,9 +49,6 @@ import Ball from './models/ball';
 import Crosshair from './models/crosshair';
 import setupPaddles from './models/paddle';
 
-// import CCapture from './j360/js/Ccapture';
-// import CubemapToEquirectangular from './j360/js/CubemapToEquirectangular';
-
 const DEBUG_MODE = false;
 
 /* global CannonDebugRenderer, Power1, Power2, Power3, Power4 */
@@ -208,13 +205,6 @@ export default class Scene {
       this.hud = new Hud(this.scene, this.config, this.emitter, this.objLoader);
       this.crosshair = new Crosshair(this.scene, this.config);
       this.crosshair.visible = false;
-
-      // window.equiManaged = new CubemapToEquirectangular(this.renderer, true, "4K");
-      // this.capturer360 = new CCapture({
-      //   format: 'threesixty',
-      //   display: true,
-      //   autoSaveTime: 3,
-      // });
 
       Promise.all([
         setupPaddles(this.objLoader, this.config, this.scene),
@@ -475,9 +465,7 @@ export default class Scene {
     document.body.appendChild(this.renderer.domElement);
 
     this.scene = new ThreeScene();
-    // window.scene = this.scene;
     this.camera = new PerspectiveCamera(47, window.innerWidth / window.innerHeight, 0.1, 10000);
-    // window.camera = this.camera;
 
     this.camera.position.x = 0;
     this.camera.position.y = 1.6;
@@ -689,12 +677,6 @@ export default class Scene {
         this.hud.countdown.setCountdown(n);
         n -= 1;
         if (n < 0) {
-          // setTimeout(() => {
-          //   this.capturer360.start();
-          // }, 15 * 1000);
-          // setTimeout(() => {
-          //   this.capturer360.stop();
-          // }, 25 * 1000);
           // stop the countdown
           this.time.clearInterval(countdown);
           this.hud.countdown.hideCountdown();
@@ -1318,11 +1300,6 @@ export default class Scene {
       || this.config.state === STATE.INSTRUCTIONS
       || this.config.state === STATE.GAME_OVER) {
       this.updateControls();
-      if (this.ball && this.config.mode === MODE.MULTIPLAYER && !this.communication.isHost) {
-        // for multiplayer testing
-        // this.paddle.position.y = Math.max(this.config.tableHeight + 0.1, this.ball.position.y);
-        // this.paddle.position.x = this.ball.position.x;
-      }
       if (this.config.mode === MODE.MULTIPLAYER && this.config.state !== STATE.WAITING) {
         // send where the paddle has moved, if it has moved
         // every 5th frame is enough, this way we send less bytes down the line
@@ -1384,6 +1361,5 @@ export default class Scene {
     } else {
       requestAnimationFrame(this.animate.bind(this));
     }
-    // this.capturer360.capture(this.renderer.domElement);
   }
 }
