@@ -1,8 +1,10 @@
-# Konterball
-
 <p align="center">
-  <img alt="Konterball Logo" src="https://raw.githubusercontent.com/madebywild/konterball/master/logo.png">
+  <img alt="Konterball Logo" width="480" src="https://raw.githubusercontent.com/madebywild/konterball/master/logo.png">
 </p>
+
+<p></p>
+<p></p>
+
 <p align="center">
   <img alt="Konterball Demo" src="https://raw.githubusercontent.com/madebywild/konterball/master/demo.gif">
 </p>
