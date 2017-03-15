@@ -1,6 +1,6 @@
 # Konterball
 
-<center>[demo.gif]</center>
+<center>![Konterball](demo.gif)</center>
 [https://konterball.com/](Try it here)
 
 ## Introduction
