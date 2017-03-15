@@ -2,8 +2,7 @@
   <img alt="Konterball Logo" width="480" src="https://raw.githubusercontent.com/madebywild/konterball/master/logo.png">
 </p>
 
-<p></p>
-<p></p>
+<br><br>
 
 <p align="center">
   <img alt="Konterball Demo" src="https://raw.githubusercontent.com/madebywild/konterball/master/demo.gif">
