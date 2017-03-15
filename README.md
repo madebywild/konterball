@@ -1,11 +1,14 @@
 # Konterball
 
 <p align="center">
-  <img alt="Konterball" src="https://raw.githubusercontent.com/madebywild/konterball/master/demo.gif">
+  <img alt="Konterball Logo" src="https://raw.githubusercontent.com/madebywild/konterball/master/logo.png">
+</p>
+<p align="center">
+  <img alt="Konterball Demo" src="https://raw.githubusercontent.com/madebywild/konterball/master/demo.gif">
 </p>
 
 <p align="center">
-  [Try it here](https://konterball.com/)
+  <a href="https://konterball.com/">Try it here</a>
 </p>
 
 ## Introduction
