@@ -7,8 +7,11 @@ node_modules
 npm-debug.log
 *.swp
 *.repeaks
+src/fonts
+public/fonts
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+.ebextensions
