@@ -1,7 +1,12 @@
 # Konterball
 
-<center>![Konterball](demo.gif)</center>
-[https://konterball.com/](Try it here)
+<p align="center">
+  <img alt="Konterball" src="https://raw.githubusercontent.com/madebywild/konterball/master/demo.gif">
+</p>
+
+<p align="center">
+  [Try it here](https://konterball.com/)
+</p>
 
 ## Introduction
 
