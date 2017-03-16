@@ -24,8 +24,8 @@ class PingPong {
     this.emitter = EventEmitter({});
     this.communication = new Communication(this.emitter);
     this.scene = new Scene(this.emitter, this.communication);
-    this.setupHandlers();
-    this.setupListeners();
+    this.setupDOMHandlers();
+    this.setupCustomEventHandlers();
     this.introBallTween = null;
     this.activeScreen = '.intro-screen';
 
@@ -255,7 +255,7 @@ class PingPong {
     }, 0.6 / speed);
   }
 
-  setupListeners() {
+  setupCustomEventHandlers() {
     this.emitter.on(EVENT.GAME_OVER, () => {
       if (document.exitPointerLock) {
         document.exitPointerLock();
@@ -318,7 +318,7 @@ class PingPong {
     ]);
   }
 
-  setupHandlers() {
+  setupDOMHandlers() {
     $(document).on('visibilitychange', this.onVisibilityChange.bind(this));
     $('#start-singleplayer').on('click', this.onStartSingleplayerClick.bind(this));
     $('#open-room').on('click', this.onOpenRoomClick.bind(this));
@@ -335,6 +335,15 @@ class PingPong {
     $('.open-room-screen .back-arrow').on('click', () => {this.backAnimation('.choose-mode-screen');});
     $('.about-screen .back-arrow').on('click', () => {this.backAnimation(this.activeScreen, true);});
     $('.mute').on('click', this.scene.sound.toggleMute.bind(this.scene.sound));
+    $('button.btn').mouseenter(function() {
+      TweenMax.to($(this), 0.3, {
+        boxShadow: 'inset 0px 0px 0px 3px rgba(255, 255, 255, 1)',
+      });
+    }).mouseleave(function() {
+      TweenMax.to($(this), 0.3, {
+        boxShadow: 'inset 0px 0px 0px 0px rgba(255, 255, 255, 0)',
+      });
+    });
 
     $('button.btn').on('click', function onAnyButtonClick() {
       const duration = 0.1;

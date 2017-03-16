@@ -273,7 +273,7 @@ export default class Scene {
     $(window).on('resize', this.onResize.bind(this));
     $(window).on('vrdisplaypresentchange', this.onResize.bind(this));
     $(document).on('keydown', e => {
-      if (e.key === 'r') {
+      if (e.key === 'r' && (this.config.state === STATE.PLAYING || STATE.GAME_OVER)) {
         this.emitter.emit(EVENT.TOGGLE_RAINBOW_MODE);
       }
     });

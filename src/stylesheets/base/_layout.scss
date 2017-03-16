@@ -86,10 +86,6 @@ button {
   position: relative;
   overflow: hidden;
   z-index: 2;
-  transition: 0.3s;
-  &:hover {
-    box-shadow: inset 0px 0px 0px 3px #fff;
-  }
 }
 @media screen and (max-width: $breakpoint-mobile-max) {
   button.btn {
