@@ -335,11 +335,11 @@ class PingPong {
     $('.open-room-screen .back-arrow').on('click', () => {this.backAnimation('.choose-mode-screen');});
     $('.about-screen .back-arrow').on('click', () => {this.backAnimation(this.activeScreen, true);});
     $('.mute').on('click', this.scene.sound.toggleMute.bind(this.scene.sound));
-    $('button.btn').mouseenter(function() {
+    $('button.btn').mouseenter(function buttonIn() {
       TweenMax.to($(this), 0.3, {
         boxShadow: 'inset 0px 0px 0px 3px rgba(255, 255, 255, 1)',
       });
-    }).mouseleave(function() {
+    }).mouseleave(function buttonOut() {
       TweenMax.to($(this), 0.3, {
         boxShadow: 'inset 0px 0px 0px 0px rgba(255, 255, 255, 0)',
       });
