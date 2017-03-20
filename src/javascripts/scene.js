@@ -279,7 +279,6 @@ export default class Scene {
     });
 
     this.fps.on('data', framerate => {
-      $('#fps-counter').text(`${Math.round(framerate * 100) / 100} FPS`);
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 60 * 5 && framerate < 50) {
         // allow the fps to recover for 5 seconds before further reducing quality
         this.firstActiveFrame = this.frameNumber;
