@@ -143,7 +143,7 @@ button.btn.about-button {
 .badge {
   left: 13px;
   bottom: 13px;
-  position: fixed;
+  position: fixed !important;
   width: 100px;
   z-index: 100;
   img {
@@ -261,7 +261,7 @@ button.btn.about-button {
   opacity: 0;
 }
 .wild-logo {
-  position: absolute;
+  position: absolute !important;
   right: 0;
   bottom: 0;
   display: block;
