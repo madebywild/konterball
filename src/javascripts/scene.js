@@ -272,11 +272,6 @@ export default class Scene {
     }
     $(window).on('resize', this.onResize.bind(this));
     $(window).on('vrdisplaypresentchange', this.onResize.bind(this));
-    $(document).on('keydown', e => {
-      if (e.key === 'r' && (this.config.state === STATE.PLAYING || STATE.GAME_OVER)) {
-        this.emitter.emit(EVENT.TOGGLE_RAINBOW_MODE);
-      }
-    });
 
     this.fps.on('data', framerate => {
       if (this.tabActive && this.frameNumber - this.firstActiveFrame > 60 * 5 && framerate < 50) {

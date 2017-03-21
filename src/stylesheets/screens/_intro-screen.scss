@@ -70,18 +70,6 @@
   #start {
     opacity: 0;
   }
-  .wild-logo {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    display: block;
-    width: 40px;
-    padding: 15px 20px;
-    img {
-      width: 100%;
-      height: auto;
-    }
-  }
   @media screen and (max-width: $breakpoint-mobile-max) {
     .inner {
       margin-top: 10px;
@@ -90,9 +78,5 @@
       margin-top: 10px;
       margin-bottom: 25px;
     }
-    .wild-logo {
-      padding: 10px 15px;
-    }
   }
 }
-

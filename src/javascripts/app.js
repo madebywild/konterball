@@ -512,6 +512,11 @@ class PingPong {
   }
 
   viewVRChooserScreen() {
+    if (this.scene.config.mode === MODE.MULTIPLAYER) {
+      ga('send', 'event', 'Mode', 'custom', 'Multiplayer');
+    } else {
+      ga('send', 'event', 'Mode', 'custom', 'Singleplayer');
+    }
     return new Promise(resolve => {
       this.scene.sound.playUI('transition');
       const tl = new TimelineMax();
