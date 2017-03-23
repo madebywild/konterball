@@ -153,6 +153,7 @@ class PingPong {
       TweenMax.set([this.scene.renderer, '.mute', 'canvas'], {
         display: 'block',
         visibility: 'visible',
+        opacity: 1,
       });
       if (this.scene.display) {
         TweenMax.set('.enter-vr', {
