@@ -115,32 +115,8 @@ ButtonManager.prototype.loadIcons_ = function() {
   // Preload some hard-coded SVG.
   this.ICONS = {};
   this.ICONS.cardboard = Util.base64('image/svg+xml', 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGRkZGRiI+CiAgICA8cGF0aCBkPSJNMjAuNzQgNkgzLjIxQzIuNTUgNiAyIDYuNTcgMiA3LjI4djEwLjQ0YzAgLjcuNTUgMS4yOCAxLjIzIDEuMjhoNC43OWMuNTIgMCAuOTYtLjMzIDEuMTQtLjc5bDEuNC0zLjQ4Yy4yMy0uNTkuNzktMS4wMSAxLjQ0LTEuMDFzMS4yMS40MiAxLjQ1IDEuMDFsMS4zOSAzLjQ4Yy4xOS40Ni42My43OSAxLjExLjc5aDQuNzljLjcxIDAgMS4yNi0uNTcgMS4yNi0xLjI4VjcuMjhjMC0uNy0uNTUtMS4yOC0xLjI2LTEuMjh6TTcuNSAxNC42MmMtMS4xNyAwLTIuMTMtLjk1LTIuMTMtMi4xMiAwLTEuMTcuOTYtMi4xMyAyLjEzLTIuMTMgMS4xOCAwIDIuMTIuOTYgMi4xMiAyLjEzcy0uOTUgMi4xMi0yLjEyIDIuMTJ6bTkgMGMtMS4xNyAwLTIuMTMtLjk1LTIuMTMtMi4xMiAwLTEuMTcuOTYtMi4xMyAyLjEzLTIuMTNzMi4xMi45NiAyLjEyIDIuMTMtLjk1IDIuMTItMi4xMiAyLjEyeiIvPgogICAgPHBhdGggZmlsbD0ibm9uZSIgZD0iTTAgMGgyNHYyNEgwVjB6Ii8+Cjwvc3ZnPgo=');
-  this.ICONS.exitFullscreen = `data:image/svg+xml;utf8,
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 50.2 52.8" style="enable-background:new 0 0 50.2 52.8;" xml:space="preserve">
-<g id="Layer_1">
-  <g>
-    <g> <polyline fill="none" stroke-width="5" stroke="white" points="15.3,52.8 15.3,38.3 0,38.3"/> </g>
-    <g> <polyline fill="none" stroke-width="5" stroke="white" points="50.2,38.3 34.8,38.3 34.8,52.8"/> </g>
-    <g> <polyline fill="none" stroke-width="5" stroke="white" points="34.8,0 34.8,14.4 50.2,14.4"/> </g>
-    <g> <polyline fill="none" stroke-width="5" stroke="white" points="0,14.4 15.3,14.4 15.3,0"/> </g>
-  </g>
-</g>
-</svg>
-    `;
-  this.ICONS.fullscreen = `data:image/svg+xml;utf8,
-<?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 53.2 53.2" style="enable-background:new 0 0 53.2 53.2;" xml:space="preserve">
-<g id="Layer_1">
-	<g>
-		<g> <polyline fill="none" stroke-width="5" stroke="white" points="17.8,2.5 2.5,2.5 2.5,16.9"/> </g>
-		<g> <polyline fill="none" stroke-width="5" stroke="white" points="2.5,36.2 2.5,50.7 17.8,50.7"/> </g>
-		<g> <polyline fill="none" stroke-width="5" stroke="white" points="35.3,50.7 50.7,50.7 50.7,36.2"/> </g>
-		<g> <polyline fill="none" stroke-width="5" stroke="white" points="50.7,16.9 50.7,2.5 35.3,2.5"/> </g>
-	</g>
-</g>
-</svg>
-    `;
+  this.ICONS.fullscreen = Util.base64('image/svg+xml', 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHZpZXdCb3g9IjAgMCA1My4yIDUzLjIiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDUzLjIgNTMuMjsiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxnIGlkPSJMYXllcl8xIj48Zz48Zz4gPHBvbHlsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlPSJ3aGl0ZSIgcG9pbnRzPSIxNy44LDIuNSAyLjUsMi41IDIuNSwxNi45Ii8+IDwvZz48Zz4gPHBvbHlsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlPSJ3aGl0ZSIgcG9pbnRzPSIyLjUsMzYuMiAyLjUsNTAuNyAxNy44LDUwLjciLz4gPC9nPjxnPiA8cG9seWxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2U9IndoaXRlIiBwb2ludHM9IjM1LjMsNTAuNyA1MC43LDUwLjcgNTAuNywzNi4yIi8+IDwvZz48Zz4gPHBvbHlsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlPSJ3aGl0ZSIgcG9pbnRzPSI1MC43LDE2LjkgNTAuNywyLjUgMzUuMywyLjUiLz4gPC9nPjwvZz48L2c+PC9zdmc+');
+  this.ICONS.exitFullscreen = Util.base64('image/svg+xml', 'PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48c3ZnIHZlcnNpb249IjEuMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiIHZpZXdCb3g9IjAgMCA1MC4yIDUyLjgiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDUwLjIgNTIuODsiIHhtbDpzcGFjZT0icHJlc2VydmUiPjxnIGlkPSJMYXllcl8xIj4gIDxnPiAgICA8Zz4gPHBvbHlsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlPSJ3aGl0ZSIgcG9pbnRzPSIxNS4zLDUyLjggMTUuMywzOC4zIDAsMzguMyIvPiA8L2c+ICAgIDxnPiA8cG9seWxpbmUgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI1IiBzdHJva2U9IndoaXRlIiBwb2ludHM9IjUwLjIsMzguMyAzNC44LDM4LjMgMzQuOCw1Mi44Ii8+IDwvZz4gICAgPGc+IDxwb2x5bGluZSBmaWxsPSJub25lIiBzdHJva2Utd2lkdGg9IjUiIHN0cm9rZT0id2hpdGUiIHBvaW50cz0iMzQuOCwwIDM0LjgsMTQuNCA1MC4yLDE0LjQiLz4gPC9nPiAgICA8Zz4gPHBvbHlsaW5lIGZpbGw9Im5vbmUiIHN0cm9rZS13aWR0aD0iNSIgc3Ryb2tlPSJ3aGl0ZSIgcG9pbnRzPSIwLDE0LjQgMTUuMywxNC40IDE1LjMsMCIvPiA8L2c+ICA8L2c+PC9nPjwvc3ZnPg==');
   this.ICONS.settings = Util.base64('image/svg+xml', 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI0ZGRkZGRiI+CiAgICA8cGF0aCBkPSJNMCAwaDI0djI0SDB6IiBmaWxsPSJub25lIi8+CiAgICA8cGF0aCBkPSJNMTkuNDMgMTIuOThjLjA0LS4zMi4wNy0uNjQuMDctLjk4cy0uMDMtLjY2LS4wNy0uOThsMi4xMS0xLjY1Yy4xOS0uMTUuMjQtLjQyLjEyLS42NGwtMi0zLjQ2Yy0uMTItLjIyLS4zOS0uMy0uNjEtLjIybC0yLjQ5IDFjLS41Mi0uNC0xLjA4LS43My0xLjY5LS45OGwtLjM4LTIuNjVDMTQuNDYgMi4xOCAxNC4yNSAyIDE0IDJoLTRjLS4yNSAwLS40Ni4xOC0uNDkuNDJsLS4zOCAyLjY1Yy0uNjEuMjUtMS4xNy41OS0xLjY5Ljk4bC0yLjQ5LTFjLS4yMy0uMDktLjQ5IDAtLjYxLjIybC0yIDMuNDZjLS4xMy4yMi0uMDcuNDkuMTIuNjRsMi4xMSAxLjY1Yy0uMDQuMzItLjA3LjY1LS4wNy45OHMuMDMuNjYuMDcuOThsLTIuMTEgMS42NWMtLjE5LjE1LS4yNC40Mi0uMTIuNjRsMiAzLjQ2Yy4xMi4yMi4zOS4zLjYxLjIybDIuNDktMWMuNTIuNCAxLjA4LjczIDEuNjkuOThsLjM4IDIuNjVjLjAzLjI0LjI0LjQyLjQ5LjQyaDRjLjI1IDAgLjQ2LS4xOC40OS0uNDJsLjM4LTIuNjVjLjYxLS4yNSAxLjE3LS41OSAxLjY5LS45OGwyLjQ5IDFjLjIzLjA5LjQ5IDAgLjYxLS4yMmwyLTMuNDZjLjEyLS4yMi4wNy0uNDktLjEyLS42NGwtMi4xMS0xLjY1ek0xMiAxNS41Yy0xLjkzIDAtMy41LTEuNTctMy41LTMuNXMxLjU3LTMuNSAzLjUtMy41IDMuNSAxLjU3IDMuNSAzLjUtMS41NyAzLjUtMy41IDMuNXoiLz4KPC9zdmc+Cg==');
 };
 
