@@ -1274,7 +1274,8 @@ export default class Scene {
         (dist.length() < 0.4
           && Math.abs(dist.x) < 0.2
           && Math.abs(dist.z) < 0.1
-        || this.isMobile && dist.length() < 0.8
+        // make it a little easier on mobile
+        || this.isMobile && dist.length() < 0.4
           && Math.abs(dist.x) < 0.3
           && Math.abs(dist.z) < 0.1)
         // and ball is moving towards us, it could move away from us
