@@ -1,17 +1,185 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Konterball</title><link rel="stylesheet" href="stylesheets/app-ef2ccc4c95.css"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0"><meta property="og:url" content="https://konterball.com"><meta property="og:type" content="website"><meta property="og:title" content="Konterball"><meta property="og:description" content="A 2-player virtual reality game, built for the web"><meta property="og:image" content="https://konterball.com/images/share/fb-share-blue-cf25bc8c66.jpg"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Konterball"><meta name="twitter:description" content="A 2-player virtual reality game, built for the web"><meta name="twitter:image" content="https://konterball.com/images/share/fb-share-blue-cf25bc8c66.jpg"><link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png"><link rel="icon" type="image/png" href="/favicon/favicon-32x32.png" sizes="32x32"><link rel="icon" type="image/png" href="/favicon/favicon-16x16.png" sizes="16x16"><link rel="manifest" href="/favicon/manifest.json"><meta name="theme-color" content="#ffffff"></head><body><button class="ui mute"><img src="images/icon-unmute-cbfe8e0389.svg" title="Toggle mute"></button> <button class="enter-vr"><img src="images/icon-cardboard-74a97f8947.svg" title="Toggle VR"></button> <button class="reset-pose"><img src="images/icon-reset-pose-19a7e0b347.svg" title="Reset pose"></button> <a href="https://vr.chromeexperiments.com/" class="ui badge" target="_blank"><img src="images/webvr-badge-483c65ffd8.svg"></a><div class="rotate-phone-screen"><div class="phone-container"><div class="phone-inner"><img class="phone" src="images/rotate-screen/phone-37002e7eb5.svg"> <img class="x" src="images/rotate-screen/x-9992968367.svg"> <img class="checkmark" src="images/rotate-screen/checkmark-ed9b2c4593.svg"></div></div></div><div class="intro-wrapper"><div class="transition-color-screen pink"></div><div class="transition-color-screen blue"></div><div class="transition-color-screen green"></div><div class="intro-screen"><svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" style="enable-background:new 0 0 1920 1080" xml:space="preserve"><style type="text/css">.st0{fill:#4332A5;}
+
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Konterball</title>
+    <link rel="stylesheet" href="stylesheets/app.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0">
+
+    <meta property="og:url" content="https://konterball.com" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Konterball" />
+    <meta property="og:description" content="A 2-player virtual reality game, built for the web" />
+    <meta property="og:image" content="https://konterball.com/images/share/fb-share-blue.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Konterball" />
+    <meta name="twitter:description" content="A 2-player virtual reality game, built for the web" />
+    <meta name="twitter:image" content="https://konterball.com/images/share/fb-share-blue.jpg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/favicon/manifest.json">
+<meta name="theme-color" content="#ffffff">
+
+
+    
+  </head>
+  <body>
+    
+<button class="ui mute"><img src="images/icon-unmute.svg" title="Toggle mute"></button>
+<button class="enter-vr"><img src="images/icon-cardboard.svg" title="Toggle VR"></button>
+<button class="reset-pose"><img src="images/icon-reset-pose.svg" title="Reset pose"></button>
+<a href="https://vr.chromeexperiments.com/" class="ui badge" target="_blank"><img src="images/webvr-badge.svg"></a>
+<div class="rotate-phone-screen">
+  <div class="phone-container">
+    <div class="phone-inner">
+      <img class="phone" src="images/rotate-screen/phone.svg">
+      <img class="x" src="images/rotate-screen/x.svg">
+      <img class="checkmark" src="images/rotate-screen/checkmark.svg">
+    </div>
+  </div>
+</div>
+<div class="intro-wrapper">
+  <div class="transition-color-screen pink"></div>
+  <div class="transition-color-screen blue"></div>
+  <div class="transition-color-screen green"></div>
+  <div class="intro-screen">
+    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+       viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" style="enable-background:new 0 0 1920 1080;" xml:space="preserve">
+    <style type="text/css">
+      .st0{fill:#4332A5;}
       .st1{fill:#392B8E;}
       .st2{fill:#1C1A54;}
       .st3{fill:#BEC0CC;}
       .st4{fill:#AFB2BC;}
       .st5{fill:#302575;}
-      .st6{fill:#F9FC56;}</style><g id="Layer_1"><polygon id="panel-light" class="st0" points="0,1080 1222.1,1080 1620.2,850.2 1009.9,497.8 	"/><polygon id="panel-dark" class="st1" points="147.7,0 0,0 0,1080 1009.9,497.8 	"/><polygon id="panel-side" class="st2" points="1620.2,850.2 1222.1,1080 1222.1,1080 1620.2,1080 	"/><polygon id="lines-light" class="st3" points="1462.1,758.9 1009.9,497.8 986.5,511.3 1573.5,850.2 1175.4,1080 1222.1,1080 
-        1620.2,850.2 	"/><polygon id="lines-dark" class="st4" points="0,595.5 0,622.9 591,282.9 986.5,511.3 1009.9,497.8 147.7,0 101,0 568,269.6"/><ellipse id="ball-shadow" class="st2" cx="3205.4" cy="829.8" rx="85.6" ry="41.2"/><polygon id="top-mask" class="st5" points="1920,0 147.7,0 1620.2,850.2 1620.2,1080 1920,1080 	"/></g></svg><div class="inner"><header><h1>Konterball</h1><span class="loading-text-overlay">Konterball</span></header><p><span class="no-break">a 2-player virtual reality game,</span> <span class="no-break">built for the web</span></p><button class="btn" id="start">Let’s Go</button></div> <svg class="ball-svg" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" style="enable-background:new 0 0 1920 1080" xml:space="preserve"><circle id="ball" class="st6" cx="-1205.4" cy="637" r="60"/></svg> <button class="about-button btn ui">About</button> <a href="https://wild.as/" target="_blank" class="ui wild-logo"><img src="images/logo-wild-a5caf9957a.svg"></a></div><div class="choose-mode-screen"><div class="one-player-col"><div id="singleplayer-animation"></div><div class="buttons"><button class="btn" id="start-singleplayer">Start Game</button></div></div><div class="two-player-col"><div id="multiplayer-animation"></div><div class="buttons"><button class="btn" id="open-room">New Game</button> <button class="btn" id="join-room">Join Game</button></div></div><button class="about-button btn">About</button> <a href="https://wild.as/" target="_blank" class="ui wild-logo"><img src="images/logo-wild-a5caf9957a.svg"></a></div><div class="open-room-screen"><div class="inner"><input type="text" id="generated-room-code" value="" readonly="readonly" data-clipboard-target="#generated-room-code"><br><p class="grey-text">send code to your opponent</p><br><p class="opponent-joined">connecting to server</p><br></div><button class="back-arrow"><img src="images/icon-arrow-c99e442b86.svg"></button></div><div class="join-room-screen"><div class="inner"><form id="room-form" action="javascript:void(0)"><div class="input-wrapper"><input required type="text" id="room-code" maxlength="4" autocomplete="off"><br><div class="placeholder">____</div></div><p class="grey-text">type in your code</p><br><button class="btn" id="join-room-button" role="submit" class="inactive">Join Game</button></form></div><button class="back-arrow"><img src="images/icon-arrow-c99e442b86.svg"></button></div><div class="choose-vr-mode-screen"><div class="inner"><div class="cardboard" id="cardboard"></div><div class="tilt"><p><span id="tilt"><span class="before"></span><span class="main">Try it without a headset</span></span> or <a href="https://webvr.info/" target="_blank"><span class="before"></span><span class="main">get set up in VR.</span></a></p></div></div></div><div class="about-screen"><div class="about-inner"><h1>Konterball</h1><p>is a 2-player virtual reality game, built for the web, using three.js, cannon.js and deepstream.io.</p><p>Konterball is made by <a target="_blank" href="https://wild.as/">wild</a> in Vienna with the help of <a target="_blank" href="http://www.fifth-music.com/">Fifth Music</a>. Follow us on <a target="_blank" href="https://www.facebook.com/WILD-657435247617232/">facebook</a>, <a target="_blank" href="https://twitter.com/madebywild">twitter</a> &amp; <a target="_blank" href="https://www.instagram.com/madebywild/">instagram</a>.</p><p><a class="btn" href="https://open.spotify.com/album/27Wb6Hf2DKdfW8Gso65Wte" target="_blank"><img src="/images/icon-note-3a6b504e9f.svg"> Listen to the EP on Spotify</a></p></div><button class="back-arrow"><img src="images/icon-arrow-c99e442b86.svg"></button></div></div><script>WebVRConfig = {
+      .st6{fill:#F9FC56;}
+    </style>
+    <g id="Layer_1">
+      <polygon id="panel-light" class="st0" points="0,1080 1222.1,1080 1620.2,850.2 1009.9,497.8 	"/>
+      <polygon id="panel-dark" class="st1" points="147.7,0 0,0 0,1080 1009.9,497.8 	"/>
+      <polygon id="panel-side" class="st2" points="1620.2,850.2 1222.1,1080 1222.1,1080 1620.2,1080 	"/>
+      <polygon id="lines-light" class="st3" points="1462.1,758.9 1009.9,497.8 986.5,511.3 1573.5,850.2 1175.4,1080 1222.1,1080 
+        1620.2,850.2 	"/>
+      <polygon id="lines-dark" class="st4" points="0,595.5 0,622.9 591,282.9 986.5,511.3 1009.9,497.8 147.7,0 101,0 568,269.6"/>
+      <ellipse id="ball-shadow" class="st2" cx="3205.4" cy="829.8" rx="85.6" ry="41.2"/>
+      <polygon id="top-mask" class="st5" points="1920,0 147.7,0 1620.2,850.2 1620.2,1080 1920,1080 	"/>
+    </g>
+    </svg>
+    <div class="inner">
+      <header>
+        <h1>Konterball</h1>
+        <span class="loading-text-overlay">Konterball</span>
+      </header>
+      <p>
+        <span class="no-break">a 2-player virtual reality game,</span>
+        <span class="no-break">built for the web</span>
+      </p>
+      <button class="btn" id="start">Let’s Go</button>
+    </div>
+    </svg>
+    <svg class="ball-svg" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" style="enable-background:new 0 0 1920 1080;" xml:space="preserve">
+      <circle id="ball" class="st6" cx="-1205.4" cy="637" r="60"/>
+    </svg>
+    <button class="about-button btn ui">About</button>
+    <a href="https://wild.as/" target="_blank" class="ui wild-logo"><img src="images/logo-wild.svg"></a>
+  </div>
+
+  <div class="choose-mode-screen">
+    <div class="one-player-col">
+      <div id="singleplayer-animation"></div>
+      <div class="buttons">
+        <button class="btn" id="start-singleplayer">Start Game</button>
+      </div>
+    </div>
+    <div class="two-player-col">
+      <div id="multiplayer-animation"></div>
+      <div class="buttons">
+        <button class="btn" id="open-room">New Game</button>
+        <button class="btn" id="join-room">Join Game</button>
+      </div>
+    </div>
+    <button class="about-button btn">About</button>
+    <a href="https://wild.as/" target="_blank" class="ui wild-logo"><img src="images/logo-wild.svg"></a>
+  </div>
+
+  <div class="open-room-screen">
+    <div class="inner">
+      <input type="text" id="generated-room-code" value="" readonly data-clipboard-target="#generated-room-code"><br>
+      <p class="grey-text">send code to your opponent</p><br>
+      <p class="opponent-joined">connecting to server</p><br>
+    </div>
+    <button class="back-arrow"><img src="images/icon-arrow.svg"></button>
+  </div>
+
+  <div class="join-room-screen">
+    <div class="inner">
+      <form id="room-form" action="javascript:void(0)">
+        <div class="input-wrapper">
+          <input required type="text" id="room-code" maxlength="4" autocomplete="off"><br>
+          <div class="placeholder">____</div>
+        </div>
+        <p class="grey-text">type in your code</p><br>
+        <button class="btn" id="join-room-button" role="submit" class="inactive">Join Game</button>
+      </form>
+    </div>
+    <button class="back-arrow"><img src="images/icon-arrow.svg"></button>
+  </div>
+
+  <div class="choose-vr-mode-screen">
+    <div class="inner">
+      <div class="cardboard" id="cardboard"></div>
+      <div class="tilt">
+        <p><span id="tilt"><span class="before"></span><span class="main">Try it without a headset</span></span> or <a href="https://webvr.info/" target="_blank"><span class="before"></span><span class="main">get set up in VR.</span></a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-screen">
+    <div class="about-inner">
+      <h1>Konterball</h1>
+      <p>is a 2-player virtual reality game, built for the web, using three.js, cannon.js and deepstream.io.</p>
+
+      <p>Konterball is made by
+        <a target="_blank" href="https://wild.as/">wild</a>
+        in Vienna with the help of
+        <a target="_blank" href="http://www.fifth-music.com/">Fifth Music</a>.
+        Follow us on 
+        <a target="_blank" href="https://www.facebook.com/WILD-657435247617232/">facebook</a>,
+        <a target="_blank" href="https://twitter.com/madebywild">twitter</a> &amp;
+        <a target="_blank" href="https://www.instagram.com/madebywild/">instagram</a>.
+      </p>
+      <p>
+      <a class="btn" href="https://open.spotify.com/album/27Wb6Hf2DKdfW8Gso65Wte" target="_blank">
+        <img src="/images/icon-note.svg"> Listen to the EP on Spotify
+      </a>
+      </p>
+    </div>
+    <button class="back-arrow"><img src="images/icon-arrow.svg"></button>
+  </div>
+</div>
+
+
+    
+      <script>
+        WebVRConfig = {
           MOUSE_KEYBOARD_CONTROLS_DISABLED: true,
           ROTATE_INSTRUCTIONS_DISABLED: true,
           BUFFER_SCALE: 1,
-        };</script><script src="lib/cannon.js"></script><script src="lib/webvr-polyfill.js"></script><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        };
+      </script>
+      <script src="lib/cannon.js"></script>
+      <script src="lib/webvr-polyfill.js"></script>
+      <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
         m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
         })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
         ga('create', 'UA-92285671-1', 'auto');
-        ga('send', 'pageview');</script><script src="javascripts/app-55b31525c27278472382.js"></script></body></html>
+        ga('send', 'pageview');
+      </script>
+      <script src="javascripts/app.js"></script>
+    
+  </body>
+</html>

@@ -1,6 +1,7 @@
 import NoSleep from 'nosleep';
 import {TweenMax, TimelineMax, Power0, Power1, Power4, SlowMo, Back} from 'gsap';
 import $ from 'zepto-modules';
+import MobileDetect from 'mobile-detect';
 import Clipboard from 'clipboard';
 import bodymovin from 'bodymovin';
 import EventEmitter from 'event-emitter';
@@ -10,6 +11,7 @@ import {EVENT, MODE, STATE, CONTROLMODE} from './constants';
 import Scene from './scene';
 import Util from './webvr-manager/util';
 import Communication from './communication';
+
 
 document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
 
@@ -124,6 +126,10 @@ class PingPong {
     }
     this.enterVRButton = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
     document.getElementById('cardboard').appendChild(this.enterVRButton.domElement);
+    const md = new MobileDetect(window.navigator.userAgent);
+    if (md.tablet()) {
+      this.enterVRButton.disable();
+    }
     this.enterVRButton.on('enter', () => {
       ga('send', 'event', 'VR Mode', 'click', 'Enter VR Button');
       TweenMax.set('.enter-vr, .mute, .reset-pose', {
