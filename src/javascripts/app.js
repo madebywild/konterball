@@ -341,6 +341,18 @@ class PingPong {
     $('.open-room-screen .back-arrow').on('click', () => {this.backAnimation('.choose-mode-screen');});
     $('.about-screen .back-arrow').on('click', () => {this.backAnimation(this.activeScreen, true);});
     $('.mute').on('click', this.scene.sound.toggleMute.bind(this.scene.sound));
+    $('input').on('focus', e => {
+      if (Util.isMobile()) {
+        TweenMax.to(e.target, 0.3, {
+          scale: 0.5,
+        });
+      }
+    });
+    $('input').on('blur', e => {
+      TweenMax.to(e.target, 0.3, {
+        scale: 1,
+      });
+    });
     $('button.btn:not(.about-button)').mouseenter(function buttonIn() {
       TweenMax.to($(this), 0.3, {
         boxShadow: 'inset 0px 0px 0px 3px rgba(255, 255, 255, 1)',
