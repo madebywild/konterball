@@ -1,4 +1,4 @@
-import deepstream from 'deepstream.io-client-js';
+import deepstream from 'deepstream.io-client-js/dist/deepstream';
 import $ from 'zepto-modules';
 import chunk from 'lodash.chunk';
 import randomstring from 'randomstring';

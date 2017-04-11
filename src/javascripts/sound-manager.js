@@ -1,4 +1,5 @@
 import {Howler, Howl} from 'howler';
+import Map from 'es6-map';
 import $ from 'zepto-modules';
 import {rand, cap} from './util/helpers';
 import {MODE} from './constants';

@@ -12,7 +12,6 @@ import Scene from './scene';
 import Util from './webvr-manager/util';
 import Communication from './communication';
 
-
 document.exitPointerLock = document.exitPointerLock || document.mozExitPointerLock;
 
 const screenTransitionDuration = 1;
@@ -30,6 +29,7 @@ class PingPong {
     this.setupCustomEventHandlers();
     this.introBallTween = null;
     this.activeScreen = '.intro-screen';
+    this.mobileDetect = new MobileDetect(window.navigator.userAgent);
 
     if (Util.isMobile() && 'orientation' in window) {
       this.checkPhoneOrientation();
@@ -126,8 +126,7 @@ class PingPong {
     }
     this.enterVRButton = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
     document.getElementById('cardboard').appendChild(this.enterVRButton.domElement);
-    const md = new MobileDetect(window.navigator.userAgent);
-    if (md.tablet()) {
+    if (this.mobileDetect.tablet()) {
       this.enterVRButton.disable();
     }
     this.enterVRButton.on('enter', () => {
@@ -507,7 +506,7 @@ class PingPong {
 
   onTiltClick() {
     ga('send', 'event', 'VR Mode', 'click', 'Enter 360 Button');
-    if (Util.isMobile()) {
+    if (Util.isMobile() || this.mobileDetect.tablet()) {
       // eslint-disable-next-line
       this.scene.manager.onFSClick_();
       this.scene.setupVRControls();
