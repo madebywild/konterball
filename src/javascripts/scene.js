@@ -270,6 +270,17 @@ export default class Scene {
     } else if ('onmozpointerlockchange' in document) {
       document.addEventListener('mozpointerlockchange', this.onPointerLockChange.bind(this), false);
     }
+    $(document).on('keydown', e => {
+      if (e.keyCode === 82
+        && (this.config.state === STATE.PLAYING
+        || this.config.state === STATE.WAITING
+        || this.config.state === STATE.COUNTDOWN
+        || this.config.state === STATE.PAUSED
+        || this.config.state === STATE.INSTRUCTIONS
+        || this.config.state === STATE.GAME_OVER)) {
+        this.emitter.emit(EVENT.TOGGLE_RAINBOW_MODE);
+      }
+    });
     $(window).on('resize', this.onResize.bind(this));
     $(window).on('vrdisplaypresentchange', this.onResize.bind(this));
 
