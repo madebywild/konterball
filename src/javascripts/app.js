@@ -141,18 +141,13 @@ class PingPong {
           || this.scene.config.state === STATE.PAUSED) {
         return;
       }
-      $('.choose-vr-mode-screen .inner').html('Put on your VR device now<br>Game is starting...');
-      $('.choose-vr-mode-screen').css('z-index', '1000001');
-      $('.choose-vr-mode-screen').appendTo('.webvr-polyfill-fullscreen-wrapper');
-      TweenMax.delayedCall(5, () => {
-        TweenMax.to('.choose-vr-mode-screen', 0.4, {
-          autoAlpha: 0,
-        });
-        this.scene.setupVRControls();
-        this.scene.controlMode = CONTROLMODE.VR;
-        this.scene.startGame();
-        this.scene.onResize();
+      TweenMax.to('.choose-vr-mode-screen', 0.4, {
+        autoAlpha: 0,
       });
+      this.scene.setupVRControls();
+      this.scene.controlMode = CONTROLMODE.VR;
+      this.scene.startGame();
+      this.scene.onResize();
     });
     this.enterVRButton.on('exit', () => {
       TweenMax.set([this.scene.renderer, '.mute', 'canvas'], {
