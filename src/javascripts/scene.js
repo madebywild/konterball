@@ -615,7 +615,11 @@ export default class Scene {
   }
 
   introPanAnimation() {
-    this.animate();
+    if (this.display && 'requestAnimationFrame' in this.display && this.controlMode === CONTROLMODE.VR) {
+      this.display.requestAnimationFrame(this.animate.bind(this));
+    } else {
+      requestAnimationFrame(this.animate.bind(this));
+    }
     return new Promise(resolve => {
       const tl = new TimelineMax();
       this.camera.lookAt(
