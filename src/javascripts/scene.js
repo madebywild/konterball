@@ -162,7 +162,7 @@ export default class Scene {
     // 0 = half pixel density
     this.quality = 4;
     // the trail causes the paddle to be janky on mobile devices for some reason.
-    this.trailEnabled = !Util.isMobile();
+    this.trailEnabled = true;
     // count the frames
     this.frameNumber = 0;
     // first frame after tab became active again, when tab is in background the
@@ -488,7 +488,7 @@ export default class Scene {
     this.light.shadow.camera.right = this.config.tableWidth / 2;
     this.light.shadow.camera.bottom = 0.8;
     this.light.shadow.camera.top = 3.4;
-    this.light.castShadow = true;
+    this.light.castShadow = !this.isMobile;
     this.light.shadow.mapSize.width = (this.isMobile ? 1 : 8) * 512;
     this.light.shadow.mapSize.height = (this.isMobile ? 1 : 8) * 512;
     this.scene.add(this.light);
@@ -598,7 +598,6 @@ export default class Scene {
           display: 'block',
         });
       }
-      this.resetPose();
       this.paddle.visible = true;
       this.hud.container.visible = true;
       this.setupVRControls();
@@ -986,7 +985,7 @@ export default class Scene {
   }
 
   resetPose() {
-    if (this.display) {
+    if (this.display && this.display.resetPose) {
       this.controls.resetPose();
     }
   }
