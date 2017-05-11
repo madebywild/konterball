@@ -36,16 +36,10 @@ class PingPong {
     } else {
       this.startLoading();
     }
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    if (iOS) {
+    this.iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    if (this.iOS) {
       // cant reliably go fullscreen in ios so just hide the button
-      TweenMax.set('.fullscreen-button', {
-        display: 'none',
-        opacity: 0,
-        visibility: 'hidden',
-        right: '-999px',
-        top: '-9999px',
-      });
+      this.hideFullscreenButton();
       TweenMax.set('.enter-vr', {
         right: '0',
         bottom: '-10px',
@@ -114,6 +108,14 @@ class PingPong {
     });
   }
 
+  hideFullscreenButton() {
+    if (this.iOS) {
+      TweenMax.set('.fullscreen-button', {
+        display: 'none',
+      });
+    }
+  }
+
   setupVRButton() {
     const options = {
       color: '#fff',
@@ -148,6 +150,7 @@ class PingPong {
       this.scene.controlMode = CONTROLMODE.VR;
       this.scene.startGame();
       this.scene.onResize();
+      this.hideFullscreenButton();
     });
     this.enterVRButton.on('exit', () => {
       TweenMax.set([this.scene.renderer, '.mute', 'canvas'], {
@@ -155,6 +158,7 @@ class PingPong {
         visibility: 'visible',
         opacity: 1,
       });
+      this.hideFullscreenButton();
       if (this.scene.display) {
         TweenMax.set('.enter-vr', {
           display: 'block',
@@ -349,11 +353,11 @@ class PingPong {
       });
     });
     $('button.btn:not(.about-button)').mouseenter(function buttonIn() {
-      TweenMax.to($(this), 0.3, {
-        boxShadow: 'inset 0px 0px 0px 3px rgba(255, 255, 255, 1)',
+      TweenMax.to($(this), 0.2, {
+        boxShadow: 'inset 0px 0px 0px 2px rgba(255, 255, 255, 1)',
       });
     }).mouseleave(function buttonOut() {
-      TweenMax.to($(this), 0.3, {
+      TweenMax.to($(this), 0.2, {
         boxShadow: 'inset 0px 0px 0px 0px rgba(255, 255, 255, 0)',
       });
     });
@@ -522,6 +526,7 @@ class PingPong {
       this.scene.controlMode = CONTROLMODE.MOUSE;
     }
     this.scene.startGame();
+    this.hideFullscreenButton();
   }
 
   viewVRChooserScreen() {
