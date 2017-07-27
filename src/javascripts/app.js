@@ -128,7 +128,7 @@ class PingPong {
     }
     this.enterVRButton = new webvrui.EnterVRButton(this.scene.renderer.domElement, options);
     document.getElementById('cardboard').appendChild(this.enterVRButton.domElement);
-    if (this.mobileDetect.tablet()) {
+    if (this.mobileDetect.tablet() && !(/OculusBrowser/.test(navigator.userAgent))) {
       this.enterVRButton.disable();
     }
     this.enterVRButton.on('enter', () => {
