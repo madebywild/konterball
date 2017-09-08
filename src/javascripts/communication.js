@@ -18,9 +18,6 @@ export default class Communication {
     this.isOpponentConnected = false;
     this.availableServers = [
       'wss://konter-eu-1.madebywild.com:6020',
-      'wss://konter-eu-2.madebywild.com:6020',
-      'wss://konter-us-1.madebywild.com:6020',
-      'wss://konter-us-2.madebywild.com:6020',
     ];
     // chunk available characters into n parts where n is the number of servers
     this.availablePrefixes = chunk(
