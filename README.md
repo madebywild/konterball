@@ -42,3 +42,6 @@ Depending on whether you want to host a local deepstream server too:
 * Run `gulp production`
 * Run `node deepstream.js`
 * Server should now be available at port 8081, or whatever port you set in the PORT environment var.
+
+## Support
+*As of 9/11/2018, the WebVR API is no longer supported so some features may not work as intended.*
