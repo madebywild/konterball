@@ -9,9 +9,10 @@
     padding-right: 15px;
   }
   p {
+    max-width: 400px;
     width: 100%;
     text-align: center;
-    margin-top: 40px;
+    margin: 0 auto;
     span {
       cursor: pointer;
     }

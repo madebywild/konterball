@@ -101,7 +101,6 @@ class PingPong {
       this.loadModeChooserAnimation(),
       this.loadingAnimation(),
     ]).then(() => {
-      this.setupVRButton();
       this.introAnimation();
     }).catch(e => {
       console.warn(e);
