@@ -144,10 +144,11 @@ button.btn.about-button {
   left: 13px;
   bottom: 13px;
   position: fixed !important;
-  width: 100px;
+  width: 200px;
   z-index: 100;
   img {
     opacity: 0.35;
+    width: 100%;
   }
   @media screen and (max-width: $breakpoint-mobile-max) {
     left: 8px;

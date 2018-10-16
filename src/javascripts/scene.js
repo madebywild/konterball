@@ -51,7 +51,7 @@ import setupPaddles from './models/paddle';
 
 const DEBUG_MODE = false;
 
-/* global CannonDebugRenderer, Power1, Power2, Power3, Power4 */
+/* global CannonDebugRenderer */
 
 export default class Scene {
   constructor(emitter, communication) {
