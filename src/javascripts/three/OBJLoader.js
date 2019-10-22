@@ -712,7 +712,7 @@ OBJLoader.prototype = {
 
 				}
 
-				material.shading = sourceMaterial.smooth ? SmoothShading : FlatShading;
+				material.flatShading = sourceMaterial.smooth ? SmoothShading : FlatShading;
 
 				createdMaterials.push(material);
 
