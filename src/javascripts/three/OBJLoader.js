@@ -663,11 +663,11 @@ OBJLoader.prototype = {
 
 			var buffergeometry = new BufferGeometry();
 
-			buffergeometry.addAttribute( 'position', new BufferAttribute( new Float32Array( geometry.vertices ), 3 ) );
+			buffergeometry.setAttribute( 'position', new BufferAttribute( new Float32Array( geometry.vertices ), 3 ) );
 
 			if ( geometry.normals.length > 0 ) {
 
-				buffergeometry.addAttribute( 'normal', new BufferAttribute( new Float32Array( geometry.normals ), 3 ) );
+				buffergeometry.setAttribute( 'normal', new BufferAttribute( new Float32Array( geometry.normals ), 3 ) );
 
 			} else {
 
@@ -677,7 +677,7 @@ OBJLoader.prototype = {
 
 			if ( geometry.uvs.length > 0 ) {
 
-				buffergeometry.addAttribute( 'uv', new BufferAttribute( new Float32Array( geometry.uvs ), 2 ) );
+				buffergeometry.setAttribute( 'uv', new BufferAttribute( new Float32Array( geometry.uvs ), 2 ) );
 
 			}
 
@@ -712,7 +712,7 @@ OBJLoader.prototype = {
 
 				}
 
-				material.shading = sourceMaterial.smooth ? SmoothShading : FlatShading;
+				material.flatShading = sourceMaterial.smooth ? SmoothShading : FlatShading;
 
 				createdMaterials.push(material);
 
