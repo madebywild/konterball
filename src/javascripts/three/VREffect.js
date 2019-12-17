@@ -9,7 +9,7 @@
  *
  */
 
-import {Vector3, PerspectiveCamera} from 'three';
+import {Vector2, Vector3, PerspectiveCamera} from 'three';
 
 const VREffect = function ( renderer, onError ) {
 
@@ -59,7 +59,8 @@ const VREffect = function ( renderer, onError ) {
 
 	var scope = this;
 
-	var rendererSize = renderer.getSize();
+	var rendererSize = new Vector2();
+	renderer.getSize(rendererSize);
 	var rendererUpdateStyle = false;
 	var rendererPixelRatio = renderer.getPixelRatio();
 
