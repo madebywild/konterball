@@ -105,7 +105,7 @@
     "express": "^4.13.4",
     "express-history-api-fallback": "^2.0.0",
     "fps": "0.0.3",
-    "gsap": "^1.19.0",
+    "gsap": "^3.6.0",
     "howler": "^2.0.2",
     "jquery": "^3.1.1",
     "json-loader": "^0.5.4",
