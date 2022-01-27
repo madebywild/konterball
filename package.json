@@ -117,7 +117,7 @@
     "object.values": "^1.0.3",
     "randomstring": "^1.1.5",
     "screenfull": "^3.0.2",
-    "three": "^0.84.0",
+    "three": "^0.137.0",
     "webvr-polyfill": "^0.9.20",
     "wordwrap": "^1.0.0",
     "worker-loader": "^0.7.1",
